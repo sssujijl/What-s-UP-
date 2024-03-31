@@ -1,34 +1,93 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { validate } from 'class-validator';
+import { SignupDto } from './dto/signup.dto';
+import { signinDto } from './dto/signin.dto';
+import { AuthService } from 'src/auth/auth.service';
+import { AuthGuard } from '@nestjs/passport';
+import { UserInfo } from 'src/utils/userInfo.decorator';
+import { User } from './entities/user.entity';
+import { EditUserDto } from './dto/editUser.dto';
+import { DeleteUserDto } from './dto/deleteUser.dto';
+
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly authService: AuthService
+  ) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Post('signup')
+  async signup(@Body() signupDto: SignupDto) {
+    try {
+      await validate(signupDto);
+
+      return await this.usersService.signup(signupDto);
+    } catch (err) {
+      return { message: `${err}` }
+    }
   }
 
+  @Post('signin')
+  async signin(
+    @Body() signinDto: signinDto,
+    @Res() res: any
+  ) {
+    try {
+      await validate(signinDto);
+
+      const user = await this.usersService.signin(signinDto);
+
+      await this.authService.createTokens(res, user.id);
+
+      return res.json({ message: "로그인이 완료되었습니다." });
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  @UseGuards(AuthGuard("jwt"))
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  async getUser(@UserInfo() user: User) {
+    try {
+      return { user };
+    } catch (err) {
+      return { message: `${err}` }
+    }
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  @UseGuards(AuthGuard("jwt"))
+  @Patch()
+  async editUser(
+    @UserInfo() user: User,
+    @Body() editUserDto: EditUserDto
+  ) {
+    try {
+      const editUser = await this.usersService.editUser(user.id, editUserDto);
+
+      return editUser;
+    } catch (err) {
+      return { message: `${err}` }
+    }
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
+  @UseGuards(AuthGuard("jwt"))
+  @Delete()
+  async deleteUser(
+    @UserInfo() user: User,
+    @Body() deleteUserDto: DeleteUserDto,
+    @Res() res: any
+  ) {
+    try {
+      await this.usersService.deleteUser(user, deleteUserDto);
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+
+      return { message: `${user.name} 님이 정상적으로 탈퇴되었습니다.`};
+    } catch (err) {
+      return { message: `${err}` }
+    }
   }
 }
