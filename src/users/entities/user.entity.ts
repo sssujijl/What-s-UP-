@@ -18,15 +18,16 @@ import { Like } from "src/likes/entities/like.entity";
 @Entity({ name: "users" })
 @Unique(["email"])
 @Unique(["phone"])
+@Unique(["nickName"])
 export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
     @IsEmail()
-    @Column({ type: 'varchar', unique: true, nullable: false })
+    @Column({ type: 'varchar', nullable: false })
     email: string;
 
-    @Column({ type: 'varchar'})
+    @Column({ type: 'varchar', nullable: true })
     profileImage: string;
 
     @IsString()
@@ -46,11 +47,11 @@ export class User {
     gender: Gender;
 
     @IsString()
-    @Column({ type: 'varchar', unique: true, nullable: false })
+    @Column({ type: 'varchar', nullable: false })
     phone: string;
 
     @IsString()
-    @Column({ type: 'varchar', unique: true, nullable: false })
+    @Column({ type: 'varchar', nullable: false })
     nickName: string;
 
     @CreateDateColumn()
@@ -71,8 +72,11 @@ export class User {
     @OneToMany(() => User_Title, (userTitle) => userTitle.user, { cascade: true })
     userTitles: User_Title[];
 
-    @OneToMany(() => Follow, (follow) => follow.user, { cascade: true })
-    follows: Follow[];
+    @OneToMany(() => Follow, (follow) => follow.follower, { cascade: true })
+    follower: Follow[];
+
+    @OneToMany(() => Follow, (follow) => follow.followee, { cascade: true })
+    followee: Follow[];
 
     @OneToMany(() => Coupon, (coupon) => coupon.user, { cascade: true })
     coupons: Coupon[];
