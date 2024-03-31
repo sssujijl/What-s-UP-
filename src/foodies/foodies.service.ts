@@ -1,26 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateFoodieDto } from './dto/create-foodie.dto';
 import { UpdateFoodieDto } from './dto/update-foodie.dto';
+import { Foodie } from './entities/foodie.entity';
 
 @Injectable()
 export class FoodiesService {
-  create(createFoodieDto: CreateFoodieDto) {
-    return 'This action adds a new foodie';
-  }
+ 
+  constructor(
+    @InjectRepository(Foodie) private readonly foodieRepository: Repository<Foodie>
+  ) {}
 
-  findAll() {
-    return `This action returns all foodies`;
-  }
+  async findOneById(id: number) {
+    const foodie = await this.foodieRepository.findOneBy({ id });
 
-  findOne(id: number) {
-    return `This action returns a #${id} foodie`;
-  }
+    if (!foodie) {
+      throw new NotFoundException('해당 맛집인을 찾을 수 없습니다.');
+    }
 
-  update(id: number, updateFoodieDto: UpdateFoodieDto) {
-    return `This action updates a #${id} foodie`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} foodie`;
+    return foodie;
   }
 }

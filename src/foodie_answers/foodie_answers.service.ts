@@ -1,26 +1,52 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateFoodieAnswerDto } from './dto/create-foodie_answer.dto';
 import { UpdateFoodieAnswerDto } from './dto/update-foodie_answer.dto';
+import { Foodie_Answer } from './entities/foodie_answer.entity';
 
 @Injectable()
 export class FoodieAnswersService {
-  create(createFoodieAnswerDto: CreateFoodieAnswerDto) {
-    return 'This action adds a new foodieAnswer';
+  constructor(
+    @InjectRepository(Foodie_Answer) private readonly foodieAnswerRepository: Repository<Foodie_Answer>
+  ) {}
+
+  async createAnswer(createFoodieAnswerDto: CreateFoodieAnswerDto) {
+    return await this.foodieAnswerRepository.save(createFoodieAnswerDto)
   }
 
-  findAll() {
-    return `This action returns all foodieAnswers`;
+  async findAllAnswers(foodieId: number) {
+    const foodieAnswer = await this.foodieAnswerRepository.findBy({ foodieId });
+    return foodieAnswer
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} foodieAnswer`;
+  async findAnswerById(id: number) {
+    const answer = await this.foodieAnswerRepository.findOneBy({ id });
+
+    if (!answer) {
+      throw new NotFoundException('해당 답변을 찾을 수 없습니다.');
+    }
+
+    return answer;
   }
 
-  update(id: number, updateFoodieAnswerDto: UpdateFoodieAnswerDto) {
-    return `This action updates a #${id} foodieAnswer`;
+  async updateAnswer(foodieAnswerId: number,userId: number, updateFoodieAnswerDto: UpdateFoodieAnswerDto) {
+    const answer = await this.findAnswerById(foodieAnswerId);
+
+    if (answer.userId !== userId) {
+      throw new UnauthorizedException('해당 답글을 수정할 권한이 없습니다.');
+    }
+    return await this.foodieAnswerRepository.update(foodieAnswerId, updateFoodieAnswerDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} foodieAnswer`;
+  async deleteAnswer(foodieAnswerId: number, userId: number) {
+    const answer = await this.findAnswerById(foodieAnswerId);
+
+    if (answer.userId !== userId ) {
+      throw new UnauthorizedException('해당 답글을 삭제할 권한이 없습니다.');
+    }
+    
+    answer.deletedAt = new Date();
+    return await this.foodieAnswerRepository.save(answer);
   }
 }
