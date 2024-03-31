@@ -15,7 +15,7 @@ export class FoodMate {
     @Column({ type: 'int', nullable: true})
     userId: number;
 
-    @Column({ type: 'int', nullable: true})
+    @Column({ type: 'int', nullable: false})
     foodCategoryId: number;
 
     @IsString()

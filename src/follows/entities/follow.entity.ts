@@ -1,5 +1,6 @@
+import { IsNumber } from "class-validator";
 import { User } from "src/users/entities/user.entity";
-import { CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({ name: 'follows'})
 export class Follow {
@@ -12,8 +13,11 @@ export class Follow {
     @CreateDateColumn()
     createdAt: Date;
 
-    @ManyToOne(() => User, (user) => user.follows, { onDelete: 'CASCADE' })
+    @ManyToOne(() => User, (user) => user.follower, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'followerId', referencedColumnName: 'id'})
+    follower: User;
+
+    @ManyToOne(() => User, (user) => user.followee, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'followeeId', referencedColumnName: 'id' })
-    user: User;
+    followee: User;
 }

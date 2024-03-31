@@ -1,26 +1,43 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { DataSource, Repository } from 'typeorm';
+import * as bcrypt from "bcryptjs";
+import { PointsService } from 'src/points/points.service';
+import { SignupDto } from './dto/signup.dto';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
-  }
+  constructor(
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private dataSource: DataSource,
+    private readonly pointService: PointsService,
+  ) {}
 
-  findAll() {
-    return `This action returns all users`;
-  }
+  async signup(signupDto: SignupDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+    try {
+      if (signupDto.password !== signupDto.checkPassword) {
+        throw new Error('비밀번호가 일치하지 않습니다.');
+      }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+      const salt = await bcrypt.genSalt();
+      signupDto.password = await bcrypt.hash(signupDto.password, salt);
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+      const user = await queryRunner.manager.save(User, signupDto);
+
+      await this.pointService.createPoint(user.id, 3000);
+
+      await queryRunner.commitTransaction();
+      return user;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      return { message: `${err}` }
+    } finally {
+      await queryRunner.release();
+    }
   }
 }
