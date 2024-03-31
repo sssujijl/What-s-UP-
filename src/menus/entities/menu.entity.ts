@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
 import { Place } from "src/places/entities/place.entity";
+import { Order_Menus } from "src/reservations/entities/orderMenus.entity";
 
 @Entity({ name: "menus" })
 export class Menu {
@@ -25,6 +26,9 @@ export class Menu {
     @IsNumber()
     @Column({ type: 'int', nullable: false })
     price: number;
+
+    @OneToMany(() => Order_Menus, (orderMenu) => orderMenu.menu)
+    orderMenus: Order_Menus[];
 
     @ManyToOne(() => Place, (place) => place.menus, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'placeId', referencedColumnName: 'id' })

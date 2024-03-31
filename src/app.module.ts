@@ -21,6 +21,29 @@ import { PlacesModule } from './places/places.module';
 import { MenusModule } from './menus/menus.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { FollowsModule } from './follows/follows.module';
+import { User } from './users/entities/user.entity';
+import { Point } from './points/entities/point.entity';
+import { Saved_Place } from './place-lists/entities/savedPlaces.entity';
+import { PlaceList } from './place-lists/entities/place-list.entity';
+import { FoodCategory } from './places/entities/foodCategorys.entity';
+import { User_Title } from './titles/entities/user_titles.entity';
+import { Like } from './likes/entities/like.entity';
+import { Follow } from './follows/entities/follow.entity';
+import { Coupon } from './coupons/entities/coupon.entity';
+import { Mission } from './missions/entities/mission.entity';
+import { Reservation } from './reservations/entities/reservation.entity';
+import { Title } from './titles/entities/title.entity';
+import { User_ChatRoom } from './chat-rooms/entities/user_chatRoom.entity';
+import { ChatRoom } from './chat-rooms/entities/chat-room.entity';
+import { Message } from './messages/entities/message.entity';
+import { Order_Menus } from './reservations/entities/orderMenus.entity';
+import { Place } from './places/entities/place.entity';
+import { Menu } from './menus/entities/menu.entity';
+import { Review } from './reviews/entities/review.entity';
+import { Foodie } from './foodies/entities/foodie.entity';
+import { Foodie_Answer } from './foodie_answers/entities/foodie_answer.entity';
+import { FoodMate } from './foodmates/entities/foodmate.entity';
+import { User_FoodMate } from './foodmates/entities/user_foodmates.entity';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -33,7 +56,31 @@ const typeOrmModuleOptions = {
     host: configService.get('DB_HOST'),
     port: configService.get('DB_PORT'),
     database: configService.get('DB_NAME'),
-    entities: [],
+    entities: [
+      User,
+      Point,
+      Saved_Place,
+      PlaceList,
+      FoodCategory,
+      User_Title,
+      Like,
+      Follow,
+      Coupon,
+      Mission,
+      Reservation,
+      Title,
+      User_ChatRoom,
+      ChatRoom,
+      Message,
+      Order_Menus,
+      Place,
+      Menu,
+      Review,
+      Foodie,
+      Foodie_Answer,
+      FoodMate,
+      User_FoodMate,
+    ],
     synchronize: configService.get('DB_SYNC'),
     logging: true,
   }),

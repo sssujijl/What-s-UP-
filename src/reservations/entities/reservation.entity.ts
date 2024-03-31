@@ -5,6 +5,7 @@ import { Place } from "src/places/entities/place.entity";
 import { User } from "src/users/entities/user.entity";
 import { Mission } from "src/missions/entities/mission.entity";
 import { Review } from "src/reviews/entities/review.entity";
+import { Order_Menus } from "./orderMenus.entity";
 
 @Entity({ name: "reservations" })
 export class Reservation {
@@ -35,6 +36,9 @@ export class Reservation {
 
     @OneToMany(() => Review, (review) => review.reservation)
     reviews: Review[];
+
+    @OneToMany(() => Order_Menus, (orderMenu) => orderMenu.reservation)
+    orderMenus: Order_Menus[];
 
     @ManyToOne(() => User, (user) => user.reservations, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
