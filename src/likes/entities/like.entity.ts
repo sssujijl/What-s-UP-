@@ -1,5 +1,7 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
-import { IsDate, IsEmail, IsEnum, IsNumber, IsString } from "class-validator";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "src/users/entities/user.entity";
+import { Place } from "src/places/entities/place.entity";
+import { Foodie } from "src/foodies/entities/foodie.entity";
 
 @Entity({ name: "likes" })
 export class Like {
@@ -14,4 +16,16 @@ export class Like {
 
     @Column({ type: 'int', nullable: true })
     foodieId: number;
+
+    @ManyToOne(() => User, (user) => user.likes, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
+    user: User;
+
+    @ManyToOne(() => Place, (place) => place.Likes, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'placeId', referencedColumnName: 'id' })
+    place: Place;
+
+    @ManyToOne(() => Foodie, (foodie) => foodie.Likes, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'foodieId', referencedColumnName: 'id' })
+    foodie: Foodie;
 }

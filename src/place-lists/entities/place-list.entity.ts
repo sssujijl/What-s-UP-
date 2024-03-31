@@ -1,9 +1,11 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
-import { IsDate, IsEmail, IsEnum, IsNumber, IsString } from "class-validator";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { IsEnum, IsString } from "class-validator";
 import { Visible } from "../types/visible.type";
+import { Saved_Place } from "./savedPlaces.entity";
+import { Place } from "src/places/entities/place.entity";
 
 @Entity({ name: "placeLists" })
-export class PlaceLists {
+export class PlaceList {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -30,4 +32,11 @@ export class PlaceLists {
 
     @DeleteDateColumn()
     deletedAt: Date;
+
+    @OneToMany(() => Saved_Place, (savedPlace) => savedPlace.placeList, { cascade: true })
+    savedPlaces: Saved_Place[];
+
+    @ManyToOne(() => Place, (place) => place.placeLists, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'placeId', referencedColumnName: 'id' })
+    place: Place;
 }

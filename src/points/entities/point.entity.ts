@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 import { IsDate, IsEmail, IsEnum, IsNumber, IsString } from "class-validator";
+import { User } from "src/users/entities/user.entity";
 
 @Entity({ name: "points" })
 export class Point {
@@ -18,4 +19,8 @@ export class Point {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @OneToOne(() => User, (user) => user.point, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
+    user: User;
 }

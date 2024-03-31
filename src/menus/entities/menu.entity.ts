@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
+import { Place } from "src/places/entities/place.entity";
 
 @Entity({ name: "menus" })
 export class Menu {
@@ -24,4 +25,8 @@ export class Menu {
     @IsNumber()
     @Column({ type: 'int', nullable: false })
     price: number;
+
+    @ManyToOne(() => Place, (place) => place.menus, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'placeId', referencedColumnName: 'id' })
+    place: Place;
 }

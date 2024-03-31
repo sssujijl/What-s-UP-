@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
 import { Rating } from "../types/rating.types";
+import { Reservation } from "src/reservations/entities/reservation.entity";
 
 @Entity({ name: "reviews" })
 export class Review {
@@ -30,4 +31,8 @@ export class Review {
 
     @DeleteDateColumn()
     deletedAt: Date;
+
+    @ManyToOne(() => Reservation, (reservation) => reservation.reviews)
+    @JoinColumn({ name: 'reservationId', referencedColumnName: 'id' })
+    reservation: Reservation;
 }

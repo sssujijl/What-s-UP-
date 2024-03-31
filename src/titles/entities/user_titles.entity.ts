@@ -1,7 +1,9 @@
-import { CreateDateColumn, DeleteDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { User } from "src/users/entities/user.entity";
+import { CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Title } from "./title.entity";
 
 @Entity({ name: "user_titles" })
-export class User_Titles {
+export class User_Title {
     @PrimaryColumn({ type: 'int', nullable: false })
     userId: number;
 
@@ -16,4 +18,12 @@ export class User_Titles {
 
     @DeleteDateColumn()
     deletedAt: Date;
+
+    @ManyToOne(() => User, (user) => user.userTitles, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
+    user: User;
+
+    @ManyToOne(() => Title, (title) => title.userTitles)
+    @JoinColumn({ name: 'titleId', referencedColumnName: 'id' })
+    title: Title;
 }

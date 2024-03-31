@@ -1,6 +1,10 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
 import { Status } from "../types/status.type";
+import { Foodie_Answer } from "src/foodie_answers/entities/foodie_answer.entity";
+import { User } from "src/users/entities/user.entity";
+import { Title } from "src/titles/entities/title.entity";
+import { Like } from "src/likes/entities/like.entity";
 
 @Entity({ name: "foodies" })
 export class Foodie {
@@ -45,4 +49,18 @@ export class Foodie {
 
     @DeleteDateColumn()
     deletedAt: Date;
+
+    @OneToMany(() => Like, (like) => like.foodie, { cascade: true })
+    Likes: Like[];
+
+    @OneToMany(() => Foodie_Answer, (foodieAnswer) => foodieAnswer.foodie, { cascade: true })
+    foodieAnswers: Foodie_Answer[];
+
+    @ManyToOne(() => User, (user) => user.foodies)
+    @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
+    user: User;
+
+    @ManyToOne(() => Title, (title) => title.foodies)
+    @JoinColumn({ name: 'titleId', referencedColumnName: 'id' })
+    Title: Title;
 }

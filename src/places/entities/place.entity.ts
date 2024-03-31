@@ -1,5 +1,12 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { IsNumber, IsString } from "class-validator";
+import { Menu } from "src/menus/entities/menu.entity";
+import { PlaceList } from "src/place-lists/entities/place-list.entity";
+import { Coupon } from "src/coupons/entities/coupon.entity";
+import { Reservation } from "src/reservations/entities/reservation.entity";
+import { Mission } from "src/missions/entities/mission.entity";
+import { FoodCategory } from "./foodCategorys.entity";
+import { Like } from "src/likes/entities/like.entity";
 
 @Entity({ name: "places" })
 export class Place {
@@ -53,4 +60,26 @@ export class Place {
 
     @DeleteDateColumn()
     deletedAt: Date;
+
+    @OneToMany(() => Menu, (menu) => menu.place, { cascade: true })
+    menus: Menu[];
+
+    @OneToMany(() => PlaceList, (placeList) => placeList.place, { cascade: true })
+    placeLists: PlaceList[];
+
+    @OneToMany(() => Like, (like) => like.place, { cascade: true })
+    Likes: Like[];
+
+    @OneToMany(() => Coupon, (coupon) => coupon.place, { cascade: true })
+    coupons: Coupon[];
+
+    @OneToMany(() => Mission, (mission) => mission.place, { cascade: true })
+    missions: Mission[];
+
+    @OneToMany(() => Reservation, (reservation) => reservation.place, { cascade: true })
+    reservations: Reservation[];
+
+    @ManyToOne(() => FoodCategory, (foodCategory) => foodCategory.places)
+    @JoinColumn({ name: 'foodCategoryId', referencedColumnName: 'id' })
+    foodCategory: FoodCategory;
 }
