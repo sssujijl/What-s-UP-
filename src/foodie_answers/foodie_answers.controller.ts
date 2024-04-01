@@ -11,7 +11,7 @@ import { User } from 'src/users/entities/user.entity';
 export class FoodieAnswersController {
   constructor(
     private readonly foodieAnswersService: FoodieAnswersService,
-    private readonly foodieService: FoodiesService) {}
+    private readonly foodiesService: FoodiesService) {}
 
   @Post()
   async createAnswer(
@@ -21,7 +21,7 @@ export class FoodieAnswersController {
   ) {
     try {
       // 1. 게시물이 실제로 있는 게시물인지 확인
-      await this.foodieService.findOneById(foodieId);
+      await this.foodiesService.findOneById(foodieId);
       createFoodieAnswerDto.foodieId = foodieId;
 
       // createFoodieAnswerDto.userId = user.id;
@@ -36,7 +36,7 @@ export class FoodieAnswersController {
     @Param("foodieId") foodieId: number
   ) {
     try {
-      await this.foodieService.findOneById(foodieId);
+      await this.foodiesService.findOneById(foodieId);
 
       return await this.foodieAnswersService.findAllAnswers(foodieId)
     } catch (err) {
@@ -52,7 +52,7 @@ export class FoodieAnswersController {
     @Body() updateFoodieAnswerDto: UpdateFoodieAnswerDto
   ) {
     try {
-      await this.foodieService.findOneById(foodieId);
+      await this.foodiesService.findOneById(foodieId);
 
       return await this.foodieAnswersService.updateAnswer(foodieAnswerId, userId ,updateFoodieAnswerDto)
     } catch (err) {
@@ -67,9 +67,9 @@ export class FoodieAnswersController {
     // @userInfo() user: User
   ) {
     try {
-      await this.foodieService.findOneById(foodieId);
+      await this.foodiesService.findOneById(foodieId);
 
-      return await this.foodieService.findOneById(foodieAnswerId, user.id)
+      return await this.foodiesService.findOneById(foodieAnswerId, user.id)
     } catch (err) {
       return { message: `${err}`}
     }

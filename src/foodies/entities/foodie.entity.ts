@@ -15,11 +15,11 @@ export class Foodie {
     userId: number;
 
     @Column({ type: 'int', nullable: false})
-    titleId: number;
+    titleId: number; // 칭호
 
     @IsString()
     @Column({ type: 'varchar', nullable: false })
-    title: string;
+    title: string; // 제목
 
     @IsString()
     @Column({ type: 'varchar', nullable: false })
@@ -28,10 +28,6 @@ export class Foodie {
     @IsString()
     @Column({ type: 'varchar', nullable: true })
     images: string;
-
-    @IsNumber()
-    @Column({ type: 'int', nullable: false, default: 0 })
-    likes: number;
 
     @IsNumber()
     @Column({ type: 'int', nullable: false, default: 0 })
@@ -49,9 +45,6 @@ export class Foodie {
 
     @DeleteDateColumn()
     deletedAt: Date;
-
-    @OneToMany(() => Like, (like) => like.foodie, { cascade: true })
-    Likes: Like[];
 
     @OneToMany(() => Foodie_Answer, (foodieAnswer) => foodieAnswer.foodie, { cascade: true })
     foodieAnswers: Foodie_Answer[];
