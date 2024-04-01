@@ -1,4 +1,9 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreatePlaceListDto } from './create-place-list.dto';
+import { PickType } from "@nestjs/mapped-types";
+import { PlaceList } from "../entities/place-list.entity";
 
-export class UpdatePlaceListDto extends PartialType(CreatePlaceListDto) {}
+export class UpdatePlaceListDto extends PickType(PlaceList, [
+    'id',
+    'title',
+    'content',
+    'visible'
+]) {}

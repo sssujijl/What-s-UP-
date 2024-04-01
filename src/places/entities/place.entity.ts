@@ -6,6 +6,7 @@ import { Coupon } from "src/coupons/entities/coupon.entity";
 import { Mission } from "src/missions/entities/mission.entity";
 import { FoodCategory } from "./foodCategorys.entity";
 import { ResStatus } from "src/reservations/entities/resStatus.entity";
+import { Saved_Place } from "src/place-lists/entities/savedPlaces.entity";
 
 @Entity({ name: "places" })
 export class Place {
@@ -59,8 +60,8 @@ export class Place {
     @OneToMany(() => Menu, (menu) => menu.place, { cascade: true })
     menus: Menu[];
 
-    @OneToMany(() => PlaceList, (placeList) => placeList.place, { cascade: true })
-    placeLists: PlaceList[];
+    @OneToMany(() => Saved_Place, (savedPlace) => savedPlace.place, { cascade: true })
+    savedPlaces: Saved_Place[];
 
     @OneToMany(() => Coupon, (coupon) => coupon.place, { cascade: true })
     coupons: Coupon[];

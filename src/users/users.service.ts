@@ -131,4 +131,14 @@ export class UsersService {
     user.deletedAt = new Date();
     return await this.userRepository.save(user);
   }
+
+  async findUserByNickName(nickName: string) {
+    const user = await this.userRepository.findOneBy({ nickName });
+
+    if (!user) {
+      throw new NotFoundException('해당 닉네임의 유저를 찾을 수 없습니다.');
+    }
+
+    return user;
+  }
 }
