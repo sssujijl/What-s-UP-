@@ -5,6 +5,7 @@ import { DateTime } from "../types/dateTime.type";
 import { Place } from "src/places/entities/place.entity";
 import { Reservation } from "src/reservations/entities/reservation.entity";
 import { Coupon } from "src/coupons/entities/coupon.entity";
+import { ResStatus } from "src/reservations/entities/resStatus.entity";
 
 @Entity({ name: "missions" })
 export class Mission {
@@ -38,8 +39,8 @@ export class Mission {
     @OneToMany(() => Coupon, (coupon) => coupon.mission, { cascade: true })
     coupons: Coupon[];
 
-    @OneToMany(() => Reservation, (reservation) => reservation.mission, { cascade: true })
-    reservations: Reservation[];
+    @OneToMany(() => ResStatus, (resStatus) => resStatus.mission)
+    resStatus: ResStatus[];
 
     @ManyToOne(() => Place, (place) => place.missions, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'placeId', referencedColumnName: 'id' })

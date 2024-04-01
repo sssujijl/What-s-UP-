@@ -4,7 +4,6 @@ import { Status } from "../types/status.type";
 import { Foodie_Answer } from "src/foodie_answers/entities/foodie_answer.entity";
 import { User } from "src/users/entities/user.entity";
 import { Title } from "src/titles/entities/title.entity";
-import { Like } from "src/likes/entities/like.entity";
 
 @Entity({ name: "foodies" })
 export class Foodie {
@@ -31,10 +30,6 @@ export class Foodie {
 
     @IsNumber()
     @Column({ type: 'int', nullable: false, default: 0 })
-    likes: number;
-
-    @IsNumber()
-    @Column({ type: 'int', nullable: false, default: 0 })
     views: number;
 
     @IsEnum(Status)
@@ -49,9 +44,6 @@ export class Foodie {
 
     @DeleteDateColumn()
     deletedAt: Date;
-
-    @OneToMany(() => Like, (like) => like.foodie, { cascade: true })
-    Likes: Like[];
 
     @OneToMany(() => Foodie_Answer, (foodieAnswer) => foodieAnswer.foodie, { cascade: true })
     foodieAnswers: Foodie_Answer[];

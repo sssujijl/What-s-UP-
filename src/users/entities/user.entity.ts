@@ -13,7 +13,6 @@ import { Foodie } from "src/foodies/entities/foodie.entity";
 import { Foodie_Answer } from "src/foodie_answers/entities/foodie_answer.entity";
 import { FoodMate } from "src/foodmates/entities/foodmate.entity";
 import { User_FoodMate } from "src/foodmates/entities/user_foodmates.entity";
-import { Like } from "src/likes/entities/like.entity";
 
 @Entity({ name: "users" })
 export class User {
@@ -97,7 +96,4 @@ export class User {
 
     @OneToMany(() => User_FoodMate, (userFoodMate) => userFoodMate.user, { cascade: true })
     userFoodMates: User_FoodMate[];
-
-    @OneToMany(() => Like, (like) => like.user, { cascade: true })
-    likes: Like[];
 }

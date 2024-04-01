@@ -1,10 +1,9 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { IsEnum } from "class-validator";
-import { Status } from "../types/status.type";
-import { Place } from "src/places/entities/place.entity";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { IsEnum, IsNumber } from "class-validator";
+import { Status } from "../types/reservationStatus.type";
 import { User } from "src/users/entities/user.entity";
-import { Mission } from "src/missions/entities/mission.entity";
 import { Review } from "src/reviews/entities/review.entity";
+import { ResStatus } from "./resStatus.entity";
 import { Order_Menus } from "./orderMenus.entity";
 
 @Entity({ name: "reservations" })
@@ -16,14 +15,18 @@ export class Reservation {
     userId: number;
 
     @Column({ type: 'int', nullable: true})
-    placeId: number;
+    resStatusId: number;
 
-    @Column({ type: 'int', nullable: true})
-    missionId: number;
+    @IsNumber()
+    @Column({ type: 'int', nullable: false})
+    capacity: number;
 
     @IsEnum(Status)
     @Column({ type: 'enum', enum: Status, nullable: false, default: Status.BEFORE_VISIT })
     status: Status;
+
+    @Column({ type: 'int', nullable: false})
+    totalAmount: number;
 
     @CreateDateColumn()
     createdAt: Date;
@@ -34,21 +37,17 @@ export class Reservation {
     @DeleteDateColumn()
     deletedAt: Date;
 
-    @OneToMany(() => Review, (review) => review.reservation)
-    reviews: Review[];
-
-    @OneToMany(() => Order_Menus, (orderMenu) => orderMenu.reservation)
-    orderMenus: Order_Menus[];
+    @OneToOne(() => Review, (review) => review.reservation)
+    review: Review;
 
     @ManyToOne(() => User, (user) => user.reservations, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
     user: User;
 
-    @ManyToOne(() => Place, (place) => place.reservations, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'placeId', referencedColumnName: 'id' })
-    place: Place;
+    @OneToOne(() => ResStatus, (resStatus) => resStatus.reservation)
+    @JoinColumn({ name: 'resStatusId', referencedColumnName: 'id' })
+    resStatus: ResStatus;
 
-    @ManyToOne(() => Mission, (mission) => mission.reservations, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'missionId', referencedColumnName: 'id' })
-    mission: Mission;
+    @OneToMany(() => Order_Menus, (orderMenus) => orderMenus.reservation, { cascade: true })
+    orderMenus: Order_Menus[];
 }
