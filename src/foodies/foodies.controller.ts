@@ -17,8 +17,10 @@ export class FoodiesController {
     @Body() createFoodieDto: CreateFoodieDto
   ) {
     try {
-      await this.foodiesService
+      await this.foodiesService.findOneById(userId)
       // createFoodieDto.userId = user.id;
+
+      return await this.foodiesService.createFoodie(createFoodieDto)
     } catch (err) {
       return { message: `${err}` };
     }
@@ -26,9 +28,11 @@ export class FoodiesController {
 
   // 게시물 전체조회
   @Get()
-  async findAllFoodies() {
+  async findAllFoodies(
+    @Param("foodieId") foodieId: number
+  ) {
     try {
-
+      return await this.foodiesService.findOneById(foodieId)
     } catch (err) {
       return { message: `${err}` };
     }
