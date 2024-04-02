@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 import { Gender } from "../types/gender.types";
-import { IsDate, IsEmail, IsEnum, IsString } from "class-validator";
+import { IsDate, IsEmail, IsEnum, IsMobilePhone, IsString } from "class-validator";
 import { Point } from "src/points/entities/point.entity";
 import { Saved_Place } from "src/place-lists/entities/savedPlaces.entity";
 import { User_Title } from "src/titles/entities/user_titles.entity";
@@ -16,9 +16,6 @@ import { User_FoodMate } from "src/foodmates/entities/user_foodmates.entity";
 import { Like } from "src/likes/entities/like.entity";
 
 @Entity({ name: "users" })
-@Unique(["email"])
-@Unique(["phone"])
-@Unique(["nickName"])
 export class User {
     @PrimaryGeneratedColumn()
     id: number;
@@ -38,7 +35,6 @@ export class User {
     @Column({ type: 'varchar', select: false, nullable: false })
     password: string;
 
-    @IsDate()
     @Column({ type: 'date', nullable: false })
     birth: Date;
 
@@ -46,7 +42,7 @@ export class User {
     @Column({ type: 'enum', enum: Gender, nullable: false })
     gender: Gender;
 
-    @IsString()
+    @IsMobilePhone("ko-KR")
     @Column({ type: 'varchar', nullable: false })
     phone: string;
 
@@ -60,7 +56,7 @@ export class User {
     @UpdateDateColumn()
     updatedAt: Date;
 
-    @DeleteDateColumn()
+    @DeleteDateColumn({ type: 'timestamp' })
     deletedAt: Date;
 
     @OneToOne(() => Point, (point) => point.user, { cascade: true })
