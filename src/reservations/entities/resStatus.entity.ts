@@ -1,9 +1,8 @@
-import { IsBoolean, IsEnum, IsNumber } from "class-validator";
+import { IsBoolean, IsNumber } from "class-validator";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Reservation } from "./reservation.entity";
 import { Place } from "src/places/entities/place.entity";
 import { Mission } from "src/missions/entities/mission.entity";
-import { Order_Menus } from "./orderMenus.entity";
 
 @Entity({ name: 'resStatus' })
 export class ResStatus {

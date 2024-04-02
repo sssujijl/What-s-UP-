@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Point } from './entities/point.entity';
 import { Repository } from 'typeorm';
-import { ReservationsService } from 'src/reservations/reservations.service';
 
 @Injectable()
 export class PointsService {
@@ -11,10 +10,7 @@ export class PointsService {
   ) {}
 
   async createPoint(userId: number, point: number) {
-    const points = await this.pointRepository.save({
-      userId, 
-      point 
-    });
+    const points = await this.pointRepository.save({ userId, point });
 
     return points;
   }

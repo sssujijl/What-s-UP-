@@ -8,6 +8,9 @@ import { Order_Menus } from './entities/orderMenus.entity';
 import { MenusService } from 'src/menus/menus.service';
 import { PointsService } from 'src/points/points.service';
 import { Status } from './types/status.type';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ReservationsService {
@@ -17,7 +20,8 @@ export class ReservationsService {
     @InjectRepository(Order_Menus) private readonly orderMenuRepository: Repository<Order_Menus>,
     private dataSource: DataSource,
     private readonly menuService: MenusService,
-    private readonly pointService: PointsService
+    private readonly pointService: PointsService,
+    @InjectQueue('reservationQueue') private reservationQueu: Queue
   ) {}
 
   async findReservationsByUserId(userId: number) {
@@ -28,6 +32,16 @@ export class ReservationsService {
     }
 
     return reservations;
+  }
+
+  async addReservationQueue(resStatusId: number, createReservationDto: CreateReservationDto) {
+    const job = await this.reservationQueu.add('reservation', {
+      resStatusId, createReservationDto
+    },
+    { removeOnComplete: true, removeOnFail: true }
+    );
+
+    return { message: '예약중입니다.' };
   }
 
   async createReservation(resStatusId: number, createReservationDto: CreateReservationDto) {
@@ -49,7 +63,9 @@ export class ReservationsService {
       const order = await this.findOrderMenus(resStatus.placeId, createReservationDto.orderMenus);
 
       if (resStatus.mission) {
-        order.totalAmount =- 1000;
+        order.totalAmount -= 1000;
+      } else if (createReservationDto.deposit) {
+        order.totalAmount += createReservationDto.deposit;
       }
 
       await this.pointService.updatePoint(createReservationDto.userId, order.totalAmount);
@@ -66,6 +82,9 @@ export class ReservationsService {
       }
 
       await queryRunner.manager.save(Order_Menus, order.orders);
+
+      resStatus.status = false;
+      await queryRunner.manager.save(ResStatus, resStatus);
 
       await queryRunner.commitTransaction();
 
@@ -116,7 +135,7 @@ export class ReservationsService {
       where: {
         userId,
         id: reservationId
-      },
+      }
     });
 
     if (!reservation) {
@@ -158,7 +177,24 @@ export class ReservationsService {
     }
   }
 
-  async changeReservationStatus(reservationId: number) {
-    
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  async handleCron() {
+    const reservations = await this.reservationRepository.find({
+      where: { status: Status.BEFORE_VISIT},
+      relations: ['resStatus']
+    });
+
+    const currentTime = new Date();
+    for (const reservation of reservations) {
+      const differenceInMinutes = (currentTime.getTime() - reservation.resStatus.dateTime.getTime()) / (1000 * 60);
+      if (differenceInMinutes >= 10) {
+        await this.changeReservation(reservation);
+      }
+    }
+  }
+  async changeReservation(reservation: Reservation) {
+    reservation.status = Status.VISIT_COMPLETED;
+
+    return await this.reservationRepository.save(reservation);
   }
 }

@@ -43,12 +43,12 @@ import { Foodie_Answer } from './foodie_answers/entities/foodie_answer.entity';
 import { FoodMate } from './foodmates/entities/foodmate.entity';
 import { User_FoodMate } from './foodmates/entities/user_foodmates.entity';
 import { ResStatus } from './reservations/entities/resStatus.entity';
+import { BullModule } from '@nestjs/bull';
 
 const typeOrmModuleOptions = {
   useFactory: async (
     configService: ConfigService,
   ): Promise<TypeOrmModuleOptions> => ({
-    namingStrategy: new SnakeNamingStrategy(),
     type: 'mysql',
     username: configService.get('DB_USERNAME'),
     password: configService.get('DB_PASSWORD'),
@@ -100,6 +100,12 @@ const typeOrmModuleOptions = {
         DB_NAME: Joi.string().required(),
         DB_SYNC: Joi.boolean().required(),
       }),
+    }),
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UsersModule,

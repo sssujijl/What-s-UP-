@@ -22,7 +22,7 @@ export class ReservationsController {
 
       createReservationDto.userId = user.id;
 
-      return await this.reservationsService.createReservation(resStatusId, createReservationDto);
+      return await this.reservationsService.addReservationQueue(resStatusId, createReservationDto);
     } catch (err) {
       return { message: `${err}` }
     }
@@ -59,15 +59,6 @@ export class ReservationsController {
   ) {
     try {
       return await this.reservationsService.cancelReservation(user.id, reservationId);
-    } catch (err) {
-      return { message: `${err}` }
-    }
-  }
-
-  @Put('/:reservationId')
-  async changeReservationStatus(@Param('reservationId') reservationId: number) {
-    try {
-      return await this.reservationsService.changeReservationStatus(reservationId);
     } catch (err) {
       return { message: `${err}` }
     }

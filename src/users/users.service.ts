@@ -3,18 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from "bcryptjs";
-import { PointsService } from 'src/points/points.service';
 import { SignupDto } from './dto/signup.dto';
 import { signinDto } from './dto/signin.dto';
 import { EditUserDto } from './dto/editUser.dto';
 import { DeleteUserDto } from './dto/deleteUser.dto';
+import { Point } from 'src/points/entities/point.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
-    private readonly pointService: PointsService,
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -34,7 +33,8 @@ export class UsersService {
 
       const user = await queryRunner.manager.save(User, signupDto);
 
-      await this.pointService.createPoint(user.id, 3000);
+      const userPoint = { userId: user.id, point: 3000};
+      await queryRunner.manager.save(Point, userPoint);
 
       await queryRunner.commitTransaction();
 

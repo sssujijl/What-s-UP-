@@ -9,4 +9,5 @@ export class CreateReservationDto extends PickType (Reservation, [
     @IsObject()
     @ValidateNested()
     orderMenus: Record<number, number>;
+    deposit?: number;
 }
