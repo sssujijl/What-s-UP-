@@ -1,26 +1,30 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { FoodiesService } from './foodies.service';
 import { CreateFoodieDto } from './dto/create-foodie.dto';
 import { UpdateFoodieDto } from './dto/update-foodie.dto';
+import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
-import { userInfo } from 'os';
+import { AuthGuard } from '@nestjs/passport';
+import { validate } from 'class-validator';
 
 @Controller('foodies')
 export class FoodiesController {
   constructor(
-    private readonly foodiesService: FoodiesService,) { }
+    private readonly foodiesService: FoodiesService
+  ) { }
 
   // 게시물 생성
-  @Post('userId')
+  @UseGuards(AuthGuard('jwt'))
+  @Post()
   async createFoodie(
-    // @userInfo() user: User
+    @UserInfo() user: User,
     @Body() createFoodieDto: CreateFoodieDto
   ) {
     try {
-      // await this.foodiesService.findOneById(userId)
-      // createFoodieDto.userId = user.id;
+      await validate(createFoodieDto);
 
-      return await this.foodiesService.createFoodie(createFoodieDto)
+      createFoodieDto.userId = user.id;
+      return await this.foodiesService.createFoodie(createFoodieDto);
     } catch (err) {
       return { message: `${err}` };
     }
@@ -30,7 +34,7 @@ export class FoodiesController {
   @Get()
   async findAllFoodies() {
     try {
-      return await this.foodiesService.findAllFoodies;
+      return await this.foodiesService.findAllFoodies();
     } catch (err) {
       return { message: `${err}` };
     }
@@ -39,9 +43,11 @@ export class FoodiesController {
   // 게시물 상세조회
   @Get('/:foodieId')
   async findFoodie(
-    @Param("foodieId") foodieId: number
+    @Param("foodieId") foodieId: number,
+    @Req() req: any
   ) {
     try {
+      const userIP = req.ip;
       return await this.foodiesService.findOneById(foodieId);
     } catch (err) {
       return { message: `${err}` }
@@ -49,31 +55,29 @@ export class FoodiesController {
   }
 
   // 게시물 수정
+  @UseGuards(AuthGuard('jwt'))
   @Patch('/:foodieId')
   async updateFoodie(
     @Param("foodieId") foodieId: number,
-    // @userInfo() user: User,
+    @UserInfo() user: User,
     @Body() updateFoodieDto: UpdateFoodieDto
   ) {
     try {
-      await this.foodiesService.findOneById(foodieId);
-
-      return await this.foodiesService.updateFoodie(foodieId, user.userId, updateFoodieDto)
+      return await this.foodiesService.updateFoodie(foodieId, user.id, updateFoodieDto);
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
   // 게시물 삭제
+  @UseGuards(AuthGuard('jwt'))
   @Delete('/:foodieId')
   async deleteFoodie(
     @Param("foodieId") foodieId: number,
-    // @userInfo() user: User
+    @UserInfo() user: User,
   ) {
     try {
-      await this.foodiesService.findOneById(foodieId);
-
-      // return await this.foodiesService.findOneById(user.id)
+      return await this.foodiesService.deleteFoodie(foodieId, user.id);
     } catch (err) {
       return { message: `${err}`}
     }

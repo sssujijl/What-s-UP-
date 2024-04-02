@@ -12,6 +12,7 @@ export class PointsService {
   ) {}
 
   async createPoint(userId: number, point: number) {
+    console.log('------', userId, point);
     const points = await this.pointRepository.save({
       userId, 
       point 

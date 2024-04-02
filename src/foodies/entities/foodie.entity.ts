@@ -1,10 +1,9 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
+import { IsEnum, IsNumber, IsString } from "class-validator";
 import { Status } from "../types/status.type";
 import { Foodie_Answer } from "src/foodie_answers/entities/foodie_answer.entity";
 import { User } from "src/users/entities/user.entity";
 import { Title } from "src/titles/entities/title.entity";
-import { Like } from "src/likes/entities/like.entity";
 
 @Entity({ name: "foodies" })
 export class Foodie {
@@ -25,7 +24,6 @@ export class Foodie {
     @Column({ type: 'varchar', nullable: false })
     content: string;
 
-    @IsString()
     @Column({ type: 'varchar', nullable: true })
     images: string;
 

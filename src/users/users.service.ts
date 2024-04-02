@@ -34,7 +34,7 @@ export class UsersService {
 
       const user = await queryRunner.manager.save(User, signupDto);
 
-      await this.pointService.createPoint(user.id, 3000);
+      // await this.pointService.createPoint(user.id, 3000);
 
       await queryRunner.commitTransaction();
 

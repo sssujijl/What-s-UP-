@@ -17,6 +17,10 @@ export class FoodieAnswersService {
 
   async findAllAnswers(foodieId: number) {
     const foodieAnswer = await this.foodieAnswerRepository.findBy({ foodieId });
+    
+    if(!foodieAnswer) {
+      throw new NotFoundException('답글이 없습니다.');
+    }
     return foodieAnswer
   }
 
