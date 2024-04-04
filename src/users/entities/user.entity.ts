@@ -1,8 +1,7 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 import { Gender } from "../types/gender.types";
-import { IsDate, IsEmail, IsEnum, IsMobilePhone, IsString } from "class-validator";
+import { IsEmail, IsEnum, IsMobilePhone, IsString } from "class-validator";
 import { Point } from "src/points/entities/point.entity";
-import { Saved_Place } from "src/place-lists/entities/savedPlaces.entity";
 import { User_Title } from "src/titles/entities/user_titles.entity";
 import { Follow } from "src/follows/entities/follow.entity";
 import { Coupon } from "src/coupons/entities/coupon.entity";
@@ -13,8 +12,12 @@ import { Foodie } from "src/foodies/entities/foodie.entity";
 import { Foodie_Answer } from "src/foodie_answers/entities/foodie_answer.entity";
 import { FoodMate } from "src/foodmates/entities/foodmate.entity";
 import { User_FoodMate } from "src/foodmates/entities/user_foodmates.entity";
+import { PlaceList } from "src/place-lists/entities/place-list.entity";
 
 @Entity({ name: "users" })
+@Unique(['email'])
+@Unique(['phone'])
+@Unique(['nickName'])
 export class User {
     @PrimaryGeneratedColumn()
     id: number;
@@ -61,8 +64,8 @@ export class User {
     @OneToOne(() => Point, (point) => point.user, { cascade: true })
     point: Point;
 
-    @OneToMany(() => Saved_Place, (savedPlace) => savedPlace.user, { cascade: true })
-    savedPlaces: Saved_Place[];
+    @OneToMany(() => PlaceList, (placeList) => placeList.user, { cascade: true })
+    placeLists: PlaceList[];
 
     @OneToMany(() => User_Title, (userTitle) => userTitle.user, { cascade: true })
     userTitles: User_Title[];
@@ -96,5 +99,4 @@ export class User {
 
     @OneToMany(() => User_FoodMate, (userFoodMate) => userFoodMate.user, { cascade: true })
     userFoodMates: User_FoodMate[];
-
 }

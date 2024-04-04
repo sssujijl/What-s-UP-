@@ -41,6 +41,8 @@ import { Foodie } from './foodies/entities/foodie.entity';
 import { Foodie_Answer } from './foodie_answers/entities/foodie_answer.entity';
 import { FoodMate } from './foodmates/entities/foodmate.entity';
 import { User_FoodMate } from './foodmates/entities/user_foodmates.entity';
+import { ResStatus } from './reservations/entities/resStatus.entity';
+import { BullModule } from '@nestjs/bull';
 import { RedisModule } from '@nestjs-modules/ioredis';
 
 const typeOrmModuleOptions = {
@@ -76,6 +78,8 @@ const typeOrmModuleOptions = {
       Foodie_Answer,
       FoodMate,
       User_FoodMate,
+      ResStatus,
+      Order_Menus
     ],
     synchronize: configService.get('DB_SYNC'),
     logging: true,
@@ -96,6 +100,12 @@ const typeOrmModuleOptions = {
         DB_NAME: Joi.string().required(),
         DB_SYNC: Joi.boolean().required(),
       }),
+    }),
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
     }),
     RedisModule.forRootAsync({
       useFactory: () => ({

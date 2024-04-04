@@ -1,26 +1,56 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Mission } from './entities/mission.entity';
+import { DataSource, Repository } from 'typeorm';
+import { Cron } from '@nestjs/schedule';
 import { CreateMissionDto } from './dto/create-mission.dto';
-import { UpdateMissionDto } from './dto/update-mission.dto';
+import { DateTime } from './types/dateTime.type';
+import { PlacesService } from 'src/places/places.service';
 
 @Injectable()
 export class MissionsService {
-  create(createMissionDto: CreateMissionDto) {
-    return 'This action adds a new mission';
+  constructor (
+    @InjectRepository(Mission) private readonly missionRepository: Repository<Mission>,
+    private dataSource: DataSource,
+    private placeService: PlacesService
+  ) {}
+
+  @Cron(`${getRandomHour()} * * * *`)
+  async createRandomMissions(createMissionDto: CreateMissionDto) {
+    createMissionDto.capacity = getRandomAttendees();
+
+    const currentTime = new Date();
+    const currentHour = currentTime.getHours();
+    
+    if (currentHour === 13) {
+      createMissionDto.dateTime = DateTime.TEN_AM;
+    } else {
+      createMissionDto.dateTime = DateTime.THREE_PN;
+    }
+
+    await this.createMission(createMissionDto);
   }
 
-  findAll() {
-    return `This action returns all missions`;
-  }
+  async createMission(createMissionDto: CreateMissionDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-  findOne(id: number) {
-    return `This action returns a #${id} mission`;
-  }
+    try{
+      const mission = await queryRunner.manager.save(Mission, createMissionDto);
 
-  update(id: number, updateMissionDto: UpdateMissionDto) {
-    return `This action updates a #${id} mission`;
-  }
 
-  remove(id: number) {
-    return `This action removes a #${id} mission`;
+    } catch (err) {
+      return { message: `${err}` }
+    }
   }
 }
+
+function getRandomHour(): string {
+  return Math.random() > 0.5 ? '13' : '18';
+}
+
+function getRandomAttendees(): number {
+  return Math.floor(Math.random() * 5) + 1;
+}
+
