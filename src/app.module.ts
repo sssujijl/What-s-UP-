@@ -44,12 +44,13 @@ import { Foodie } from './foodies/entities/foodie.entity';
 import { Foodie_Answer } from './foodie_answers/entities/foodie_answer.entity';
 import { FoodMate } from './foodmates/entities/foodmate.entity';
 import { User_FoodMate } from './foodmates/entities/user_foodmates.entity';
+import { PuppeteerModule } from './puppeteer/puppeteer.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
     configService: ConfigService,
   ): Promise<TypeOrmModuleOptions> => ({
-    namingStrategy: new SnakeNamingStrategy(),
+    // namingStrategy: new SnakeNamingStrategy(),
     type: 'mysql',
     username: configService.get('DB_USERNAME'),
     password: configService.get('DB_PASSWORD'),
@@ -120,6 +121,7 @@ const typeOrmModuleOptions = {
     MenusModule,
     ReviewsModule,
     FollowsModule,
+    PuppeteerModule,
   ],
   controllers: [],
   providers: [],
