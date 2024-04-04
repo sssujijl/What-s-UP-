@@ -1,26 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { CreatePlaceDto } from './dto/create-place.dto';
-import { UpdatePlaceDto } from './dto/update-place.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Place } from './entities/place.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class PlacesService {
-  create(createPlaceDto: CreatePlaceDto) {
-    return 'This action adds a new place';
-  }
+  constructor(
+    @InjectRepository(Place) private readonly placeRepository: Repository<Place>
+  ) {}
 
-  findAll() {
-    return `This action returns all places`;
-  }
+  async findPlaceById(placeId: number) {
+    const place = await this.placeRepository.findOneBy({ id: placeId });
 
-  findOne(id: number) {
-    return `This action returns a #${id} place`;
-  }
+    if (!place) {
+      throw new NotFoundException('해당 장소를 찾을 수 없습니다.');
+    }
 
-  update(id: number, updatePlaceDto: UpdatePlaceDto) {
-    return `This action updates a #${id} place`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} place`;
+    return place;
   }
 }

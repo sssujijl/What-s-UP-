@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { IsEnum } from "class-validator";
 import { level } from "../types/level.type";
 import { User_Title } from "./user_titles.entity";
@@ -6,6 +6,7 @@ import { FoodCategory } from "src/places/entities/foodCategorys.entity";
 import { Foodie } from "src/foodies/entities/foodie.entity";
 
 @Entity({ name: "titles" })
+@Unique(['level', 'foodCategoryId'])
 export class Title {
     @PrimaryGeneratedColumn()
     id: number;

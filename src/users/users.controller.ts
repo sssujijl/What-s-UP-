@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete, Res, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { validate } from 'class-validator';
 import { SignupDto } from './dto/signup.dto';
@@ -9,8 +9,9 @@ import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from './entities/user.entity';
 import { EditUserDto } from './dto/editUser.dto';
 import { DeleteUserDto } from './dto/deleteUser.dto';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-
+@ApiTags('USER')
 @Controller('users')
 export class UsersController {
   constructor(
@@ -18,6 +19,7 @@ export class UsersController {
     private readonly authService: AuthService
   ) {}
 
+  @ApiOperation({ summary: "회원가입 API" })
   @Post('signup')
   async signup(@Body() signupDto: SignupDto) {
     try {
@@ -29,6 +31,7 @@ export class UsersController {
     }
   }
 
+  @ApiOperation({ summary: "로그인 API " })
   @Post('signin')
   async signin(
     @Body() signinDto: signinDto,
@@ -47,6 +50,8 @@ export class UsersController {
     }
   }
 
+  @ApiOperation({ summary: "내정보조회 API " })
+  @ApiBearerAuth("access-token")
   @UseGuards(AuthGuard("jwt"))
   @Get()
   async getUser(@UserInfo() user: User) {
@@ -57,6 +62,8 @@ export class UsersController {
     }
   }
 
+  @ApiOperation({ summary: "내정보 수정 API " })
+  @ApiBearerAuth("access-token")
   @UseGuards(AuthGuard("jwt"))
   @Patch()
   async editUser(
@@ -72,6 +79,8 @@ export class UsersController {
     }
   }
 
+  @ApiOperation({ summary: "회원탈퇴 API " })
+  @ApiBearerAuth("access-token")
   @UseGuards(AuthGuard("jwt"))
   @Delete()
   async deleteUser(

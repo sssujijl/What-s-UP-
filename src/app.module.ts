@@ -1,5 +1,4 @@
 import Joi from 'joi';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -16,7 +15,6 @@ import { PointsModule } from './points/points.module';
 import { PlaceListsModule } from './place-lists/place-lists.module';
 import { MissionsModule } from './missions/missions.module';
 import { ReservationsModule } from './reservations/reservations.module';
-import { LikesModule } from './likes/likes.module';
 import { PlacesModule } from './places/places.module';
 import { MenusModule } from './menus/menus.module';
 import { ReviewsModule } from './reviews/reviews.module';
@@ -27,7 +25,6 @@ import { Saved_Place } from './place-lists/entities/savedPlaces.entity';
 import { PlaceList } from './place-lists/entities/place-list.entity';
 import { FoodCategory } from './places/entities/foodCategorys.entity';
 import { User_Title } from './titles/entities/user_titles.entity';
-import { Like } from './likes/entities/like.entity';
 import { Follow } from './follows/entities/follow.entity';
 import { Coupon } from './coupons/entities/coupon.entity';
 import { Mission } from './missions/entities/mission.entity';
@@ -45,12 +42,14 @@ import { Foodie_Answer } from './foodie_answers/entities/foodie_answer.entity';
 import { FoodMate } from './foodmates/entities/foodmate.entity';
 import { User_FoodMate } from './foodmates/entities/user_foodmates.entity';
 import { PuppeteerModule } from './puppeteer/puppeteer.module';
+import { ResStatus } from './reservations/entities/resStatus.entity';
+import { BullModule } from '@nestjs/bull';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 const typeOrmModuleOptions = {
   useFactory: async (
     configService: ConfigService,
   ): Promise<TypeOrmModuleOptions> => ({
-    // namingStrategy: new SnakeNamingStrategy(),
     type: 'mysql',
     username: configService.get('DB_USERNAME'),
     password: configService.get('DB_PASSWORD'),
@@ -64,7 +63,6 @@ const typeOrmModuleOptions = {
       PlaceList,
       FoodCategory,
       User_Title,
-      Like,
       Follow,
       Coupon,
       Mission,
@@ -81,6 +79,8 @@ const typeOrmModuleOptions = {
       Foodie_Answer,
       FoodMate,
       User_FoodMate,
+      ResStatus,
+      Order_Menus
     ],
     synchronize: configService.get('DB_SYNC'),
     logging: true,
@@ -102,6 +102,18 @@ const typeOrmModuleOptions = {
         DB_SYNC: Joi.boolean().required(),
       }),
     }),
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
+    RedisModule.forRootAsync({
+      useFactory: () => ({
+        type: 'single',
+        url: "redis://127.0.0.1:6379"
+      })
+    }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UsersModule,
     AuthModule,
@@ -116,7 +128,6 @@ const typeOrmModuleOptions = {
     PlaceListsModule,
     MissionsModule,
     ReservationsModule,
-    LikesModule,
     PlacesModule,
     MenusModule,
     ReviewsModule,
