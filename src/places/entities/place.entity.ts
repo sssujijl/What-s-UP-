@@ -1,73 +1,78 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { IsNumber, IsString } from "class-validator";
+import { IsBoolean, IsNumber, IsString  } from "class-validator";
 import { Menu } from "src/menus/entities/menu.entity";
 import { Coupon } from "src/coupons/entities/coupon.entity";
 import { FoodCategory } from "./foodCategorys.entity";
 import { ResStatus } from "src/reservations/entities/resStatus.entity";
 import { Saved_Place } from "src/place-lists/entities/savedPlaces.entity";
 
-@Entity({ name: "places" })
+
+@Entity({ name: 'places' })
 export class Place {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ type: 'int', nullable: false})
-    foodCategoryId: number;
+  @Column({ type: 'int', nullable: false })
+  foodCategoryId: number;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: false })
-    title: string;
+  @IsString()
+  @Column({ type: 'varchar', nullable: false })
+  title: string;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: true })
-    link: string;
+  @IsString()
+  @Column({ type: 'varchar', nullable: true })
+  link: string;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: true })
-    description: string;
+  @IsString()
+  @Column({ type: 'varchar', nullable: true })
+  description: string;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: true })
-    telephone: string;
+  @IsString()
+  @Column({ type: 'varchar', nullable: true })
+  telephone: string;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: false })
-    address: string;
+  @IsString()
+  @Column({ type: 'varchar', nullable: false })
+  address: string;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: false })
-    roadAddress: string;
+  @IsString()
+  @Column({ type: 'varchar', nullable: false })
+  roadAddress: string;
 
-    @IsNumber()
-    @Column({ type: 'int', nullable: false })
-    mapx: number;
+  @IsNumber()
+  @Column({ type: 'int', nullable: false })
+  mapx: number;
 
-    @IsString()
-    @Column({ type: 'int', nullable: false })
-    mapy: number;
+  @IsString()
+  @Column({ type: 'int', nullable: false })
+  mapy: number;
 
-    @CreateDateColumn()
-    createdAt: Date;
+  @IsBoolean()
+  @Column({ type: 'boolean', nullable: false, default: true })
+  hasMenu: boolean;
 
-    @UpdateDateColumn()
-    updatedAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 
-    @DeleteDateColumn()
-    deletedAt: Date;
+  @UpdateDateColumn()
+  updatedAt: Date;
 
-    @OneToMany(() => Menu, (menu) => menu.place, { cascade: true })
-    menus: Menu[];
+  @DeleteDateColumn()
+  deletedAt: Date;
 
-    @OneToMany(() => Saved_Place, (savedPlace) => savedPlace.place, { cascade: true })
-    savedPlaces: Saved_Place[];
+  @OneToMany(() => Menu, (menu) => menu.place, { cascade: true })
+  menus: Menu[];
 
-    @OneToMany(() => Coupon, (coupon) => coupon.place, { cascade: true })
-    coupons: Coupon[];
+  @OneToMany(() => Saved_Place, (savedPlace) => savedPlace.place, { cascade: true })
+  savedPlaces: Saved_Place[];
 
-    @OneToMany(() => ResStatus, (resStatus) => resStatus.place, { cascade: true })
-    resStatus: ResStatus[];
+  @OneToMany(() => Coupon, (coupon) => coupon.place, { cascade: true })
+  coupons: Coupon[];
 
-    @ManyToOne(() => FoodCategory, (foodCategory) => foodCategory.places)
-    @JoinColumn({ name: 'foodCategoryId', referencedColumnName: 'id' })
-    foodCategory: FoodCategory;
+  @OneToMany(() => ResStatus, (resStatus) => resStatus.place, { cascade: true })
+  resStatus: ResStatus[];
+
+  @ManyToOne(() => FoodCategory, (foodCategory) => foodCategory.places)
+  @JoinColumn({ name: 'foodCategoryId', referencedColumnName: 'id' })
+  foodCategory: FoodCategory;
 }

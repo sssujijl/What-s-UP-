@@ -41,6 +41,7 @@ import { Foodie } from './foodies/entities/foodie.entity';
 import { Foodie_Answer } from './foodie_answers/entities/foodie_answer.entity';
 import { FoodMate } from './foodmates/entities/foodmate.entity';
 import { User_FoodMate } from './foodmates/entities/user_foodmates.entity';
+import { PuppeteerModule } from './puppeteer/puppeteer.module';
 import { ResStatus } from './reservations/entities/resStatus.entity';
 import { BullModule } from '@nestjs/bull';
 import { RedisModule } from '@nestjs-modules/ioredis';
@@ -131,6 +132,7 @@ const typeOrmModuleOptions = {
     MenusModule,
     ReviewsModule,
     FollowsModule,
+    PuppeteerModule,
   ],
   controllers: [],
   providers: [],
