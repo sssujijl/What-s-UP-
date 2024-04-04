@@ -4,13 +4,13 @@ import { MissionsController } from './missions.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Mission } from './entities/mission.entity';
 import { ScheduleModule } from '@nestjs/schedule';
-import { PlacesService } from 'src/places/places.service';
+import { PlacesModule } from 'src/places/places.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Mission]),
     ScheduleModule.forRoot(),
-    PlacesService
+    PlacesModule
   ],
   controllers: [MissionsController],
   providers: [MissionsService],

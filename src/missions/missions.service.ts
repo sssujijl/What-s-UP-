@@ -5,12 +5,14 @@ import { DataSource, Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import { CreateMissionDto } from './dto/create-mission.dto';
 import { DateTime } from './types/dateTime.type';
+import { PlacesService } from 'src/places/places.service';
 
 @Injectable()
 export class MissionsService {
   constructor (
     @InjectRepository(Mission) private readonly missionRepository: Repository<Mission>,
     private dataSource: DataSource,
+    private placeService: PlacesService
   ) {}
 
   @Cron(`${getRandomHour()} * * * *`)
