@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Foodie } from 'src/foodies/entities/foodie.entity';
+import { TitlesService } from 'src/titles/titles.service';
 import { Repository } from 'typeorm';
 import { CreateFoodieAnswerDto } from './dto/create-foodie_answer.dto';
 import { UpdateFoodieAnswerDto } from './dto/update-foodie_answer.dto';
@@ -8,10 +10,13 @@ import { Foodie_Answer } from './entities/foodie_answer.entity';
 @Injectable()
 export class FoodieAnswersService {
   constructor(
-    @InjectRepository(Foodie_Answer) private readonly foodieAnswerRepository: Repository<Foodie_Answer>
+    @InjectRepository(Foodie_Answer) private readonly foodieAnswerRepository: Repository<Foodie_Answer>,
+    private readonly titleService: TitlesService
   ) {}
 
-  async createAnswer(createFoodieAnswerDto: CreateFoodieAnswerDto) {
+  async createAnswer(foodie: Foodie, createFoodieAnswerDto: CreateFoodieAnswerDto) {
+    await this.titleService.findUserTitle(createFoodieAnswerDto.userId, foodie.titleId);
+    
     return await this.foodieAnswerRepository.save(createFoodieAnswerDto)
   }
 

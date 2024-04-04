@@ -25,12 +25,13 @@ export class FoodieAnswersController {
     try {
       // 1. 게시물이 실제로 있는 게시물인지 확인
       await validate(createFoodieAnswerDto);
-
+      
       const foodie = await this.foodiesService.findOneById(foodieId);
       createFoodieAnswerDto.foodieId = foodieId;
 
       createFoodieAnswerDto.userId = user.id;
-      return await this.foodieAnswersService.createAnswer(createFoodieAnswerDto);
+
+      return await this.foodieAnswersService.createAnswer(foodie, createFoodieAnswerDto);
     } catch (err) {
       return { message: `${err}` };
     }

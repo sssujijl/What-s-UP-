@@ -1,5 +1,4 @@
 import Joi from 'joi';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -42,6 +41,7 @@ import { Foodie } from './foodies/entities/foodie.entity';
 import { Foodie_Answer } from './foodie_answers/entities/foodie_answer.entity';
 import { FoodMate } from './foodmates/entities/foodmate.entity';
 import { User_FoodMate } from './foodmates/entities/user_foodmates.entity';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -96,6 +96,12 @@ const typeOrmModuleOptions = {
         DB_NAME: Joi.string().required(),
         DB_SYNC: Joi.boolean().required(),
       }),
+    }),
+    RedisModule.forRootAsync({
+      useFactory: () => ({
+        type: 'single',
+        url: "redis://127.0.0.1:6379"
+      })
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UsersModule,

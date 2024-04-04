@@ -19,7 +19,6 @@ export class Foodie_Answer {
     @Column({ type: 'varchar', nullable: false })
     content: string;
 
-    @IsString()
     @Column({ type: 'varchar', nullable: true })
     images: string;
 

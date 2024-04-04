@@ -48,7 +48,7 @@ export class FoodiesController {
   ) {
     try {
       const userIP = req.ip;
-      return await this.foodiesService.findOneById(foodieId);
+      return await this.foodiesService.findFoodieById(foodieId, userIP);
     } catch (err) {
       return { message: `${err}` }
     }

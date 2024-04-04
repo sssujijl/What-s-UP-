@@ -1,16 +1,18 @@
+import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
+import Redis from 'ioredis';
 import { Repository } from 'typeorm';
-import { Request } from 'express';
 import { CreateFoodieDto } from './dto/create-foodie.dto';
 import { UpdateFoodieDto } from './dto/update-foodie.dto';
 import { Foodie } from './entities/foodie.entity';
 
 @Injectable()
 export class FoodiesService {
- 
   constructor(
-    @InjectRepository(Foodie) private readonly foodieRepository: Repository<Foodie>
+    @InjectRepository(Foodie) private readonly foodieRepository: Repository<Foodie>,
+    @InjectRedis() private readonly redis: Redis  
   ) {}
 
   async findOneById(id: number) {
@@ -27,26 +29,56 @@ export class FoodiesService {
     return await this.foodieRepository.save(createFoodieDto);
   }
 
-  async findFoodie(id: number, req: Request): Promise<Foodie> {
-    const ip = req.ip;
-    const foodie = await this.foodieRepository.findOneBy({ id });
+  async findFoodieById(foodieId: number, userIP: any) {
+    const Foodie = await this.findOneById(foodieId);
 
-    if (!foodie) {
-      throw new NotFoundException('해당 맛집인을 찾을 수 없습니다.');
+    const key = `foodieId:${foodieId}:userIP:${userIP}`
+
+    const duplicateIp = await this.redis.exists(key);
+    if (duplicateIp === 0) {
+      await this.redis.incr(`foodie:${foodieId}:views`);
+      await this.redis.setex(key, 300, 'visited');
     }
+    
+    const views = await this.redis.get(`foodie:${foodieId}:views`);
+    Foodie.views = +views;
+    //---------------------------------------------------
+    const keys = await this.redis.keys('foodie:*:views');
 
-    // // 클라이언트의 IP주소와 조회한 게시글 ID를 저장하는 테이블에 저장
-    // const isAlreadyViewed = await this.foodieRepository.checkIfViewed(ip, id);
+    const viewsResults = await Promise.all(keys.map(async (key) => {
+      const foodieId = key.split(':')[1];
+      const views = await this.redis.get(key);
+      return { foodieId, views };
+    }));
 
-    // if (!isAlreadyViewed) {
-    //   // 중복 조회가 아닌 경우에만 조회수 증가
-    //   foodie.views += 1;
-    //   await this.foodieRepository.save(foodie);
-    //   // 클라이언트의 IP 주소와 조회한 게시글 ID 저장
-    //   await this.foodieRepository.saveViewedRecord(ip, id);
-    // }
-    return foodie
+    console.log(viewsResults);
+
+    return Foodie;  
   }
+
+  @Cron(CronExpression.EVERY_DAY_AT_3AM, { timeZone: 'Asia/Seoul' })
+  async savedFoodieViews() {
+    const foodiesViews = await this.redis.keys('foodie:*:views');
+  }
+
+  async moveViewsFromRedisToDatabase() {
+    // Redis에서 모든 음식의 조회수 가져오기
+    const keys = await this.redis.keys('foodie:*:views');
+    const viewsPromises = keys.map(async key => {
+        const foodieId = key.split(':')[1];
+        const views = await this.redis.get(key);
+        return { foodieId, views: parseInt(views) };
+    });
+    const views = await Promise.all(viewsPromises);
+
+    // 데이터베이스에 조회수 저장
+    await Promise.all(views.map(async view => {
+        await this.foodieRepository.update(view.foodieId, { views: view.views });
+    }));
+
+    // Redis 데이터 삭제
+    await Promise.all(keys.map(key => this.redis.del(key)));
+}
 
   async findAllFoodies() {
     const foodie = await this.foodieRepository.find();
