@@ -1,25 +1,29 @@
-import { IsEnum } from "class-validator";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Category } from "../types/category.type";
-import { Title } from "src/titles/entities/title.entity";
-import { FoodMate } from "src/foodmates/entities/foodmate.entity";
-import { Place } from "./place.entity";
+import { IsEnum, IsString } from 'class-validator';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Category } from '../types/category.type';
+import { Title } from 'src/titles/entities/title.entity';
+import { FoodMate } from 'src/foodmates/entities/foodmate.entity';
+import { Place } from './place.entity';
 
-@Entity({ name: 'foodCategorys'})
+@Entity({ name: 'foodCategorys' })
 export class FoodCategory {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @IsEnum(Category)
-    @Column({ type: 'enum', enum: Category})
-    category: Category
+  //   @IsEnum(Category)
+  //   @Column({ type: 'enum', enum: Category })
+  //   category: Category;
 
-    @OneToMany(() => Title, (title) => title.foodCategory)
-    titles: Title[];
+  @IsString()
+  @Column({ type: 'varchar', nullable: false })
+  category: string;
 
-    @OneToMany(() => FoodMate, (foodMate) => foodMate.foodCategory)
-    foodMates: FoodMate[];
+  @OneToMany(() => Title, (title) => title.foodCategory)
+  titles: Title[];
 
-    @OneToMany(() => Place, (place) => place.foodCategory)
-    places: Place[];
+  @OneToMany(() => FoodMate, (foodMate) => foodMate.foodCategory)
+  foodMates: FoodMate[];
+
+  @OneToMany(() => Place, (place) => place.foodCategory)
+  places: Place[];
 }
