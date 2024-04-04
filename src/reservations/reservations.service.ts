@@ -1,26 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Reservation } from './entities/reservation.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ReservationsService {
-  create(createReservationDto: CreateReservationDto) {
-    return 'This action adds a new reservation';
-  }
+  constructor(
+    @InjectRepository(Reservation) private readonly reservationRepository: Repository<Reservation>
+  ) {}
 
-  findAll() {
-    return `This action returns all reservations`;
-  }
+  async findReservationsByUserId(userId: number) {
+    const reservations = await this.reservationRepository.findBy({ userId });
 
-  findOne(id: number) {
-    return `This action returns a #${id} reservation`;
-  }
+    if (!reservations) {
+      throw new NotFoundException('해당 유저의 예약목록을 찾을 수 없습니다.');
+    }
 
-  update(id: number, updateReservationDto: UpdateReservationDto) {
-    return `This action updates a #${id} reservation`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} reservation`;
+    return reservations;
   }
 }

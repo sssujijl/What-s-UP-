@@ -10,13 +10,15 @@ export class Foodie_Answer {
     id: number;
 
     @Column({ type: 'int', nullable: false})
+    foodieId: number;
+
+    @Column({ type: 'int', nullable: false})
     userId: number;
 
     @IsString()
     @Column({ type: 'varchar', nullable: false })
     content: string;
 
-    @IsString()
     @Column({ type: 'varchar', nullable: true })
     images: string;
 
