@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
+import { IsEnum, IsNumber, IsString } from "class-validator";
 import { Status } from "../types/status.type";
 import { Foodie_Answer } from "src/foodie_answers/entities/foodie_answer.entity";
 import { User } from "src/users/entities/user.entity";
@@ -14,17 +14,16 @@ export class Foodie {
     userId: number;
 
     @Column({ type: 'int', nullable: false})
-    titleId: number;
+    titleId: number; // 칭호
 
     @IsString()
     @Column({ type: 'varchar', nullable: false })
-    title: string;
+    title: string; // 제목
 
     @IsString()
     @Column({ type: 'varchar', nullable: false })
     content: string;
 
-    @IsString()
     @Column({ type: 'varchar', nullable: true })
     images: string;
 

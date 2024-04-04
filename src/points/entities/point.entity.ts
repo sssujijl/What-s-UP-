@@ -1,11 +1,11 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
-import { IsDate, IsEmail, IsEnum, IsNumber, IsString } from "class-validator";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { IsNumber } from "class-validator";
 import { User } from "src/users/entities/user.entity";
 
 @Entity({ name: "points" })
 export class Point {
     @PrimaryGeneratedColumn()
-    id: number;
+    id: number; 
 
     @Column({ type: 'int', nullable: false })
     userId: number;

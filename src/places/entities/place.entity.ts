@@ -1,9 +1,7 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { IsNumber, IsString } from "class-validator";
 import { Menu } from "src/menus/entities/menu.entity";
-import { PlaceList } from "src/place-lists/entities/place-list.entity";
 import { Coupon } from "src/coupons/entities/coupon.entity";
-import { Mission } from "src/missions/entities/mission.entity";
 import { FoodCategory } from "./foodCategorys.entity";
 import { ResStatus } from "src/reservations/entities/resStatus.entity";
 import { Saved_Place } from "src/place-lists/entities/savedPlaces.entity";
