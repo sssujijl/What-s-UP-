@@ -5,4 +5,12 @@ import { MissionsService } from './missions.service';
 export class MissionsController {
   constructor(private readonly missionsService: MissionsService) {}
 
+  @Get()
+  async test() {
+    try {
+      return this.missionsService.randomPlace();
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
 }
