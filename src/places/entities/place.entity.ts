@@ -66,9 +66,6 @@ export class Place {
     @OneToMany(() => Coupon, (coupon) => coupon.place, { cascade: true })
     coupons: Coupon[];
 
-    @OneToMany(() => Mission, (mission) => mission.place, { cascade: true })
-    missions: Mission[];
-
     @OneToMany(() => ResStatus, (resStatus) => resStatus.place, { cascade: true })
     resStatus: ResStatus[];
 

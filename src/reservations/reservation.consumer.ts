@@ -1,7 +1,6 @@
 import { OnQueueCompleted, OnQueueError, OnQueueFailed, Process, Processor } from "@nestjs/bull";
 import { ReservationsService } from "./reservations.service";
 import { Job } from "bull";
-import { includes } from "lodash";
 
 @Processor('reservationQueue')
 export class ReservationConsumer {

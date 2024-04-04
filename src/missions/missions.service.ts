@@ -1,26 +1,42 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Mission } from './entities/mission.entity';
+import { Repository } from 'typeorm';
+import { Cron } from '@nestjs/schedule';
 import { CreateMissionDto } from './dto/create-mission.dto';
-import { UpdateMissionDto } from './dto/update-mission.dto';
+import { DateTime } from './types/dateTime.type';
 
 @Injectable()
 export class MissionsService {
-  create(createMissionDto: CreateMissionDto) {
-    return 'This action adds a new mission';
+  constructor (
+    @InjectRepository(Mission) private readonly missionRepository: Repository<Mission>
+  ) {}
+
+  @Cron(`${getRandomHour()} * * * *`)
+  async createRandomMissions(createMissionDto: CreateMissionDto) {
+    createMissionDto.capacity = getRandomAttendees();
+
+    const currentTime = new Date();
+    const currentHour = currentTime.getHours();
+    
+    if (currentHour === 7) {
+      createMissionDto.dateTime = DateTime.TEN_AM;
+    } else {
+      createMissionDto.dateTime = DateTime.THREE_PN;
+    }
+
   }
 
-  findAll() {
-    return `This action returns all missions`;
-  }
+  async createMission() {
 
-  findOne(id: number) {
-    return `This action returns a #${id} mission`;
-  }
-
-  update(id: number, updateMissionDto: UpdateMissionDto) {
-    return `This action updates a #${id} mission`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} mission`;
   }
 }
+
+function getRandomHour(): string {
+  return Math.random() > 0.5 ? '07' : '12';
+}
+
+function getRandomAttendees(): number {
+  return Math.floor(Math.random() * 5) + 1;
+}
+

@@ -11,17 +11,19 @@ import { Status } from './types/status.type';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import { Redis } from 'ioredis';
 
 @Injectable()
 export class ReservationsService {
   constructor(
     @InjectRepository(Reservation) private readonly reservationRepository: Repository<Reservation>,
     @InjectRepository(ResStatus) private readonly resStatusRepository: Repository<ResStatus>,
-    @InjectRepository(Order_Menus) private readonly orderMenuRepository: Repository<Order_Menus>,
     private dataSource: DataSource,
     private readonly menuService: MenusService,
     private readonly pointService: PointsService,
-    @InjectQueue('reservationQueue') private reservationQueu: Queue
+    @InjectQueue('reservationQueue') private reservationQueu: Queue,
+    @InjectRedis() private readonly redis: Redis
   ) {}
 
   async findReservationsByUserId(userId: number) {
@@ -181,7 +183,6 @@ export class ReservationsService {
   async handleCron() {
     const reservations = await this.reservationRepository.find({
       where: { status: Status.BEFORE_VISIT},
-      relations: ['resStatus']
     });
 
     const currentTime = new Date();
@@ -192,6 +193,7 @@ export class ReservationsService {
       }
     }
   }
+  
   async changeReservation(reservation: Reservation) {
     reservation.status = Status.VISIT_COMPLETED;
 

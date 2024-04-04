@@ -15,6 +15,9 @@ import { User_FoodMate } from "src/foodmates/entities/user_foodmates.entity";
 import { PlaceList } from "src/place-lists/entities/place-list.entity";
 
 @Entity({ name: "users" })
+@Unique(['email'])
+@Unique(['phone'])
+@Unique(['nickName'])
 export class User {
     @PrimaryGeneratedColumn()
     id: number;

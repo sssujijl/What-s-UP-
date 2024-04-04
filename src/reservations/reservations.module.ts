@@ -9,7 +9,7 @@ import { MenusModule } from 'src/menus/menus.module';
 import { PointsModule } from 'src/points/points.module';
 import { BullModule } from '@nestjs/bull';
 import { ReservationConsumer } from './reservation.consumer';
-import { ScheduleModule } from '@nestjs/schedule'
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [

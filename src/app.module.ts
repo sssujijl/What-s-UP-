@@ -44,6 +44,7 @@ import { FoodMate } from './foodmates/entities/foodmate.entity';
 import { User_FoodMate } from './foodmates/entities/user_foodmates.entity';
 import { ResStatus } from './reservations/entities/resStatus.entity';
 import { BullModule } from '@nestjs/bull';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -106,6 +107,12 @@ const typeOrmModuleOptions = {
         host: 'localhost',
         port: 6379,
       },
+    }),
+    RedisModule.forRootAsync({
+      useFactory: () => ({
+        type: 'single',
+        url: "redis://127.0.0.1:6379"
+      })
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UsersModule,

@@ -22,8 +22,6 @@ export class UsersService {
     await queryRunner.startTransaction();
 
     try {
-      await this.validate(signupDto.email, signupDto.phone, signupDto.nickName);
-
       if (signupDto.password !== signupDto.checkPassword) {
         throw new Error('비밀번호가 일치하지 않습니다.');
       }
@@ -44,18 +42,6 @@ export class UsersService {
       return { message: `${err}` }
     } finally {
       await queryRunner.release();
-    }
-  }
-
-  async validate(email: string, phone: string, nickName: string) {
-    const duplicateUsers = await this.userRepository
-      .createQueryBuilder('user')
-      .where('user.deletedAt IS NULL')
-      .andWhere('(user.email = :email OR user.phone = :phone OR user.nickName = :nickName)', { email, phone, nickName })
-      .getMany();
-
-    if (duplicateUsers.length > 0) {
-      throw new Error('중복된 사용자 정보가 있습니다.');
     }
   }
 

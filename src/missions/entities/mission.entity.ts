@@ -12,9 +12,6 @@ export class Mission {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'int', nullable: true})
-    placeId: number;
-
     @IsNumber()
     @Column({ type: 'int', nullable: false })
     capacity: number;
@@ -41,8 +38,4 @@ export class Mission {
 
     @OneToMany(() => ResStatus, (resStatus) => resStatus.mission)
     resStatus: ResStatus[];
-
-    @ManyToOne(() => Place, (place) => place.missions, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'placeId', referencedColumnName: 'id' })
-    place: Place;
 }
