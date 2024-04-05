@@ -6,10 +6,11 @@ import { Mission } from './entities/mission.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PlacesModule } from 'src/places/places.module';
 import { Place } from 'src/places/entities/place.entity';
+import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Mission, Place]),
+    TypeOrmModule.forFeature([Mission, Place, ResStatus]),
     ScheduleModule.forRoot(),
     PlacesModule
   ],

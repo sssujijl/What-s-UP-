@@ -7,7 +7,7 @@ import { ResStatus } from './entities/resStatus.entity';
 import { Order_Menus } from './entities/orderMenus.entity';
 import { MenusService } from 'src/menus/menus.service';
 import { PointsService } from 'src/points/points.service';
-import { Status } from './types/status.type';
+import { Status } from './types/reservation.status.type';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Cron, CronExpression } from '@nestjs/schedule';
