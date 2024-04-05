@@ -10,25 +10,28 @@ import { User } from './entities/user.entity';
 import { EditUserDto } from './dto/editUser.dto';
 import { DeleteUserDto } from './dto/deleteUser.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { sendMail } from 'src/utils/sendmail.service';
 
 @ApiTags('USER')
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
   ) {}
 
   @ApiOperation({ summary: "회원가입 API" })
   @Post('signup')
-  async signup(@Body() signupDto: SignupDto) {
+  async signup(
+    @Body() signupDto: SignupDto) {
     try {
-      await validate(signupDto);
-
-      return await this.usersService.signup(signupDto);
-    } catch (err) {
-      return { message: `${err}` }
-    }
+     // 사용자 정보를 이용하여 회원가입 처리
+     const newUser = await this.usersService.signup(signupDto);
+ 
+     return newUser;
+   } catch (err) {
+     return { message: `${err}` };
+   }
   }
 
   @ApiOperation({ summary: "로그인 API " })

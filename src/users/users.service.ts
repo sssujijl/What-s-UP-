@@ -8,12 +8,14 @@ import { signinDto } from './dto/signin.dto';
 import { EditUserDto } from './dto/editUser.dto';
 import { DeleteUserDto } from './dto/deleteUser.dto';
 import { Point } from 'src/points/entities/point.entity';
+import { sendMail } from 'src/utils/sendmail.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
+    private readonly sendMailService: sendMail
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -33,6 +35,8 @@ export class UsersService {
 
       const userPoint = { userId: user.id, point: 3000};
       await queryRunner.manager.save(Point, userPoint);
+
+      await this.sendMailService.sendVerificationCode(signupDto.email);
 
       await queryRunner.commitTransaction();
 

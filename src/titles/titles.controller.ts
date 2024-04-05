@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Post } from '@nestjs/common';
 import { TitlesService } from './titles.service';
 
 @Controller('titles')
@@ -7,4 +7,9 @@ export class TitlesController {
     private readonly titlesService: TitlesService
   ) {}
 
+
+  @Post()
+  async createTitle(
+    
+  ) {}
 }

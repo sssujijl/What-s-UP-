@@ -6,13 +6,20 @@ import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { validate } from 'class-validator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Foodies')
 @Controller('foodies')
 export class FoodiesController {
   constructor(
     private readonly foodiesService: FoodiesService
   ) { }
 
+  /**
+   * 맛집인 등록
+   * @param createFoodieDto
+   * @returns
+   */
   // 게시물 생성
   @UseGuards(AuthGuard('jwt'))
   @Post()
@@ -30,6 +37,10 @@ export class FoodiesController {
     }
   }
 
+  /**
+   * 밥친구 목록 조회
+   * @returns
+   */
   // 게시물 전체조회
   @Get()
   async findAllFoodies() {
@@ -40,6 +51,11 @@ export class FoodiesController {
     }
   }
 
+  /**
+   * 밥친구 상세 조회
+   * @param foodieId
+   * @returns
+   */
   // 게시물 상세조회
   @Get('/:foodieId')
   async findFoodie(
@@ -54,6 +70,12 @@ export class FoodiesController {
     }
   }
 
+  /**
+   * 밥친구 수정
+   * @param foodieId
+   * @param updateFoodieDto
+   * @returns
+   */
   // 게시물 수정
   @UseGuards(AuthGuard('jwt'))
   @Patch('/:foodieId')
@@ -69,6 +91,11 @@ export class FoodiesController {
     }
   }
 
+  /**
+   * 보드 삭제
+   * @param foodieId
+   * @returns
+   */
   // 게시물 삭제
   @UseGuards(AuthGuard('jwt'))
   @Delete('/:foodieId')
