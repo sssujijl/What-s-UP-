@@ -145,7 +145,7 @@ export class PuppeteerController {
     const browser = await this.puppeteerService.getBrowserInstance();
     const page = await browser.newPage();
 
-    const gu = '서울 강남구';
+    const gu = '서울 종로구';
 
     const restaurants = [];
 
@@ -271,13 +271,13 @@ export class PuppeteerController {
           roadAddress: data.roadAddress,
           mapx: data.mapx,
           mapy: data.mapy,
+          hasMenu: true,
         };
         const newRestaurant =
           await this.puppeteerService.createRestaurant(restaurantData);
         savedPlaces.push(newRestaurant);
       } catch (error) {
-        console.error('Error occurred while fetching additional info:', error);
-        break;
+        console.error('오류 발생!:', error);
       }
     }
 
@@ -287,12 +287,12 @@ export class PuppeteerController {
   }
 
   /**
-   * 스크래핑 실험 - 네이버 지도
+   * 스크래핑 실험 - 통합
    * 현재 상태: 구 정보가 저장된 임의의 배열로 스크래핑한다.
    * @returns
    */
-  @Get('/map')
-  async getGu(): Promise<string[]> {
+  @Get('/scrap')
+  async getGu(): Promise<string> {
     const browser = await this.puppeteerService.getBrowserInstance();
     const page = await browser.newPage();
 
@@ -504,16 +504,152 @@ export class PuppeteerController {
       }
     }
 
+    const savedPlaces = [];
+    for (const restaurant of restaurants) {
+      const query = encodeURIComponent(restaurant.gu + restaurant.name);
+
+      try {
+        await this.delay(100);
+        const response = await axios.get(
+          `https://openapi.naver.com/v1/search/local?query=${query}`,
+          {
+            headers: {
+              'X-Naver-Client-Id': process.env.NAVER_CLIENT_ID,
+              'X-Naver-Client-Secret': process.env.NAVER_CLIENT_SECRET,
+            },
+          },
+        );
+
+        const data = response.data.items[0];
+        const restaurantData = {
+          title: restaurant.name,
+          foodCategoryId: restaurant.categoryId,
+          link: data.link,
+          description: data.description,
+          address: data.address,
+          roadAddress: data.roadAddress,
+          mapx: data.mapx,
+          mapy: data.mapy,
+          hasMenu: false,
+        };
+
+        await page.goto(
+          `https://search.naver.com/search.naver?where=nexearch&sm=top_sly.hst&fbm=0&acr=3&ie=utf8&query=${query}`,
+        );
+
+        const storeCode = await page.evaluate(() => {
+          const aTag = document.querySelector('#_title > a');
+          if (aTag) {
+            const href = aTag.getAttribute('href');
+            const match = href.match(/place\/(\d+)\?/);
+            if (match) {
+              return match[1];
+            } else {
+              return null;
+            }
+          }
+        });
+
+        const menus = [];
+
+        if (storeCode) {
+          await page.goto(
+            `https://pcmap.place.naver.com/restaurant/${storeCode}/menu/list`,
+          );
+
+          let button = await page.$('a.fvwqf');
+          while (button) {
+            await button.click();
+            button = await page.$('a.fvwqf');
+            console.log('click!');
+          }
+
+          const menuNames = await page.$$eval('.lPzHi', (elements) =>
+            elements.map((element) => element.textContent),
+          );
+
+          const menuImages = await page.$$eval('.K0PDV', (elements) =>
+            elements.map((element) => {
+              const backgroundImage = window
+                .getComputedStyle(element)
+                .getPropertyValue('background-image');
+              return {
+                name: element.textContent,
+                url: backgroundImage.match(/url\("(.+)"\)/)[1],
+              };
+            }),
+          );
+
+          const menuDescriptions = await page.$$eval('.kPogF', (elements) =>
+            elements.map((element) => element.textContent),
+          );
+
+          const menuPrices = await page.$$eval('.GXS1X', (elements) =>
+            elements.map((element) => {
+              const priceText = element.textContent;
+              const price = parseInt(
+                priceText.replace('원', '').replace(/,/g, ''),
+              );
+              return price;
+            }),
+          );
+
+          if (menuNames.length !== 0) {
+            restaurantData.hasMenu = true;
+
+            for (let i = 0; i < menuNames.length; i++) {
+              let imageURL = null;
+              const matchingImage = menuImages.find(
+                (image) => image.name === menuNames[i],
+              );
+              if (matchingImage) {
+                imageURL = matchingImage.url;
+              }
+              const menu = {
+                name: menuNames[i],
+                image: imageURL,
+                description: menuDescriptions[i],
+                price: menuPrices[i],
+              };
+              menus.push(menu);
+            }
+          }
+        }
+
+        const newRestaurant =
+          await this.puppeteerService.createRestaurant(restaurantData);
+        savedPlaces.push(newRestaurant);
+
+        if (menus.length !== 0) {
+          for (const menu of menus) {
+            await this.puppeteerService.createMenu({
+              placeId: newRestaurant.id,
+              name: menu.name,
+              image: menu.image,
+              description: menu.description,
+              price: menu.price,
+            });
+          }
+        }
+
+        return savedPlaces.length.toString();
+      } catch (error) {
+        console.error('오류 발생!:', error);
+      }
+    }
+
     await page.close();
     await browser.close();
-    return restaurants;
+
+    // 양이 상당히 많을 것이기 때문에 일단 개수로
+    return savedPlaces.length.toString();
   }
 
   /**
    * api 적용 실험 - 네이버 검색 api
    * @returns
    */
-  @Get('/naver')
+  @Get('/search-api')
   async searchBlog(@Query('query') query: string, @Res() res): Promise<void> {
     const clientId = process.env.NAVER_CLIENT_ID;
     const clientSecret = process.env.NAVER_CLIENT_SECRET;
@@ -537,5 +673,104 @@ export class PuppeteerController {
         console.error('Error occurred while making request:', error);
       }
     }
+  }
+
+  /**
+   * 스크래핑 실험 - 네이버, 네이버 지도
+   * 현재 상태: 가게 이름을 받아 메뉴를 저장한다.
+   * @param Body 가게 이름
+   * @returns
+   */
+  @Post('/menu')
+  @ApiBody({ schema: { example: { name: '서울 강남구 호보식당' } } })
+  async getMenu(@Body('name') name: string): Promise<string[]> {
+    const browser = await this.puppeteerService.getBrowserInstance();
+    const page = await browser.newPage();
+
+    await page.goto(
+      `https://search.naver.com/search.naver?where=nexearch&sm=top_sly.hst&fbm=0&acr=3&ie=utf8&query=${name}`,
+    );
+
+    const storeCode = await page.evaluate(() => {
+      const aTag = document.querySelector('#_title > a');
+      if (aTag) {
+        const href = aTag.getAttribute('href');
+        const match = href.match(/place\/(\d+)\?/);
+        if (match) {
+          return match[1];
+        } else {
+          return null;
+        }
+      }
+    });
+
+    console.log(storeCode);
+    if (storeCode) {
+      await page.goto(
+        `https://pcmap.place.naver.com/restaurant/${storeCode}/menu/list`,
+      );
+
+      // 더보기 버튼 모두 클릭
+      let button = await page.$('a.fvwqf');
+      while (button) {
+        await button.click();
+        button = await page.$('a.fvwqf');
+        console.log('click!');
+      }
+
+      // 잘 되는지 스크린샷 찍어서 확인하는 코드
+      // console.log('Say cheese!');
+      // await page.screenshot({ path: './screenshot.png' });
+
+      const menuNames = await page.$$eval('.lPzHi', (elements) =>
+        elements.map((element) => element.textContent),
+      );
+      const menuImages = await page.$$eval('.K0PDV', (elements) =>
+        elements.map((element) => {
+          const backgroundImage = window
+            .getComputedStyle(element)
+            .getPropertyValue('background-image');
+          return {
+            name: element.textContent,
+            url: backgroundImage.match(/url\("(.+)"\)/)[1],
+          };
+        }),
+      );
+
+      const menuDescriptions = await page.$$eval('.kPogF', (elements) =>
+        elements.map((element) => element.textContent),
+      );
+      const menuPrices = await page.$$eval('.GXS1X', (elements) =>
+        elements.map((element) => {
+          const priceText = element.textContent;
+          const price = parseInt(priceText.replace('원', '').replace(/,/g, ''));
+          return price;
+        }),
+      );
+
+      const menus = [];
+
+      for (let i = 0; i < menuNames.length; i++) {
+        let imageURL = null;
+        const matchingImage = menuImages.find(
+          (image) => image.name === menuNames[i],
+        );
+        if (matchingImage) {
+          imageURL = matchingImage.url;
+        }
+
+        const menu = {
+          name: menuNames[i],
+          image: imageURL,
+          description: menuDescriptions[i],
+          price: menuPrices[i],
+        };
+        menus.push(menu);
+      }
+      return menus;
+    }
+
+    await browser.close();
+    return [];
   }
 }
