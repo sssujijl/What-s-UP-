@@ -10,7 +10,8 @@ export class SignupDto extends PickType(User, [
     'birth',
     'gender',
     'phone',
-    'nickName'
+    'nickName',
+    'isVerified'
 ]) {
     @IsString()
     @IsNotEmpty({ message: "비밀번호 확인을 입력해주세요." })

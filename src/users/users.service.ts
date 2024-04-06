@@ -8,14 +8,18 @@ import { signinDto } from './dto/signin.dto';
 import { EditUserDto } from './dto/editUser.dto';
 import { DeleteUserDto } from './dto/deleteUser.dto';
 import { Point } from 'src/points/entities/point.entity';
-import { sendMail } from 'src/utils/sendmail.service';
+import { SendMailService } from 'src/users/sendMail.service';
+import { number } from 'joi';
+import Redis from 'ioredis';
+import { CheckVerification } from './dto/checkVerification.dto';
+import { InjectRedis } from '@nestjs-modules/ioredis';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
-    private readonly sendMailService: sendMail
+    @InjectRedis() private readonly redis: Redis
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -31,12 +35,19 @@ export class UsersService {
       const salt = await bcrypt.genSalt();
       signupDto.password = await bcrypt.hash(signupDto.password, salt);
 
+      const verification = await this.redis.get(`VerificationCheck:${signupDto.email}`);
+
+      if (!verification) {
+        throw new UnauthorizedException('이메일 인증을 완료해주세요.');
+      } else {
+        await this.redis.del(`VerificationCheck:${signupDto.email}`);
+        signupDto.isVerified = true;
+      }
+
       const user = await queryRunner.manager.save(User, signupDto);
 
       const userPoint = { userId: user.id, point: 3000};
       await queryRunner.manager.save(Point, userPoint);
-
-      await this.sendMailService.sendVerificationCode(signupDto.email);
 
       await queryRunner.commitTransaction();
 
@@ -47,6 +58,23 @@ export class UsersService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async checkVerificationCode(checkVerification: CheckVerification) {
+    const verificationCode = await this.redis.get(`verificationCode:${checkVerification.email}`);
+
+    if (!verificationCode) {
+      throw new NotFoundException('인증시간이 만료되었습니다.');
+    } else {
+      await this.redis.del(`verificationCode:${checkVerification.email}`);
+    }
+
+    if (checkVerification.checkVerificationCode !== verificationCode) {
+      throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
+    }
+
+    await this.redis.setex(`VerificationCheck:${checkVerification.email}`, 1800, 'true');
+    return verificationCode;
   }
 
   async findUserById(id: number) {

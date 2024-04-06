@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import nodemailer, { Transporter } from 'nodemailer'
 import dotenv from 'dotenv'
-import { SignupDto } from 'src/users/dto/signup.dto';
+import Redis from 'ioredis';
+import { InjectRedis } from '@nestjs-modules/ioredis';
 
 dotenv.config();
 
 @Injectable()
-export class sendMail {
+export class SendMailService {
   private transporter: Transporter
 
-  constructor() {
+  constructor(
+    @InjectRedis() private readonly redis: Redis
+  ) {
     // Nodemailer transporter 생성
     this.transporter = nodemailer.createTransport({
       service: 'Gmail',
@@ -24,11 +27,12 @@ export class sendMail {
   }
 
   // 이메일 보내는 메서드
-  async sendEmail(to: string, subject: string, text: string, verificationCode: string) {
+  async sendEmail(email: string, verificationCode: string) {
     try {
+      console.log('------', email);
       const mailOptions = {
-        from: process.env.My_Email,
-        to: to,
+        from: process.env.MAILER_EMAIL,
+        to: email,
         subject: '왓쩝에 가입하신걸 환영합니다!',
         text: `왓쩝 회원가입을 환영합니다! 아래 인증 코드를 입력하여 가입을 완료하세요! ${verificationCode}`,
       };
@@ -53,11 +57,10 @@ export class sendMail {
       // 이메일로 인증 코드 전송
       await this.sendEmail(
         email,
-        'Verify Your Account',
-        `Your verification code is: ${verificationCode}`,
         verificationCode
       );
 
+      await this.redis.setex(`verificationCode:${email}`, 180, verificationCode);
       // 생성된 인증 코드 반환
       return verificationCode;
     } catch (error) {

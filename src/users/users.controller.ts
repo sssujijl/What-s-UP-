@@ -10,7 +10,8 @@ import { User } from './entities/user.entity';
 import { EditUserDto } from './dto/editUser.dto';
 import { DeleteUserDto } from './dto/deleteUser.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { sendMail } from 'src/utils/sendmail.service';
+import { SendMailService } from 'src/users/sendMail.service';
+import { CheckVerification } from './dto/checkVerification.dto';
 
 @ApiTags('USER')
 @Controller('users')
@@ -18,6 +19,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
+    private readonly sendMailService: SendMailService
   ) {}
 
   @ApiOperation({ summary: "회원가입 API" })
@@ -25,13 +27,34 @@ export class UsersController {
   async signup(
     @Body() signupDto: SignupDto) {
     try {
-     // 사용자 정보를 이용하여 회원가입 처리
      const newUser = await this.usersService.signup(signupDto);
  
      return newUser;
    } catch (err) {
      return { message: `${err}` };
    }
+  }
+
+  @Post('/sendMail')
+  async sendMailVerificationCode(@Body('email') email: string) {
+    try {
+      await this.sendMailService.sendVerificationCode(email);
+
+      return { message: `${email} 로 인증메일을 발송하였습니다.` }
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  @Post('/checkVerification')
+  async checkVerificationCode(@Body() checkVerification: CheckVerification) {
+    try {
+      await this.usersService.checkVerificationCode(checkVerification);
+
+      return { message: '인증이 완료되었습니다.' };
+    } catch (err) {
+      return { message: `${err}` }
+    }
   }
 
   @ApiOperation({ summary: "로그인 API " })
