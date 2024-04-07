@@ -59,7 +59,7 @@ export class PuppeteerService {
     name: string;
     image: string;
     description: string;
-    price: number;
+    price: string;
   }) {
     const existingMenu = await this.menuRepository.findOne({
       where: { placeId: menuData.placeId, name: menuData.name },

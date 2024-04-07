@@ -415,7 +415,9 @@ export class PuppeteerController {
       let isEndOfScroll = false;
       let pageIndex = 1;
 
+      // 페이지 넘기는 while문
       while (hasNextPage) {
+        // 스크롤하는 while문
         while (!isEndOfScroll) {
           await page.evaluate(() => {
             const scrollableElement = document.querySelector(
@@ -452,15 +454,6 @@ export class PuppeteerController {
           }
         }
 
-        await page.evaluate(() => {
-          const scrollableElement = document.querySelector(
-            '#_pcmap_list_scroll_container',
-          );
-          if (scrollableElement) {
-            scrollableElement.scrollTop = scrollableElement.scrollHeight;
-          }
-        });
-
         const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
 
         await Promise.all(
@@ -476,7 +469,7 @@ export class PuppeteerController {
             const categoryId = (
               await this.puppeteerService.saveCategoryIfNotExists(category)
             ).id;
-            restaurants.push({ name, categoryId });
+            restaurants.push({ gu, name, categoryId });
           }),
         );
         console.log(pageIndex, restaurants[restaurants.length - 1]);
@@ -506,7 +499,7 @@ export class PuppeteerController {
 
     const savedPlaces = [];
     for (const restaurant of restaurants) {
-      const query = encodeURIComponent(restaurant.gu + restaurant.name);
+      const query = encodeURIComponent(restaurant.gu + ' ' + restaurant.name);
 
       try {
         await this.delay(100);
@@ -521,6 +514,11 @@ export class PuppeteerController {
         );
 
         const data = response.data.items[0];
+
+        if (!data) {
+          console.log('넘어갑니다.');
+          continue;
+        }
         const restaurantData = {
           title: restaurant.name,
           foodCategoryId: restaurant.categoryId,
@@ -533,6 +531,7 @@ export class PuppeteerController {
           hasMenu: false,
         };
 
+        // 메뉴 상세주소로 가기 위해 코드를 받아오는 작업
         await page.goto(
           `https://search.naver.com/search.naver?where=nexearch&sm=top_sly.hst&fbm=0&acr=3&ie=utf8&query=${query}`,
         );
@@ -557,6 +556,7 @@ export class PuppeteerController {
             `https://pcmap.place.naver.com/restaurant/${storeCode}/menu/list`,
           );
 
+          // 더보기 버튼 클릭
           let button = await page.$('a.fvwqf');
           while (button) {
             await button.click();
@@ -564,55 +564,37 @@ export class PuppeteerController {
             console.log('click!');
           }
 
-          const menuNames = await page.$$eval('.lPzHi', (elements) =>
-            elements.map((element) => element.textContent),
-          );
+          const menuContainers = await page.$$('.E2jtL');
 
-          const menuImages = await page.$$eval('.K0PDV', (elements) =>
-            elements.map((element) => {
-              const backgroundImage = window
-                .getComputedStyle(element)
-                .getPropertyValue('background-image');
-              return {
-                name: element.textContent,
-                url: backgroundImage.match(/url\("(.+)"\)/)[1],
-              };
-            }),
-          );
-
-          const menuDescriptions = await page.$$eval('.kPogF', (elements) =>
-            elements.map((element) => element.textContent),
-          );
-
-          const menuPrices = await page.$$eval('.GXS1X', (elements) =>
-            elements.map((element) => {
-              const priceText = element.textContent;
-              const price = parseInt(
-                priceText.replace('원', '').replace(/,/g, ''),
-              );
-              return price;
-            }),
-          );
-
-          if (menuNames.length !== 0) {
+          if (menuContainers.length !== 0) {
             restaurantData.hasMenu = true;
+          }
 
-            for (let i = 0; i < menuNames.length; i++) {
-              let imageURL = null;
-              const matchingImage = menuImages.find(
-                (image) => image.name === menuNames[i],
-              );
-              if (matchingImage) {
-                imageURL = matchingImage.url;
-              }
-              const menu = {
-                name: menuNames[i],
-                image: imageURL,
-                description: menuDescriptions[i],
-                price: menuPrices[i],
-              };
-              menus.push(menu);
-            }
+          for (const container of menuContainers) {
+            const menuName = await container
+              .$eval('.lPzHi', (element) => element.textContent)
+              .catch(() => null);
+            const menuImage = await container
+              .$eval('.K0PDV', (element) => {
+                const backgroundImage = window
+                  .getComputedStyle(element)
+                  .getPropertyValue('background-image');
+                return backgroundImage.match(/url\("(.+)"\)/)[1];
+              })
+              .catch(() => null);
+            const menuDescription = await container
+              .$eval('.kPogF', (element) => element.textContent)
+              .catch(() => null);
+            const menuPrice = await container
+              .$eval('.GXS1X', (element) => element.textContent)
+              .catch(() => null);
+
+            menus.push({
+              name: menuName,
+              image: menuImage,
+              description: menuDescription,
+              price: menuPrice,
+            });
           }
         }
 
@@ -633,6 +615,7 @@ export class PuppeteerController {
         }
       } catch (error) {
         console.error('오류 발생!:', error);
+        break;
       }
     }
 
@@ -720,51 +703,37 @@ export class PuppeteerController {
       // console.log('Say cheese!');
       // await page.screenshot({ path: './screenshot.png' });
 
-      const menuNames = await page.$$eval('.lPzHi', (elements) =>
-        elements.map((element) => element.textContent),
-      );
-      const menuImages = await page.$$eval('.K0PDV', (elements) =>
-        elements.map((element) => {
-          const backgroundImage = window
-            .getComputedStyle(element)
-            .getPropertyValue('background-image');
-          return {
-            name: element.textContent,
-            url: backgroundImage.match(/url\("(.+)"\)/)[1],
-          };
-        }),
-      );
-
-      const menuDescriptions = await page.$$eval('.kPogF', (elements) =>
-        elements.map((element) => element.textContent),
-      );
-      const menuPrices = await page.$$eval('.GXS1X', (elements) =>
-        elements.map((element) => {
-          const priceText = element.textContent;
-          const price = parseInt(priceText.replace('원', '').replace(/,/g, ''));
-          return price;
-        }),
-      );
+      const menuContainers = await page.$$('.E2jtL');
 
       const menus = [];
 
-      for (let i = 0; i < menuNames.length; i++) {
-        let imageURL = null;
-        const matchingImage = menuImages.find(
-          (image) => image.name === menuNames[i],
-        );
-        if (matchingImage) {
-          imageURL = matchingImage.url;
-        }
+      for (const container of menuContainers) {
+        const menuName = await container
+          .$eval('.lPzHi', (element) => element.textContent)
+          .catch(() => null);
+        const menuImage = await container
+          .$eval('.K0PDV', (element) => {
+            const backgroundImage = window
+              .getComputedStyle(element)
+              .getPropertyValue('background-image');
+            return backgroundImage.match(/url\("(.+)"\)/)[1];
+          })
+          .catch(() => null);
+        const menuDescription = await container
+          .$eval('.kPogF', (element) => element.textContent)
+          .catch(() => null);
+        const menuPrice = await container
+          .$eval('.GXS1X', (element) => element.textContent)
+          .catch(() => null);
 
-        const menu = {
-          name: menuNames[i],
-          image: imageURL,
-          description: menuDescriptions[i],
-          price: menuPrices[i],
-        };
-        menus.push(menu);
+        menus.push({
+          name: menuName,
+          image: menuImage,
+          description: menuDescription,
+          price: menuPrice,
+        });
       }
+
       return menus;
     }
 
