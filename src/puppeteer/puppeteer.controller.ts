@@ -72,15 +72,6 @@ export class PuppeteerController {
         }
       }
 
-      await page.evaluate(() => {
-        const scrollableElement = document.querySelector(
-          '#_pcmap_list_scroll_container',
-        );
-        if (scrollableElement) {
-          scrollableElement.scrollTop = scrollableElement.scrollHeight;
-        }
-      });
-
       const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
 
       await Promise.all(
@@ -107,8 +98,8 @@ export class PuppeteerController {
             (span) => span.textContent,
           );
           if (buttonText === '다음페이지') {
-            await Promise.all([nextButton.click()]);
-            await this.delay(1000);
+            await nextButton.click();
+            await page.waitForNetworkIdle();
             pageIndex++;
           }
         }
@@ -214,8 +205,8 @@ export class PuppeteerController {
             (span) => span.textContent,
           );
           if (buttonText === '다음페이지') {
-            await Promise.all([nextButton.click()]);
-            await this.delay(1000);
+            await nextButton.click();
+            await page.waitForNetworkIdle();
             pageIndex++;
           }
         }
@@ -456,8 +447,8 @@ export class PuppeteerController {
               (span) => span.textContent,
             );
             if (buttonText === '다음페이지') {
-              await Promise.all([nextButton.click()]);
-              await this.delay(1000);
+              await nextButton.click();
+              await page.waitForNetworkIdle();
               pageIndex++;
             }
           }
