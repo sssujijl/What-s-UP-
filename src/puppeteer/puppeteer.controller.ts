@@ -541,21 +541,20 @@ export class PuppeteerController {
           if (aTag) {
             const href = aTag.getAttribute('href');
             const match = href.match(/place\/(\d+)\?/);
-            if (match) {
-              return match[1];
-            } else {
-              return null;
-            }
-          } else {
-            const element = document.querySelector(
-              '#loc-main-section-root > section > div > div.rdX0R.HXTER > ul > li:nth-child(1) [data-cbm-doc-id]',
-            );
-            if (element) {
-              return element.getAttribute('data-cbm-doc-id');
-            } else {
-              return null;
-            }
+            return match ? match[1] : null;
           }
+
+          const element = document.querySelector(
+            'li[data-cbm-doc-id], li[data-loc_plc-doc-id]',
+          );
+          if (element) {
+            return (
+              element.getAttribute('data-cbm-doc-id') ||
+              element.getAttribute('data-loc_plc-doc-id')
+            );
+          }
+
+          return null;
         });
 
         const menus = [];
@@ -686,22 +685,24 @@ export class PuppeteerController {
       if (aTag) {
         const href = aTag.getAttribute('href');
         const match = href.match(/place\/(\d+)\?/);
-        if (match) {
-          return match[1];
-        } else {
-          return null;
-        }
-      } else {
-        const element = document.querySelector(
-          '.aFCZr [data-cbm-doc-id]:first-child',
-        );
-        if (element) {
-          return element.getAttribute('data-cbm-doc-id');
-        } else {
-          return null;
-        }
+        return match ? match[1] : null;
       }
+
+      const element = document.querySelector(
+        'li[data-cbm-doc-id], li[data-loc_plc-doc-id]',
+      );
+      if (element) {
+        return (
+          element.getAttribute('data-cbm-doc-id') ||
+          element.getAttribute('data-loc_plc-doc-id')
+        );
+      }
+
+      return null;
     });
+
+    console.log('Say cheese!');
+    await page.screenshot({ path: './screenshot.png' });
 
     console.log(storeCode);
     if (storeCode) {
@@ -717,7 +718,6 @@ export class PuppeteerController {
         console.log('click!');
       }
 
-      // 잘 되는지 스크린샷 찍어서 확인하는 코드
       // console.log('Say cheese!');
       // await page.screenshot({ path: './screenshot.png' });
 
@@ -777,7 +777,7 @@ export class PuppeteerController {
 
     await this.delay(1000);
     console.log('Say cheese!');
-    await page.screenshot({ path: './screenshot.png' });
+    await page.screenshot({ path: './mapScreenshot.png' });
 
     return 'Cheese!';
   }
