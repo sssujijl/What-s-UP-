@@ -546,6 +546,15 @@ export class PuppeteerController {
             } else {
               return null;
             }
+          } else {
+            const element = document.querySelector(
+              '#loc-main-section-root > section > div > div.rdX0R.HXTER > ul > li:nth-child(1) [data-cbm-doc-id]',
+            );
+            if (element) {
+              return element.getAttribute('data-cbm-doc-id');
+            } else {
+              return null;
+            }
           }
         });
 
@@ -682,6 +691,15 @@ export class PuppeteerController {
         } else {
           return null;
         }
+      } else {
+        const element = document.querySelector(
+          '.aFCZr [data-cbm-doc-id]:first-child',
+        );
+        if (element) {
+          return element.getAttribute('data-cbm-doc-id');
+        } else {
+          return null;
+        }
       }
     });
 
@@ -739,5 +757,28 @@ export class PuppeteerController {
 
     await browser.close();
     return [];
+  }
+
+  /**
+   * 스크래핑 실험 - 아이프레임
+   * 목표: 아이프레임 사이를 오가기.
+   * @param Body 지역 정보
+   * @returns
+   */
+  @Post('/iframe')
+  @ApiBody({ schema: { example: { region: '부산 동래구' } } })
+  async frameChange(@Body('region') region: string): Promise<string> {
+    const browser = await this.puppeteerService.getBrowserInstance();
+    const page = await browser.newPage();
+
+    await page.goto(
+      `https://map.naver.com/p/search/${region}%20%EC%9D%8C%EC%8B%9D%EC%A0%90`,
+    );
+
+    await this.delay(1000);
+    console.log('Say cheese!');
+    await page.screenshot({ path: './screenshot.png' });
+
+    return 'Cheese!';
   }
 }
