@@ -46,19 +46,9 @@ export class PuppeteerController {
 
     while (hasNextPage) {
       while (!isEndOfScroll) {
-        await page.evaluate(() => {
-          const scrollableElement = document.querySelector(
-            '#_pcmap_list_scroll_container',
-          );
-          if (scrollableElement) {
-            scrollableElement.scrollTop = scrollableElement.scrollHeight;
-          }
-        });
-
-        await this.delay(1000);
-
-        const listsBeforeScroll = await page.$$(
+        const previousListLength = await page.$$eval(
           '#_pcmap_list_scroll_container > ul > li',
+          (lists) => lists.length,
         );
 
         await page.evaluate(() => {
@@ -72,11 +62,12 @@ export class PuppeteerController {
 
         await this.delay(1000);
 
-        const listsAfterScroll = await page.$$(
+        const currentListLength = await page.$$eval(
           '#_pcmap_list_scroll_container > ul > li',
+          (lists) => lists.length,
         );
 
-        if (listsBeforeScroll.length === listsAfterScroll.length) {
+        if (previousListLength === currentListLength) {
           isEndOfScroll = true;
         }
       }
@@ -159,19 +150,9 @@ export class PuppeteerController {
 
     while (hasNextPage) {
       while (!isEndOfScroll) {
-        await page.evaluate(() => {
-          const scrollableElement = document.querySelector(
-            '#_pcmap_list_scroll_container',
-          );
-          if (scrollableElement) {
-            scrollableElement.scrollTop = scrollableElement.scrollHeight;
-          }
-        });
-
-        await this.delay(1000);
-
-        const listsBeforeScroll = await page.$$(
+        const previousListLength = await page.$$eval(
           '#_pcmap_list_scroll_container > ul > li',
+          (lists) => lists.length,
         );
 
         await page.evaluate(() => {
@@ -185,11 +166,12 @@ export class PuppeteerController {
 
         await this.delay(1000);
 
-        const listsAfterScroll = await page.$$(
+        const currentListLength = await page.$$eval(
           '#_pcmap_list_scroll_container > ul > li',
+          (lists) => lists.length,
         );
 
-        if (listsBeforeScroll.length === listsAfterScroll.length) {
+        if (previousListLength === currentListLength) {
           isEndOfScroll = true;
         }
       }
@@ -419,19 +401,9 @@ export class PuppeteerController {
       while (hasNextPage) {
         // 스크롤하는 while문
         while (!isEndOfScroll) {
-          await page.evaluate(() => {
-            const scrollableElement = document.querySelector(
-              '#_pcmap_list_scroll_container',
-            );
-            if (scrollableElement) {
-              scrollableElement.scrollTop = scrollableElement.scrollHeight;
-            }
-          });
-
-          await this.delay(1000);
-
-          const listsBeforeScroll = await page.$$(
+          const previousListLength = await page.$$eval(
             '#_pcmap_list_scroll_container > ul > li',
+            (lists) => lists.length,
           );
 
           await page.evaluate(() => {
@@ -445,11 +417,12 @@ export class PuppeteerController {
 
           await this.delay(1000);
 
-          const listsAfterScroll = await page.$$(
+          const currentListLength = await page.$$eval(
             '#_pcmap_list_scroll_container > ul > li',
+            (lists) => lists.length,
           );
 
-          if (listsBeforeScroll.length === listsAfterScroll.length) {
+          if (previousListLength === currentListLength) {
             isEndOfScroll = true;
           }
         }
