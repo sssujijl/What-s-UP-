@@ -60,7 +60,7 @@ export class PuppeteerController {
           }
         });
 
-        await this.delay(1000);
+        await page.waitForNetworkIdle();
 
         const currentListLength = await page.$$eval(
           '#_pcmap_list_scroll_container > ul > li',
@@ -155,7 +155,7 @@ export class PuppeteerController {
           }
         });
 
-        await this.delay(1000);
+        await page.waitForNetworkIdle();
 
         const currentListLength = await page.$$eval(
           '#_pcmap_list_scroll_container > ul > li',
@@ -406,7 +406,7 @@ export class PuppeteerController {
             }
           });
 
-          await this.delay(1000);
+          await page.waitForNetworkIdle();
 
           const currentListLength = await page.$$eval(
             '#_pcmap_list_scroll_container > ul > li',
