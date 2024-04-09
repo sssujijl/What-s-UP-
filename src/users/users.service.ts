@@ -14,6 +14,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
+    // private readonly snsService: SnsService
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -123,6 +124,16 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException('해당 닉네임의 유저를 찾을 수 없습니다.');
+    }
+
+    return user;
+  }
+
+  async socialLogin(req: any, res: any) {
+    let user = await this.userRepository.findOneBy({ email: req.user.email });
+
+    if (!user) {
+      user = await this.userRepository.save(req.user);
     }
 
     return user;

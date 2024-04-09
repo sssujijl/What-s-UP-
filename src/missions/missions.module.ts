@@ -7,12 +7,24 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { PlacesModule } from 'src/places/places.module';
 import { Place } from 'src/places/entities/place.entity';
 import { ResStatus } from 'src/reservations/entities/resStatus.entity';
+import * as AWS from 'aws-sdk';
+import dotenv from 'dotenv';
+import { ProducerModule } from 'src/producer/producer.module';
+
+dotenv.config();
+
+AWS.config.update({
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.ACCESS_KEY_ID,
+  secretAccessKey: process.env.SECRET_ACCESS_KEY,
+});
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Mission, Place, ResStatus]),
     ScheduleModule.forRoot(),
-    PlacesModule
+    PlacesModule,
+    ProducerModule
   ],
   controllers: [MissionsController],
   providers: [MissionsService],

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Delete, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete, Res, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { validate } from 'class-validator';
 import { SignupDto } from './dto/signup.dto';
@@ -110,5 +110,62 @@ export class UsersController {
     } catch (err) {
       return { message: `${err}` }
     }
+  }
+
+  @UseGuards(AuthGuard("google"))
+  @Get("/signin/google")
+	async loginGoogle(
+    @Req() req: any,
+    @Res() res: any	
+  ) {
+    const user = await this.usersService.socialLogin(req, res);
+
+    await this.authService.createTokens(res, user.id);
+
+    return res.json({ message: "로그인이 완료되었습니다." });
+  }
+
+  @UseGuards(AuthGuard("google"))
+  @Get('/callback/google')
+  async googleCallback(@Req() req: any, @Res() res: any) {
+    res.redirect('/users')
+  }
+
+  @UseGuards(AuthGuard("naver"))
+  @Get('/signin/naver')
+  async signinNaver(
+    @Req() req: any,
+    @Res() res: any	
+  ) {
+    try {
+      const user = await this.usersService.socialLogin(req, res);
+      await this.authService.createTokens(res, user.id);
+  
+      return res.json({ message: "로그인이 완료되었습니다." });
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  @UseGuards(AuthGuard("naver"))
+  @Get('/callback/naver')
+  async naverCallback(@Req() req: any, @Res() res: any) {
+    res.redirect('/users')
+  }
+
+  @UseGuards(AuthGuard("kakao"))
+  @Get('/signin/kakao')
+  async signinKakao() {
+    try {
+      return;
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  @UseGuards(AuthGuard("kakao"))
+  @Get('/callback/kakao')
+  async kakaoCallback(@Req() req: any, @Res() res: any) {
+    res.redirect('/users')
   }
 }

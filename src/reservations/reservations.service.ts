@@ -11,8 +11,6 @@ import { Status } from './types/reservation.status.type';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectRedis } from '@nestjs-modules/ioredis';
-import { Redis } from 'ioredis';
 
 @Injectable()
 export class ReservationsService {
@@ -23,7 +21,6 @@ export class ReservationsService {
     private readonly menuService: MenusService,
     private readonly pointService: PointsService,
     @InjectQueue('reservationQueue') private reservationQueu: Queue,
-    @InjectRedis() private readonly redis: Redis
   ) {}
 
   async findReservationsByUserId(userId: number) {

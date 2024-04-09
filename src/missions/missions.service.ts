@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Mission } from './entities/mission.entity';
 import { DataSource, Repository } from 'typeorm';
@@ -8,9 +8,11 @@ import { Time } from './types/mission_time.type';
 import { PlacesService } from 'src/places/places.service';
 import { Place } from 'src/places/entities/place.entity';
 import { ResStatus } from 'src/reservations/entities/resStatus.entity';
+import { MessageProducer } from 'src/producer/producer.service';
 
 @Injectable()
 export class MissionsService {
+
   constructor(
     @InjectRepository(Mission)
     private readonly missionRepository: Repository<Mission>,
@@ -19,11 +21,19 @@ export class MissionsService {
     @InjectRepository(ResStatus)
     private readonly resStatusRepository: Repository<ResStatus>,
     private dataSource: DataSource,
-    private placeService: PlacesService,
+    private readonly placeService: PlacesService,
+    private readonly messageProducer: MessageProducer
   ) {}
 
   async findMission(id: number) {
-    return await this.missionRepository.findOneBy({ id });
+    const mission =  await this.missionRepository.findOneBy({ id });
+
+    if (!mission) {
+      throw new NotFoundException('해당 미션을 찾을 수 없습니다.');
+    }
+
+    await this.messageProducer.sendMessage(`[${mission.date}] 미션이 생성되었습니다!!`);
+    return mission;
   }
 
   // 10시 또는 15시에 랜덤으로 스케줄링 시작
@@ -60,7 +70,11 @@ export class MissionsService {
       
       const resStatusIds = await this.checkAndRepeat(selectedPlaces, resStatus, mission);
 
-      return await queryRunner.manager.update(ResStatus, resStatusIds, {missionId: mission.id});
+      await queryRunner.manager.update(ResStatus, resStatusIds, {missionId: mission.id});
+
+      await queryRunner.commitTransaction();
+
+      return mission;
     } catch (err) {
       return { message: `${err}` };
     }
@@ -69,8 +83,8 @@ export class MissionsService {
   // 장소별 mission 인원수에 맞는 예약가능상태 확인, 찾을 때까지 반복
   async checkAndRepeat(selectedPlaces: any, resStatus: ResStatus[], mission: Mission) {
     const { reSearch, availableResStatusIds } = await this.checkResStatus(
-      selectedPlaces, 
-      resStatus, 
+      selectedPlaces,
+      resStatus,
       mission.capacity
     );
 

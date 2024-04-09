@@ -1,6 +1,6 @@
 import { PickType } from '@nestjs/swagger';
 import { User } from '../entities/user.entity';
-import { IsDate, IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsDate, IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { Gender } from '../types/gender.types';
 
 export class SignupDto extends PickType(User, [
@@ -11,6 +11,7 @@ export class SignupDto extends PickType(User, [
   'gender',
   'phone',
   'nickName',
+  'smsConsent'
 ]) {
   /**
    * 이메일
@@ -75,4 +76,12 @@ export class SignupDto extends PickType(User, [
   @IsNotEmpty({ message: '성별을 선택해주세요.' })
   @IsEnum(Gender)
   readonly gender: Gender;
+
+  /**
+   * sms 발송여부
+   * @example 'true'
+   */
+  @IsNotEmpty({ message: '메세지 수신여부를 선택해주세요.' })
+  @IsBoolean()
+  readonly smsConsent: boolean;
 }
