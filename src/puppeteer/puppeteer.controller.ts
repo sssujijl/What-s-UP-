@@ -46,19 +46,9 @@ export class PuppeteerController {
 
     while (hasNextPage) {
       while (!isEndOfScroll) {
-        await page.evaluate(() => {
-          const scrollableElement = document.querySelector(
-            '#_pcmap_list_scroll_container',
-          );
-          if (scrollableElement) {
-            scrollableElement.scrollTop = scrollableElement.scrollHeight;
-          }
-        });
-
-        await this.delay(1000);
-
-        const listsBeforeScroll = await page.$$(
+        const previousListLength = await page.$$eval(
           '#_pcmap_list_scroll_container > ul > li',
+          (lists) => lists.length,
         );
 
         await page.evaluate(() => {
@@ -70,25 +60,17 @@ export class PuppeteerController {
           }
         });
 
-        await this.delay(1000);
+        await page.waitForNetworkIdle();
 
-        const listsAfterScroll = await page.$$(
+        const currentListLength = await page.$$eval(
           '#_pcmap_list_scroll_container > ul > li',
+          (lists) => lists.length,
         );
 
-        if (listsBeforeScroll.length === listsAfterScroll.length) {
+        if (previousListLength === currentListLength) {
           isEndOfScroll = true;
         }
       }
-
-      await page.evaluate(() => {
-        const scrollableElement = document.querySelector(
-          '#_pcmap_list_scroll_container',
-        );
-        if (scrollableElement) {
-          scrollableElement.scrollTop = scrollableElement.scrollHeight;
-        }
-      });
 
       const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
 
@@ -116,8 +98,8 @@ export class PuppeteerController {
             (span) => span.textContent,
           );
           if (buttonText === '다음페이지') {
-            await Promise.all([nextButton.click()]);
-            await this.delay(1000);
+            await nextButton.click();
+            await page.waitForNetworkIdle();
             pageIndex++;
           }
         }
@@ -145,7 +127,7 @@ export class PuppeteerController {
     const browser = await this.puppeteerService.getBrowserInstance();
     const page = await browser.newPage();
 
-    const gu = '서울 강남구';
+    const gu = '서울 종로구';
 
     const restaurants = [];
 
@@ -159,19 +141,9 @@ export class PuppeteerController {
 
     while (hasNextPage) {
       while (!isEndOfScroll) {
-        await page.evaluate(() => {
-          const scrollableElement = document.querySelector(
-            '#_pcmap_list_scroll_container',
-          );
-          if (scrollableElement) {
-            scrollableElement.scrollTop = scrollableElement.scrollHeight;
-          }
-        });
-
-        await this.delay(1000);
-
-        const listsBeforeScroll = await page.$$(
+        const previousListLength = await page.$$eval(
           '#_pcmap_list_scroll_container > ul > li',
+          (lists) => lists.length,
         );
 
         await page.evaluate(() => {
@@ -183,13 +155,14 @@ export class PuppeteerController {
           }
         });
 
-        await this.delay(1000);
+        await page.waitForNetworkIdle();
 
-        const listsAfterScroll = await page.$$(
+        const currentListLength = await page.$$eval(
           '#_pcmap_list_scroll_container > ul > li',
+          (lists) => lists.length,
         );
 
-        if (listsBeforeScroll.length === listsAfterScroll.length) {
+        if (previousListLength === currentListLength) {
           isEndOfScroll = true;
         }
       }
@@ -232,8 +205,8 @@ export class PuppeteerController {
             (span) => span.textContent,
           );
           if (buttonText === '다음페이지') {
-            await Promise.all([nextButton.click()]);
-            await this.delay(1000);
+            await nextButton.click();
+            await page.waitForNetworkIdle();
             pageIndex++;
           }
         }
@@ -271,13 +244,13 @@ export class PuppeteerController {
           roadAddress: data.roadAddress,
           mapx: data.mapx,
           mapy: data.mapy,
+          hasMenu: true,
         };
         const newRestaurant =
           await this.puppeteerService.createRestaurant(restaurantData);
         savedPlaces.push(newRestaurant);
       } catch (error) {
-        console.error('Error occurred while fetching additional info:', error);
-        break;
+        console.error('오류 발생!:', error);
       }
     }
 
@@ -287,12 +260,12 @@ export class PuppeteerController {
   }
 
   /**
-   * 스크래핑 실험 - 네이버 지도
+   * 스크래핑 실험 - 통합
    * 현재 상태: 구 정보가 저장된 임의의 배열로 스크래핑한다.
    * @returns
    */
-  @Get('/map')
-  async getGu(): Promise<string[]> {
+  @Get('/scrap')
+  async getGu(): Promise<string> {
     const browser = await this.puppeteerService.getBrowserInstance();
     const page = await browser.newPage();
 
@@ -415,21 +388,13 @@ export class PuppeteerController {
       let isEndOfScroll = false;
       let pageIndex = 1;
 
+      // 페이지 넘기는 while문
       while (hasNextPage) {
+        // 스크롤하는 while문
         while (!isEndOfScroll) {
-          await page.evaluate(() => {
-            const scrollableElement = document.querySelector(
-              '#_pcmap_list_scroll_container',
-            );
-            if (scrollableElement) {
-              scrollableElement.scrollTop = scrollableElement.scrollHeight;
-            }
-          });
-
-          await this.delay(1000);
-
-          const listsBeforeScroll = await page.$$(
+          const previousListLength = await page.$$eval(
             '#_pcmap_list_scroll_container > ul > li',
+            (lists) => lists.length,
           );
 
           await page.evaluate(() => {
@@ -441,25 +406,17 @@ export class PuppeteerController {
             }
           });
 
-          await this.delay(1000);
+          await page.waitForNetworkIdle();
 
-          const listsAfterScroll = await page.$$(
+          const currentListLength = await page.$$eval(
             '#_pcmap_list_scroll_container > ul > li',
+            (lists) => lists.length,
           );
 
-          if (listsBeforeScroll.length === listsAfterScroll.length) {
+          if (previousListLength === currentListLength) {
             isEndOfScroll = true;
           }
         }
-
-        await page.evaluate(() => {
-          const scrollableElement = document.querySelector(
-            '#_pcmap_list_scroll_container',
-          );
-          if (scrollableElement) {
-            scrollableElement.scrollTop = scrollableElement.scrollHeight;
-          }
-        });
 
         const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
 
@@ -476,7 +433,7 @@ export class PuppeteerController {
             const categoryId = (
               await this.puppeteerService.saveCategoryIfNotExists(category)
             ).id;
-            restaurants.push({ name, categoryId });
+            restaurants.push({ gu, name, categoryId });
           }),
         );
         console.log(pageIndex, restaurants[restaurants.length - 1]);
@@ -490,8 +447,8 @@ export class PuppeteerController {
               (span) => span.textContent,
             );
             if (buttonText === '다음페이지') {
-              await Promise.all([nextButton.click()]);
-              await this.delay(1000);
+              await nextButton.click();
+              await page.waitForNetworkIdle();
               pageIndex++;
             }
           }
@@ -504,16 +461,148 @@ export class PuppeteerController {
       }
     }
 
+    const savedPlaces = [];
+    for (const restaurant of restaurants) {
+      const query = encodeURIComponent(restaurant.gu + ' ' + restaurant.name);
+
+      try {
+        await this.delay(100);
+        const response = await axios.get(
+          `https://openapi.naver.com/v1/search/local?query=${query}`,
+          {
+            headers: {
+              'X-Naver-Client-Id': process.env.NAVER_CLIENT_ID,
+              'X-Naver-Client-Secret': process.env.NAVER_CLIENT_SECRET,
+            },
+          },
+        );
+
+        const data = response.data.items[0];
+
+        if (!data) {
+          console.log('넘어갑니다.');
+          continue;
+        }
+        const restaurantData = {
+          title: restaurant.name,
+          foodCategoryId: restaurant.categoryId,
+          link: data.link,
+          description: data.description,
+          address: data.address,
+          roadAddress: data.roadAddress,
+          mapx: data.mapx,
+          mapy: data.mapy,
+          hasMenu: false,
+        };
+
+        // 메뉴 상세주소로 가기 위해 코드를 받아오는 작업
+        await page.goto(
+          `https://search.naver.com/search.naver?where=nexearch&sm=top_sly.hst&fbm=0&acr=3&ie=utf8&query=${query}`,
+        );
+
+        const storeCode = await page.evaluate(() => {
+          const aTag = document.querySelector('#_title > a');
+          if (aTag) {
+            const href = aTag.getAttribute('href');
+            const match = href.match(/place\/(\d+)\?/);
+            return match ? match[1] : null;
+          }
+
+          const element = document.querySelector(
+            'li[data-cbm-doc-id], li[data-loc_plc-doc-id]',
+          );
+          if (element) {
+            return (
+              element.getAttribute('data-cbm-doc-id') ||
+              element.getAttribute('data-loc_plc-doc-id')
+            );
+          }
+
+          return null;
+        });
+
+        const menus = [];
+
+        if (storeCode) {
+          await page.goto(
+            `https://pcmap.place.naver.com/restaurant/${storeCode}/menu/list`,
+          );
+
+          // 더보기 버튼 클릭
+          let button = await page.$('a.fvwqf');
+          while (button) {
+            await button.click();
+            button = await page.$('a.fvwqf');
+            console.log('click!');
+          }
+
+          const menuContainers = await page.$$('.E2jtL');
+
+          if (menuContainers.length !== 0) {
+            restaurantData.hasMenu = true;
+          }
+
+          for (const container of menuContainers) {
+            const menuName = await container
+              .$eval('.lPzHi', (element) => element.textContent)
+              .catch(() => null);
+            const menuImage = await container
+              .$eval('.K0PDV', (element) => {
+                const backgroundImage = window
+                  .getComputedStyle(element)
+                  .getPropertyValue('background-image');
+                return backgroundImage.match(/url\("(.+)"\)/)[1];
+              })
+              .catch(() => null);
+            const menuDescription = await container
+              .$eval('.kPogF', (element) => element.textContent)
+              .catch(() => null);
+            const menuPrice = await container
+              .$eval('.GXS1X', (element) => element.textContent)
+              .catch(() => null);
+
+            menus.push({
+              name: menuName,
+              image: menuImage,
+              description: menuDescription,
+              price: menuPrice,
+            });
+          }
+        }
+
+        const newRestaurant =
+          await this.puppeteerService.createRestaurant(restaurantData);
+        savedPlaces.push(newRestaurant);
+
+        if (menus.length !== 0) {
+          for (const menu of menus) {
+            await this.puppeteerService.createMenu({
+              placeId: newRestaurant.id,
+              name: menu.name,
+              image: menu.image,
+              description: menu.description,
+              price: menu.price,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('오류 발생!:', error);
+        break;
+      }
+    }
+
     await page.close();
     await browser.close();
-    return restaurants;
+
+    // 양이 상당히 많을 것이기 때문에 일단 개수로
+    return savedPlaces.length.toString();
   }
 
   /**
    * api 적용 실험 - 네이버 검색 api
    * @returns
    */
-  @Get('/naver')
+  @Get('/search-api')
   async searchBlog(@Query('query') query: string, @Res() res): Promise<void> {
     const clientId = process.env.NAVER_CLIENT_ID;
     const clientSecret = process.env.NAVER_CLIENT_SECRET;
@@ -537,5 +626,123 @@ export class PuppeteerController {
         console.error('Error occurred while making request:', error);
       }
     }
+  }
+
+  /**
+   * 스크래핑 실험 - 네이버, 네이버 지도
+   * 현재 상태: 가게 이름을 받아 메뉴를 저장한다.
+   * @param Body 가게 이름
+   * @returns
+   */
+  @Post('/menu')
+  @ApiBody({ schema: { example: { name: '서울 강남구 호보식당' } } })
+  async getMenu(@Body('name') name: string): Promise<string[]> {
+    const browser = await this.puppeteerService.getBrowserInstance();
+    const page = await browser.newPage();
+
+    await page.goto(
+      `https://search.naver.com/search.naver?where=nexearch&sm=top_sly.hst&fbm=0&acr=3&ie=utf8&query=${name}`,
+    );
+
+    const storeCode = await page.evaluate(() => {
+      const aTag = document.querySelector('#_title > a');
+      if (aTag) {
+        const href = aTag.getAttribute('href');
+        const match = href.match(/place\/(\d+)\?/);
+        return match ? match[1] : null;
+      }
+
+      const element = document.querySelector(
+        'li[data-cbm-doc-id], li[data-loc_plc-doc-id]',
+      );
+      if (element) {
+        return (
+          element.getAttribute('data-cbm-doc-id') ||
+          element.getAttribute('data-loc_plc-doc-id')
+        );
+      }
+
+      return null;
+    });
+
+    console.log('Say cheese!');
+    await page.screenshot({ path: './screenshot.png' });
+
+    console.log(storeCode);
+    if (storeCode) {
+      await page.goto(
+        `https://pcmap.place.naver.com/restaurant/${storeCode}/menu/list`,
+      );
+
+      // 더보기 버튼 모두 클릭
+      let button = await page.$('a.fvwqf');
+      while (button) {
+        await button.click();
+        button = await page.$('a.fvwqf');
+        console.log('click!');
+      }
+
+      // console.log('Say cheese!');
+      // await page.screenshot({ path: './screenshot.png' });
+
+      const menuContainers = await page.$$('.E2jtL');
+
+      const menus = [];
+
+      for (const container of menuContainers) {
+        const menuName = await container
+          .$eval('.lPzHi', (element) => element.textContent)
+          .catch(() => null);
+        const menuImage = await container
+          .$eval('.K0PDV', (element) => {
+            const backgroundImage = window
+              .getComputedStyle(element)
+              .getPropertyValue('background-image');
+            return backgroundImage.match(/url\("(.+)"\)/)[1];
+          })
+          .catch(() => null);
+        const menuDescription = await container
+          .$eval('.kPogF', (element) => element.textContent)
+          .catch(() => null);
+        const menuPrice = await container
+          .$eval('.GXS1X', (element) => element.textContent)
+          .catch(() => null);
+
+        menus.push({
+          name: menuName,
+          image: menuImage,
+          description: menuDescription,
+          price: menuPrice,
+        });
+      }
+
+      return menus;
+    }
+
+    await browser.close();
+    return [];
+  }
+
+  /**
+   * 스크래핑 실험 - 아이프레임
+   * 목표: 아이프레임 사이를 오가기.
+   * @param Body 지역 정보
+   * @returns
+   */
+  @Post('/iframe')
+  @ApiBody({ schema: { example: { region: '부산 동래구' } } })
+  async frameChange(@Body('region') region: string): Promise<string> {
+    const browser = await this.puppeteerService.getBrowserInstance();
+    const page = await browser.newPage();
+
+    await page.goto(
+      `https://map.naver.com/p/search/${region}%20%EC%9D%8C%EC%8B%9D%EC%A0%90`,
+    );
+
+    await this.delay(1000);
+    console.log('Say cheese!');
+    await page.screenshot({ path: './mapScreenshot.png' });
+
+    return 'Cheese!';
   }
 }

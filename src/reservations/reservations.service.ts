@@ -115,7 +115,8 @@ export class ReservationsService {
     const orders = menus.map((menu) => {
       const quantity = orderMenus[menu.id];
       const price = menu.price;
-      const totalPrice = quantity * price;
+      // 엔티티 변경으로 실행을 위해 임시로 price에 parseInt를 끼웠습니다ㅠㅠ
+      const totalPrice = quantity * parseInt(price);
       const reservationId = 0;
       totalAmount += totalPrice;
       return {

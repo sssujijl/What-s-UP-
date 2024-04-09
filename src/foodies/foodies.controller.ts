@@ -6,14 +6,20 @@ import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { validate } from 'class-validator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Foodies')
 @Controller('foodies')
 export class FoodiesController {
   constructor(
     private readonly foodiesService: FoodiesService
   ) { }
 
-  // 게시물 생성
+  /**
+   * 맛집인 글 등록
+   * @param createFoodieDto
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Post()
   async createFoodie(

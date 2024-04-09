@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as puppeteer from 'puppeteer';
+import { Menu } from 'src/menus/entities/menu.entity';
 import { FoodCategory } from 'src/places/entities/foodCategorys.entity';
 import { Place } from 'src/places/entities/place.entity';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class PuppeteerService {
   constructor(
     @InjectRepository(FoodCategory)
     private readonly foodCategoryRepository: Repository<FoodCategory>,
+    @InjectRepository(Menu)
+    private readonly menuRepository: Repository<Menu>,
     @InjectRepository(Place)
     private readonly placeRepository: Repository<Place>,
   ) {}
@@ -27,38 +30,47 @@ export class PuppeteerService {
     return existingCategory;
   }
 
-  async createRestaurant(restaurantData: any) {
-    const {
-      title,
-      foodCategoryId,
-      link,
-      description,
-      address,
-      roadAddress,
-      mapx,
-      mapy,
-    } = restaurantData;
-
+  async createRestaurant(restaurantData: {
+    title: string;
+    foodCategoryId: number;
+    link: string;
+    description: string;
+    address: string;
+    roadAddress: string;
+    mapx: number;
+    mapy: number;
+    hasMenu: boolean;
+  }) {
     const existingRestaurant = await this.placeRepository.findOne({
-      where: { mapx, mapy },
+      where: { mapx: restaurantData.mapx, mapy: restaurantData.mapy },
     });
 
     if (existingRestaurant) {
       return existingRestaurant;
     }
 
-    const newRestaurant = this.placeRepository.create({
-      title,
-      foodCategoryId,
-      link,
-      description,
-      address,
-      roadAddress,
-      mapx,
-      mapy,
-    });
+    const newRestaurant = this.placeRepository.create(restaurantData);
     await this.placeRepository.save(newRestaurant);
     return newRestaurant;
+  }
+
+  async createMenu(menuData: {
+    placeId: number;
+    name: string;
+    image: string;
+    description: string;
+    price: string;
+  }) {
+    const existingMenu = await this.menuRepository.findOne({
+      where: { placeId: menuData.placeId, name: menuData.name },
+    });
+
+    if (existingMenu) {
+      return existingMenu;
+    }
+
+    const newMenu = this.menuRepository.create(menuData);
+    return await this.menuRepository.save(newMenu);
   }
 
   private browser: puppeteer.Browser;
