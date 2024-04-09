@@ -1,5 +1,7 @@
+import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Redis } from 'ioredis';
 import * as puppeteer from 'puppeteer';
 import { Menu } from 'src/menus/entities/menu.entity';
 import { FoodCategory } from 'src/places/entities/foodCategorys.entity';
@@ -15,6 +17,7 @@ export class PuppeteerService {
     private readonly menuRepository: Repository<Menu>,
     @InjectRepository(Place)
     private readonly placeRepository: Repository<Place>,
+    @InjectRedis() private readonly redis: Redis
   ) {}
 
   async saveCategoryIfNotExists(category: string): Promise<FoodCategory> {
@@ -51,7 +54,20 @@ export class PuppeteerService {
 
     const newRestaurant = this.placeRepository.create(restaurantData);
     await this.placeRepository.save(newRestaurant);
+
+    await this.savedRestaurantId(newRestaurant);
+
     return newRestaurant;
+  }
+
+  async savedRestaurantId(restaurant: Place) {
+    const dong = restaurant.address.match(/\s(\S+동)\s/)[1];
+
+    if (!dong) {
+      return;
+    }
+
+    return await this.redis.sadd(`PlaceIds: ${dong}`, restaurant.id);
   }
 
   async createMenu(menuData: {

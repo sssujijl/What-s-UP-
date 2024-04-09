@@ -8,9 +8,9 @@ import { User } from 'src/users/entities/user.entity';
 export class MissionsController {
   constructor(private readonly missionsService: MissionsService) {}
 
-  // @Get(':id')
-  // async test(@Param('id') id: number) {
-  //   try {
+  @Get()
+  async test(@Param('id') id: number) {
+    try {
       // const placeIds = await this.missionsService.findByAddress();
       // console.log(placeIds);
       // return placeIds;
@@ -25,10 +25,19 @@ export class MissionsController {
       // const resStatusId = await this.missionsService.checkAndRepeat(placeIds, resStatus, mission);
       // const test = resStatusId.flat();
       // return test
-  //   } catch (err) {
-  //     return { message: `${err}` }
-  //   }
-  // }
+      return await this.missionsService.test();
+      // const placesByDong = await this.missionsService.placesByDong();
+      // const selectedPlaceIds = await this.missionsService.selectedPlaceIds(placesByDong);
+      // const resStatusIds = await this.missionsService.checkAndRepeat(placesByDong, selectedPlaceIds, mission, 0);
+      // return resStatusIds;
+      // const resStatusId = await this.missionsService.findResStatus(Object.values(selectedPlaceIds), mission);
+      // const check = await this.missionsService.checkResStatus(selectedPlaceIds, resStatusId, mission.capacity);
+      // return check;
+      // return await this.missionsService.createRandomMissions(); 
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
 
   @UseGuards(AuthGuard('jwt'))
   @Get('/:missionId')
