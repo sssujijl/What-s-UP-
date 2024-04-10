@@ -45,6 +45,7 @@ import { PuppeteerModule } from './puppeteer/puppeteer.module';
 import { ResStatus } from './reservations/entities/resStatus.entity';
 import { BullModule } from '@nestjs/bull';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { ClovaocrModule } from './clovaocr/clovaocr.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -133,6 +134,7 @@ const typeOrmModuleOptions = {
     ReviewsModule,
     FollowsModule,
     PuppeteerModule,
+    ClovaocrModule,
   ],
   controllers: [],
   providers: [],
