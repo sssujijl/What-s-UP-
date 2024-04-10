@@ -1,11 +1,20 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { IsBoolean, IsNumber, IsString  } from "class-validator";
-import { Menu } from "src/menus/entities/menu.entity";
-import { Coupon } from "src/coupons/entities/coupon.entity";
-import { FoodCategory } from "./foodCategorys.entity";
-import { ResStatus } from "src/reservations/entities/resStatus.entity";
-import { Saved_Place } from "src/place-lists/entities/savedPlaces.entity";
-
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { IsBoolean, IsNumber, IsString } from 'class-validator';
+import { Menu } from 'src/menus/entities/menu.entity';
+import { Coupon } from 'src/coupons/entities/coupon.entity';
+import { FoodCategory } from './foodCategorys.entity';
+import { ResStatus } from 'src/reservations/entities/resStatus.entity';
+import { Saved_Place } from 'src/place-lists/entities/savedPlaces.entity';
 
 @Entity({ name: 'places' })
 export class Place {
@@ -48,7 +57,7 @@ export class Place {
   mapy: number;
 
   @IsBoolean()
-  @Column({ type: 'boolean', nullable: false, default: true })
+  @Column({ type: 'boolean', nullable: false })
   hasMenu: boolean;
 
   @CreateDateColumn()
@@ -63,7 +72,9 @@ export class Place {
   @OneToMany(() => Menu, (menu) => menu.place, { cascade: true })
   menus: Menu[];
 
-  @OneToMany(() => Saved_Place, (savedPlace) => savedPlace.place, { cascade: true })
+  @OneToMany(() => Saved_Place, (savedPlace) => savedPlace.place, {
+    cascade: true,
+  })
   savedPlaces: Saved_Place[];
 
   @OneToMany(() => Coupon, (coupon) => coupon.place, { cascade: true })
