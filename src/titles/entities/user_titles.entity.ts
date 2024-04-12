@@ -1,5 +1,5 @@
 import { User } from "src/users/entities/user.entity";
-import { CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { Title } from "./title.entity";
 
 @Entity({ name: "user_titles" })
@@ -9,6 +9,9 @@ export class User_Title {
 
     @PrimaryColumn({ type: 'int', nullable: false })
     titleId: number;
+
+    @Column({ type: 'int', nullable: false, default: 1 })
+    count: number;
 
     @CreateDateColumn()
     createdAt: Date;

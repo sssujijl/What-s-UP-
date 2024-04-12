@@ -1,14 +1,18 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Post } from '@nestjs/common';
+import { PlacesService } from 'src/places/places.service';
 import { ClovaocrService } from './clovaocr.service';
 
 @Controller('clovaocr')
 export class ClovaocrController {
     constructor(
-        private readonly clovaocrService: ClovaocrService
+        private readonly clovaocrService: ClovaocrService,
+        private readonly placeService: PlacesService
     ) {}
 
     @Post()
     async test() {
-        return await this.clovaocrService.requestWithFile();
+        const text = await this.clovaocrService.requestWithFile();
+        const place = await this.placeService.findPlaceById(87);
+        return await this.clovaocrService.test2(text, place);
     }
 }

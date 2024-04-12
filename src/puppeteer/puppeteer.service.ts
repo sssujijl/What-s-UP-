@@ -17,8 +17,7 @@ export class PuppeteerService {
     private readonly menuRepository: Repository<Menu>,
     @InjectRepository(Place)
     private readonly placeRepository: Repository<Place>,
-    @InjectRepository(Title)
-    private readonly titleRepository: Repository<Title>,
+    @InjectRepository(Title) private readonly titleRepository: Repository<Title>
   ) {}
 
   async saveCategoryIfNotExists(category: string): Promise<FoodCategory> {
@@ -31,7 +30,13 @@ export class PuppeteerService {
       });
       const foodCategory = await this.foodCategoryRepository.save(newCategory);
 
-
+      for (let i=0; i<7; i++) {
+        const newTitle = this.titleRepository.create({
+            foodCategoryId: foodCategory.id,
+            level: i,
+        });
+        await this.titleRepository.save(newTitle);
+      }
 
       return foodCategory;
     }
