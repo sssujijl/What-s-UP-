@@ -11,6 +11,15 @@ export class TitlesService {
     @InjectRepository(User_Title) private readonly userTitleRepository: Repository<User_Title>
   ) {}
 
+  // 유저에게 생성한 칭호 부여
+  // 1. 푸드 카테고리에 있는 칭호를 가져와서
+  // 2. 유저가 리뷰를 작성하면
+  // 3. 해당 음식 카테고리의 칭호를 얻고 카운트 +1 해준다
+  async createUserTitle(userId: number, titleId: number) {
+    const userTitle = await this.createUserTitle()
+  }
+
+
   async findUserTitle(userId: number, titleId: number) {
     // Foodie 조건 Title -> 이하는 답변달수없음
     const title = await this.findTitle(titleId);
@@ -47,7 +56,6 @@ export class TitlesService {
     if (!titles) {
       throw new NotFoundException('해당 카테고리별 칭호를 찾을 수 없습니다.');
     }
-
     return titles;
-  }
+  } . git test
 }
