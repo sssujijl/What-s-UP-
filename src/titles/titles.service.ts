@@ -57,5 +57,5 @@ export class TitlesService {
       throw new NotFoundException('해당 카테고리별 칭호를 찾을 수 없습니다.');
     }
     return titles;
-  } . git test
+  }
 }
