@@ -3,7 +3,6 @@ import axios from 'axios';
 import * as fs from 'fs';
 import FormData from 'form-data';
 import { Place } from 'src/places/entities/place.entity';
-import dotenv from 'dotenv'
 
 @Injectable()
 export class ClovaocrService {
