@@ -26,6 +26,9 @@ export class User {
     @Column({ type: 'varchar', nullable: false })
     email: string;
 
+    @Column({ type: 'boolean', default: false })
+    isVerified: boolean
+
     @Column({ type: 'varchar', nullable: true })
     profileImage: string;
 

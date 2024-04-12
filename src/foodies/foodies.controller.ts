@@ -16,10 +16,11 @@ export class FoodiesController {
   ) { }
 
   /**
-   * 맛집인 글 등록
+   * 맛집인 등록
    * @param createFoodieDto
    * @returns
    */
+  // 게시물 생성
   @UseGuards(AuthGuard('jwt'))
   @Post()
   async createFoodie(
@@ -36,6 +37,10 @@ export class FoodiesController {
     }
   }
 
+  /**
+   * 밥친구 목록 조회
+   * @returns
+   */
   // 게시물 전체조회
   @Get()
   async findAllFoodies() {
@@ -46,6 +51,11 @@ export class FoodiesController {
     }
   }
 
+  /**
+   * 밥친구 상세 조회
+   * @param foodieId
+   * @returns
+   */
   // 게시물 상세조회
   @Get('/:foodieId')
   async findFoodie(
@@ -60,6 +70,12 @@ export class FoodiesController {
     }
   }
 
+  /**
+   * 밥친구 수정
+   * @param foodieId
+   * @param updateFoodieDto
+   * @returns
+   */
   // 게시물 수정
   @UseGuards(AuthGuard('jwt'))
   @Patch('/:foodieId')
@@ -75,6 +91,11 @@ export class FoodiesController {
     }
   }
 
+  /**
+   * 보드 삭제
+   * @param foodieId
+   * @returns
+   */
   // 게시물 삭제
   @UseGuards(AuthGuard('jwt'))
   @Delete('/:foodieId')

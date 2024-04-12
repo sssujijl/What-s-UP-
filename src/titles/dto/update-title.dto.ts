@@ -1,4 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateTitleDto } from './create-title.dto';
+import { PickType } from '@nestjs/mapped-types';
+import { Title } from '../entities/title.entity';
 
-export class UpdateTitleDto extends PartialType(CreateTitleDto) {}
+export class UpdateTitleDto extends PickType(Title,[
+    'level',
+    'foodCategoryId'
+]){}

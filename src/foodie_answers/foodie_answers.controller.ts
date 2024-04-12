@@ -7,7 +7,9 @@ import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
 import { validate } from 'class-validator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Foodie_Answer')
 @Controller('/foodie/:foodieId/foodie_answer')
 export class FoodieAnswersController {
   constructor(
@@ -15,6 +17,11 @@ export class FoodieAnswersController {
     private readonly foodiesService: FoodiesService
   ) { }
 
+  /**
+   * 맛집인 답글 등록
+   * @param createFoodieAnswerDto
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Post()
   async createAnswer(
@@ -37,6 +44,10 @@ export class FoodieAnswersController {
     }
   }
 
+  /**
+   * 맛집인 답글 목록 조회
+   * @returns
+   */
   @Get()
   async findAllAnswers(
     @Param("foodieId") foodieId: number
@@ -50,6 +61,13 @@ export class FoodieAnswersController {
     }
   }
 
+  /**
+   * 밥친구 수정
+   * @param foodieId
+   * @param foodieAnswerId
+   * @param updateFoodieAnswerDto
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Patch('/:foodieAnswerId')
   async updateAnswer(
@@ -69,6 +87,12 @@ export class FoodieAnswersController {
     }
   }
 
+  /**
+   * 보드 삭제
+   * @param foodieId
+   * @param foodieAnswerId
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Delete('/:foodieAnswerId')
   async deleteAnswer(

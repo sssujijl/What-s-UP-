@@ -3,9 +3,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Redis } from 'ioredis';
 import * as puppeteer from 'puppeteer';
+import { CreateMenuDto } from 'src/menus/dto/create-menu.dto';
 import { Menu } from 'src/menus/entities/menu.entity';
 import { FoodCategory } from 'src/places/entities/foodCategorys.entity';
 import { Place } from 'src/places/entities/place.entity';
+import { Title } from 'src/titles/entities/title.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -17,7 +19,8 @@ export class PuppeteerService {
     private readonly menuRepository: Repository<Menu>,
     @InjectRepository(Place)
     private readonly placeRepository: Repository<Place>,
-    @InjectRedis() private readonly redis: Redis
+    @InjectRedis() private readonly redis: Redis,
+    @InjectRepository(Title) private readonly titleRepository: Repository<Title>
   ) {}
 
   async saveCategoryIfNotExists(category: string): Promise<FoodCategory> {
@@ -28,7 +31,17 @@ export class PuppeteerService {
       const newCategory = this.foodCategoryRepository.create({
         category,
       });
-      return await this.foodCategoryRepository.save(newCategory);
+      const foodCategory = await this.foodCategoryRepository.save(newCategory);
+
+      for (let i=0; i<7; i++) {
+        const newTitle = this.titleRepository.create({
+            foodCategoryId: foodCategory.id,
+            level: i,
+        });
+        await this.titleRepository.save(newTitle);
+      }
+
+      return foodCategory;
     }
     return existingCategory;
   }
@@ -70,22 +83,16 @@ export class PuppeteerService {
     return await this.redis.sadd(`PlaceIds: ${dong}`, restaurant.id);
   }
 
-  async createMenu(menuData: {
-    placeId: number;
-    name: string;
-    image: string;
-    description: string;
-    price: string;
-  }) {
+  async createMenu(createMenuDto: CreateMenuDto) {
     const existingMenu = await this.menuRepository.findOne({
-      where: { placeId: menuData.placeId, name: menuData.name },
+      where: { placeId: createMenuDto.placeId, name: createMenuDto.name },
     });
 
     if (existingMenu) {
       return existingMenu;
     }
 
-    const newMenu = this.menuRepository.create(menuData);
+    const newMenu = this.menuRepository.create(createMenuDto);
     return await this.menuRepository.save(newMenu);
   }
 

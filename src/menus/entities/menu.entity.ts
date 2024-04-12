@@ -20,7 +20,7 @@ export class Menu {
     description: string;
 
     @IsString()
-    @Column({ type: 'varchar', nullable: true })
+    @Column({ type: 'varchar', length: 500, nullable: true })
     images: string;
 
     @IsNumber()

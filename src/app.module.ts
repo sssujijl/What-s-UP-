@@ -49,8 +49,11 @@ import { ProducerModule } from './producer/producer.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-ioredis';
 import dotenv from 'dotenv';
+import { ClovaocrModule } from './clovaocr/clovaocr.module';
 
 dotenv.config();
+
+
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -144,7 +147,8 @@ const typeOrmModuleOptions = {
     ReviewsModule,
     FollowsModule,
     PuppeteerModule,
-    ProducerModule
+    ProducerModule,
+    ClovaocrModule,
   ],
   controllers: [],
   providers: [],
