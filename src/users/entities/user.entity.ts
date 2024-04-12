@@ -52,7 +52,6 @@ export class User {
     @Column({ type: 'varchar', nullable: false })
     nickName: string;
 
-    @IsBoolean()
     @Column({ type: 'boolean', nullable: false, default: true })
     smsConsent: boolean;
 

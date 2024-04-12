@@ -20,7 +20,7 @@ export class ReservationsService {
     private dataSource: DataSource,
     private readonly menuService: MenusService,
     private readonly pointService: PointsService,
-    @InjectQueue('reservationQueue') private reservationQueu: Queue,
+    @InjectQueue('reservationQueue') private reservationQueue: Queue,
   ) {}
 
   async findReservationsByUserId(userId: number) {
@@ -34,7 +34,7 @@ export class ReservationsService {
   }
 
   async addReservationQueue(resStatusId: number, createReservationDto: CreateReservationDto) {
-    const job = await this.reservationQueu.add('reservation', {
+    const job = await this.reservationQueue.add('reservation', {
       resStatusId, createReservationDto
     },
     { removeOnComplete: true, removeOnFail: true }

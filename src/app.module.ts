@@ -46,6 +46,11 @@ import { ResStatus } from './reservations/entities/resStatus.entity';
 import { BullModule } from '@nestjs/bull';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { ProducerModule } from './producer/producer.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-ioredis';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -84,7 +89,7 @@ const typeOrmModuleOptions = {
       Order_Menus
     ],
     synchronize: configService.get('DB_SYNC'),
-    logging: true,
+    logging: true
   }),
   inject: [ConfigService],
 };
@@ -105,15 +110,20 @@ const typeOrmModuleOptions = {
     }),
     BullModule.forRoot({
       redis: {
-        host: 'localhost',
-        port: 6379,
+        host: process.env.REDIS_HOST,
+        port: +process.env.REDIS_PORT,
       },
     }),
     RedisModule.forRootAsync({
       useFactory: () => ({
         type: 'single',
-        url: "redis://127.0.0.1:6379"
+        url: process.env.REDIS_URL
       })
+    }),
+    CacheModule.register({
+      store: redisStore,
+      host: process.env.REDIS_HOST,
+      port: +process.env.REDIS_PORT,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UsersModule,

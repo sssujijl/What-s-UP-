@@ -31,7 +31,7 @@ export class MissionsService {
       throw new NotFoundException('해당 미션을 찾을 수 없습니다.');
     }
 
-    // await this.messageProducer.sendMessage(`[${mission.date}] 미션이 생성되었습니다!!`);
+    await this.messageProducer.sendMessage(`[${mission.date}] 미션이 생성되었습니다!!`);
     return mission;
   }
 
@@ -57,18 +57,16 @@ export class MissionsService {
     // } else {
     //   createMissionDto.time = Time.THREE_PM; // 17 ~ 20시
     // }
-    console.log(createMissionDto);
     return await this.createMission(createMissionDto);
   }
 
   // 스케줄링을 통해서 실행되는 미션 생성 로직
-  async createMission(createMissionDto: CreateMissionDto) {
+  private async createMission(createMissionDto: CreateMissionDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      console.log(createMissionDto);
       const mission = await queryRunner.manager.save(Mission, createMissionDto);
 
       const placesByDong = await this.placesByDong();
@@ -86,7 +84,7 @@ export class MissionsService {
   }
 
   // redis에 저장되어 있는 동별 placeIds 가져오기
-  async placesByDong() {
+  private async placesByDong() {
     const keys = await this.redis.keys('*동*');
 
     const placesByDong: { [key: string]: string[] } = {};
@@ -101,7 +99,7 @@ export class MissionsService {
   }
 
   // 동별로 랜덤한 장소 아이디 선택
-  async selectedPlaceIds(placesByDong: { [key: string]: string[] }) {
+  private async selectedPlaceIds(placesByDong: { [key: string]: string[] }) {
     const selectedPlaces: { [key: string]: number } = {};
 
     for (const dong in placesByDong) {
@@ -117,7 +115,7 @@ export class MissionsService {
   }
 
   // 장소별 mission 인원수에 맞는 예약가능상태 확인, 찾을 때까지 반복
-  async checkAndRepeat(placesByDong: {}, selectedPlaceIds: {}, mission: Mission, count: number) {
+  private async checkAndRepeat(placesByDong: {}, selectedPlaceIds: {}, mission: Mission, count: number) {
     const resStatusId = await this.findResStatus(Object.values(selectedPlaceIds), mission);
     const { reSearch, availableResStatusIds } = await this.checkResStatus(selectedPlaceIds, resStatusId, mission.capacity);
 
@@ -126,6 +124,8 @@ export class MissionsService {
 
       if (count < 5) {
         await this.checkAndRepeat(placesByDong, selectedPlaces, mission, count+1);
+      } else {
+        return resStatusId
       }
     }
 
@@ -133,7 +133,7 @@ export class MissionsService {
   }
 
   // 랜덤으로 장소의 mission.data, time에 맞는 resStatus 찾기
-  async findResStatus(placeIds: number[], mission: Mission) {
+  private async findResStatus(placeIds: number[], mission: Mission) {
     let startTimeHour = '';
     let endTimeHour = '';
     if (mission.time === Time.TEN_AM) {
@@ -154,7 +154,7 @@ export class MissionsService {
   }
 
   // 찾은 resStatus가 mission.capacity보다 적은 동, placeId 걸러내기
-  async checkResStatus(selectedPlaces: any, resStatusList: any[], capacity: number) {
+  private async checkResStatus(selectedPlaces: any, resStatusList: any[], capacity: number) {
     const reSearch = [];
     const availableResStatusIds = [];
 
@@ -293,6 +293,13 @@ export class MissionsService {
 
     return placesByDong;
   }
+
+  random(number: number[]) {
+    const index1 = Math.floor(Math.random() * number.length);
+    const index2 = Math.random() > 0.5 ? Math.floor(Math.random() * number.length) : null;
+    return index2 !== null ? [index1, index2] : [index1];
+  }
+  
 }
 
 function getRandom(a: string | number, b: string | number): string | number {

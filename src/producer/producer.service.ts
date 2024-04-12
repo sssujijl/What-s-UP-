@@ -9,14 +9,16 @@ export class MessageProducer {
     constructor(private readonly sqsService: SqsService) {}
 
     async sendMessage(body: any) {
-
-        const message: any = JSON.stringify(body);
-
         try {
-            await this.sqsService.send(process.env.QUEUE_URL, message);
+            
+            const message: any = JSON.stringify(body);
+
+            await this.sqsService.send(process.env.QUEUE_NAME, {
+                id: 'id',
+                body: message
+            });
         } catch (error) {
             console.log('error in producing image!', error);
         }
-
     }
 }

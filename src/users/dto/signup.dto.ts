@@ -66,7 +66,6 @@ export class SignupDto extends PickType(User, [
    * @example '2024-04-05'
    */
   @IsNotEmpty({ message: '생년월일을 입력해주세요.' })
-  @IsDate()
   readonly birth: Date;
 
   /**
@@ -81,7 +80,5 @@ export class SignupDto extends PickType(User, [
    * sms 발송여부
    * @example 'true'
    */
-  @IsNotEmpty({ message: '메세지 수신여부를 선택해주세요.' })
-  @IsBoolean()
   readonly smsConsent: boolean;
 }
