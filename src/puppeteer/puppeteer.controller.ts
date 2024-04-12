@@ -467,40 +467,11 @@ export class PuppeteerController {
         }
       }
 
-      const savedPlaces = [];
+      // const savedPlaces = [];
       for (const restaurant of restaurants) {
         const query = encodeURIComponent(restaurant.gu + ' ' + restaurant.name);
 
         try {
-          // await this.delay(100);
-          // const response = await axios.get(
-          //   `https://openapi.naver.com/v1/search/local?query=${query}`,
-          //   {
-          //     headers: {
-          //       'X-Naver-Client-Id': process.env.NAVER_CLIENT_ID,
-          //       'X-Naver-Client-Secret': process.env.NAVER_CLIENT_SECRET,
-          //     },
-          //   },
-          // );
-
-          // const data = response.data.items[0];
-
-          // if (!data) {
-          //   console.log('넘어갑니다.');
-          //   continue;
-          // }
-          // const restaurantData = {
-          //   title: restaurant.name,
-          //   foodCategoryId: restaurant.categoryId,
-          //   link: data.link,
-          //   description: data.description,
-          //   address: data.address,
-          //   roadAddress: data.roadAddress,
-          //   mapx: data.mapx,
-          //   mapy: data.mapy,
-          //   hasMenu: false,
-          // };
-
           // 메뉴 상세주소로 가기 위해 코드를 받아오는 작업
           await page.goto(
             `https://search.naver.com/search.naver?where=nexearch&sm=top_sly.hst&fbm=0&acr=3&ie=utf8&query=${query}`,
@@ -584,7 +555,6 @@ export class PuppeteerController {
           while (button) {
             await button.click();
             button = await page.$('a.fvwqf');
-            console.log('click!');
           }
 
           await page.waitForSelector('.E2jtL');
@@ -596,9 +566,9 @@ export class PuppeteerController {
 
           const newRestaurant =
             await this.puppeteerService.createRestaurant(restaurantData);
-          savedPlaces.push(newRestaurant);
+          // savedPlaces.push(newRestaurant);
 
-          if (newRestaurant.hasMenu === false) {
+          if (!newRestaurant || newRestaurant.hasMenu === false) {
             continue;
           }
 
@@ -644,7 +614,8 @@ export class PuppeteerController {
       this.logger.log(`execution time: ${executionTime}ms`);
       this.logger.log('웹 스크래핑이 성공적으로 완료되었습니다.');
       // 양이 상당히 많을 것이기 때문에 일단 개수로
-      return savedPlaces.length.toString();
+      // return savedPlaces.length.toString();
+      return '웹 스크래핑이 성공적으로 완료되었습니다.';
     } catch (error) {
       this.logger.error('웹 스크래핑 중 오류가 발생했습니다:', error);
     }
@@ -706,6 +677,9 @@ export class PuppeteerController {
       `https://search.naver.com/search.naver?where=nexearch&sm=top_sly.hst&fbm=0&acr=3&ie=utf8&query=${name}`,
     );
 
+    // console.log('Say cheese!');
+    // await page.screenshot({ path: './screenshot.png' });
+
     const storeCode = await page.evaluate(() => {
       const aTag = document.querySelector('#_title > a');
       if (aTag) {
@@ -726,9 +700,6 @@ export class PuppeteerController {
 
       return null;
     });
-
-    // console.log('Say cheese!');
-    // await page.screenshot({ path: './screenshot.png' });
 
     console.log(storeCode);
     if (storeCode) {
@@ -780,11 +751,11 @@ export class PuppeteerController {
       const endTime = Date.now();
       const executionTime = endTime - startTime;
       this.logger.log(`execution time: ${executionTime}ms`);
-      await browser.close();
+      await page.close();
       return menus;
     }
 
-    await browser.close();
+    await page.close();
     return [];
   }
 
