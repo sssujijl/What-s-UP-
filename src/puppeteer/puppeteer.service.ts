@@ -30,9 +30,9 @@ export class PuppeteerService {
     return existingCategory;
   }
 
-  async isExistingRestaurant(address: string) {
+  async isExistingRestaurant(title: string, address: string) {
     const existingRestaurant = await this.placeRepository.findOne({
-      where: { address: address },
+      where: { title: title, address: address },
     });
     return existingRestaurant;
   }
@@ -46,6 +46,7 @@ export class PuppeteerService {
     hasMenu: boolean;
   }) {
     const existingRestaurant = await this.isExistingRestaurant(
+      restaurantData.title,
       restaurantData.address,
     );
 

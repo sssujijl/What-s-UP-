@@ -538,6 +538,8 @@ export class PuppeteerController {
             `https://pcmap.place.naver.com/restaurant/${storeCode}/home`,
           );
 
+          page.waitForSelector('.PkgBl');
+
           const addressBtn = await page.$('.PkgBl');
           await addressBtn.click();
           page.waitForSelector('.Y31Sf');
@@ -553,7 +555,9 @@ export class PuppeteerController {
               .$$('.nQ7Lh')
               .then((elements) => {
                 if (elements[1]) {
-                  return elements[1].evaluate((node) => node.textContent);
+                  return elements[1].evaluate((node) =>
+                    node.textContent.slice(2, -2),
+                  );
                 }
                 return null;
               })
@@ -594,6 +598,10 @@ export class PuppeteerController {
             await this.puppeteerService.createRestaurant(restaurantData);
           savedPlaces.push(newRestaurant);
 
+          if (newRestaurant.hasMenu === false) {
+            continue;
+          }
+
           const menuPromises = menuContainers.map(async (container) => {
             const menuName = await container
               .$eval('.lPzHi', (element) => element.textContent)
@@ -613,29 +621,16 @@ export class PuppeteerController {
               .$eval('.GXS1X', (element) => element.textContent)
               .catch(() => null);
 
-            return {
+            return this.puppeteerService.createMenu({
+              placeId: newRestaurant.id,
               name: menuName,
               image: menuImage,
               description: menuDescription,
               price: menuPrice,
-            };
+            });
           });
 
-          const menus = await Promise.all(menuPromises);
-
-          if (newRestaurant && newRestaurant.hasMenu === true) {
-            await Promise.all(
-              menus.map(async (menu) => {
-                await this.puppeteerService.createMenu({
-                  placeId: newRestaurant.id,
-                  name: menu.name,
-                  image: menu.image,
-                  description: menu.description,
-                  price: menu.price,
-                });
-              }),
-            );
-          }
+          await Promise.all(menuPromises);
         } catch (error) {
           console.error('오류 발생!:', error);
           break;
