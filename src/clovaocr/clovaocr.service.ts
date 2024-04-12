@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 import FormData from 'form-data';
 import { Place } from 'src/places/entities/place.entity';
-import { async } from 'rxjs';
+import dotenv from 'dotenv'
 
 @Injectable()
 export class ClovaocrService {
@@ -29,11 +29,11 @@ export class ClovaocrService {
             formData.append('message', JSON.stringify(message));
 
             const response = await axios.post(
-                'https://edp0tsvahd.apigw.ntruss.com/custom/v1/29906/ab55a60854e1b699c68a692f0a4980dbc5771ac32e641c89b636c00bb05c7cf5/general', // APIGW Invoke URL
+                process.env.APIGW_Invoke_URL, // APIGW Invoke URL
                 formData,
                 {
                     headers: {
-                        'X-OCR-SECRET': 'YWx5blhobnlPcVZZa1hSRlpTU0xIRG1UbXZKZWZXbEg=', // 시크릿 키
+                        'X-OCR-SECRET': process.env.OCR_SECRET, // 시크릿 키
                         ...formData.getHeaders(), // FormData의 헤더 추가
                     },
                 },
