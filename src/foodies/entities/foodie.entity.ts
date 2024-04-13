@@ -3,7 +3,7 @@ import { IsEnum, IsNumber, IsString } from "class-validator";
 import { Status } from "../types/status.type";
 import { Foodie_Answer } from "src/foodie_answers/entities/foodie_answer.entity";
 import { User } from "src/users/entities/user.entity";
-import { Title } from "src/titles/entities/title.entity";
+import { Level } from "src/titles/types/level.type";
 
 @Entity({ name: "foodies" })
 export class Foodie {
@@ -13,12 +13,12 @@ export class Foodie {
     @Column({ type: 'int', nullable: false})
     userId: number;
 
-    @Column({ type: 'int', nullable: false})
-    titleId: number; // 칭호
+    @Column({ type: 'enum', enum: Level, nullable: false})
+    level: Level;
 
     @IsString()
     @Column({ type: 'varchar', nullable: false })
-    title: string; // 제목
+    title: string;
 
     @IsString()
     @Column({ type: 'varchar', nullable: false })
@@ -50,8 +50,4 @@ export class Foodie {
     @ManyToOne(() => User, (user) => user.foodies)
     @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
     user: User;
-
-    @ManyToOne(() => Title, (title) => title.foodies)
-    @JoinColumn({ name: 'titleId', referencedColumnName: 'id' })
-    Title: Title;
 }

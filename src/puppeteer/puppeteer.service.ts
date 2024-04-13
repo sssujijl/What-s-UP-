@@ -5,7 +5,6 @@ import { CreateMenuDto } from 'src/menus/dto/create-menu.dto';
 import { Menu } from 'src/menus/entities/menu.entity';
 import { FoodCategory } from 'src/places/entities/foodCategorys.entity';
 import { Place } from 'src/places/entities/place.entity';
-import { Title } from 'src/titles/entities/title.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -17,7 +16,6 @@ export class PuppeteerService {
     private readonly menuRepository: Repository<Menu>,
     @InjectRepository(Place)
     private readonly placeRepository: Repository<Place>,
-    @InjectRepository(Title) private readonly titleRepository: Repository<Title>
   ) {}
 
   async saveCategoryIfNotExists(category: string): Promise<FoodCategory> {
@@ -29,14 +27,6 @@ export class PuppeteerService {
         category,
       });
       const foodCategory = await this.foodCategoryRepository.save(newCategory);
-
-      for (let i=0; i<7; i++) {
-        const newTitle = this.titleRepository.create({
-            foodCategoryId: foodCategory.id,
-            level: i,
-        });
-        await this.titleRepository.save(newTitle);
-      }
 
       return foodCategory;
     }

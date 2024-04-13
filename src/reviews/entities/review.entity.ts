@@ -2,13 +2,21 @@ import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToO
 import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
 import { Rating } from "../types/rating.types";
 import { Reservation } from "src/reservations/entities/reservation.entity";
+import { Place } from "src/places/entities/place.entity";
+import { User } from "src/users/entities/user.entity";
 
 @Entity({ name: "reviews" })
 export class Review {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'int', nullable: false})
+    @Column({ type: 'int', nullable: false })
+    userId: number;
+
+    @Column({ type: 'int', nullable: false })
+    placeId: number;
+
+    @Column({ type: 'int', nullable: true })
     reservationId: number;
 
     @IsString()
@@ -35,4 +43,12 @@ export class Review {
     @OneToOne(() => Reservation, (reservation) => reservation.review)
     @JoinColumn({ name: 'reservationId', referencedColumnName: 'id' })
     reservation: Reservation;
+
+    @ManyToOne(() => User, (user) => user.reviews)
+    @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
+    user: User;
+
+    @ManyToOne(() => Place, (place) => place.reviews, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'placeId', referencedColumnName: 'id' })
+    place: Place;
 }

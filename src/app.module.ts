@@ -24,12 +24,11 @@ import { Point } from './points/entities/point.entity';
 import { Saved_Place } from './place-lists/entities/savedPlaces.entity';
 import { PlaceList } from './place-lists/entities/place-list.entity';
 import { FoodCategory } from './places/entities/foodCategorys.entity';
-import { User_Title } from './titles/entities/user_titles.entity';
 import { Follow } from './follows/entities/follow.entity';
 import { Coupon } from './coupons/entities/coupon.entity';
 import { Mission } from './missions/entities/mission.entity';
 import { Reservation } from './reservations/entities/reservation.entity';
-import { Title } from './titles/entities/title.entity';
+import { Title } from './titles/entities/titles.entity';
 import { User_ChatRoom } from './chat-rooms/entities/user_chatRoom.entity';
 import { ChatRoom } from './chat-rooms/entities/chat-room.entity';
 import { Message } from './messages/entities/message.entity';
@@ -63,7 +62,6 @@ const typeOrmModuleOptions = {
       Saved_Place,
       PlaceList,
       FoodCategory,
-      User_Title,
       Follow,
       Coupon,
       Mission,

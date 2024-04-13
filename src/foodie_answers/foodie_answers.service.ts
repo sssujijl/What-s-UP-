@@ -15,7 +15,6 @@ export class FoodieAnswersService {
   ) {}
 
   async createAnswer(foodie: Foodie, createFoodieAnswerDto: CreateFoodieAnswerDto) {
-    await this.titleService.findUserTitle(createFoodieAnswerDto.userId, foodie.titleId);
     
     return await this.foodieAnswerRepository.save(createFoodieAnswerDto)
   }

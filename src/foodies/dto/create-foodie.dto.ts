@@ -7,7 +7,7 @@ export class CreateFoodieDto extends PickType(Foodie, [
     'title',
     'content',
     'images',
-    'titleId'
+    'level'
 ]) {
     /**
    * 제목

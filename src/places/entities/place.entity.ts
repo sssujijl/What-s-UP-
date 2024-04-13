@@ -15,6 +15,7 @@ import { Coupon } from 'src/coupons/entities/coupon.entity';
 import { FoodCategory } from './foodCategorys.entity';
 import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import { Saved_Place } from 'src/place-lists/entities/savedPlaces.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 
 @Entity({ name: 'places' })
 export class Place {
@@ -82,6 +83,9 @@ export class Place {
 
   @OneToMany(() => ResStatus, (resStatus) => resStatus.place, { cascade: true })
   resStatus: ResStatus[];
+
+  @OneToMany(() => Review, (review) => review.place, { cascade: true })
+  reviews: Review[];
 
   @ManyToOne(() => FoodCategory, (foodCategory) => foodCategory.places)
   @JoinColumn({ name: 'foodCategoryId', referencedColumnName: 'id' })

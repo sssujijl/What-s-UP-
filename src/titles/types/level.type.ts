@@ -1,4 +1,4 @@
-export enum level {
+export enum Level {
     입문,
     초보,
     중수,
