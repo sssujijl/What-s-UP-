@@ -7,12 +7,10 @@ import { ResStatus } from './entities/resStatus.entity';
 import { Order_Menus } from './entities/orderMenus.entity';
 import { MenusService } from 'src/menus/menus.service';
 import { PointsService } from 'src/points/points.service';
-import { Status } from './types/status.type';
+import { Status } from './types/reservation.status.type';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectRedis } from '@nestjs-modules/ioredis';
-import { Redis } from 'ioredis';
 
 @Injectable()
 export class ReservationsService {
@@ -22,8 +20,7 @@ export class ReservationsService {
     private dataSource: DataSource,
     private readonly menuService: MenusService,
     private readonly pointService: PointsService,
-    @InjectQueue('reservationQueue') private reservationQueu: Queue,
-    @InjectRedis() private readonly redis: Redis
+    @InjectQueue('reservationQueue') private reservationQueue: Queue,
   ) {}
 
   async findReservationsByUserId(userId: number) {
@@ -37,7 +34,7 @@ export class ReservationsService {
   }
 
   async addReservationQueue(resStatusId: number, createReservationDto: CreateReservationDto) {
-    const job = await this.reservationQueu.add('reservation', {
+    const job = await this.reservationQueue.add('reservation', {
       resStatusId, createReservationDto
     },
     { removeOnComplete: true, removeOnFail: true }

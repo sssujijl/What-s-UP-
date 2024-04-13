@@ -1,9 +1,7 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { IsEnum, IsNumber } from "class-validator";
+import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
 import { Status } from "../types/status.types";
-import { DateTime } from "../types/dateTime.type";
-import { Place } from "src/places/entities/place.entity";
-import { Reservation } from "src/reservations/entities/reservation.entity";
+import { Time } from "../types/mission_time.type";
 import { Coupon } from "src/coupons/entities/coupon.entity";
 import { ResStatus } from "src/reservations/entities/resStatus.entity";
 
@@ -20,9 +18,13 @@ export class Mission {
     @Column({ type: 'enum', enum: Status, nullable: false, default: Status.BEFORE_MISSION })
     status: Status;
 
-    @IsEnum(DateTime)
-    @Column({ type: 'enum', enum: DateTime, nullable: false })
-    dateTime: DateTime;
+    @IsString()
+    @Column({ type: 'varchar', nullable: false })
+    date: string;
+
+    @IsEnum(Time)
+    @Column({ type: 'enum', enum: Time, nullable: false })
+    time: Time;
 
     @CreateDateColumn()
     createdAt: Date;

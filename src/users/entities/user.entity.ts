@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 import { Gender } from "../types/gender.types";
-import { IsEmail, IsEnum, IsMobilePhone, IsString } from "class-validator";
+import { IsBoolean, IsEmail, IsEnum, IsMobilePhone, IsString } from "class-validator";
 import { Point } from "src/points/entities/point.entity";
 import { Title } from "src/titles/entities/titles.entity";
 import { Follow } from "src/follows/entities/follow.entity";
@@ -55,6 +55,9 @@ export class User {
     @IsString()
     @Column({ type: 'varchar', nullable: false })
     nickName: string;
+
+    @Column({ type: 'boolean', nullable: false, default: true })
+    smsConsent: boolean;
 
     @CreateDateColumn()
     createdAt: Date;

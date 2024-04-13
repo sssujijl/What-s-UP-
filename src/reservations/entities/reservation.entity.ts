@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { IsEnum, IsNumber } from "class-validator";
-import { Status } from "../types/status.type";
+import { Status } from "../types/reservation.status.type";
 import { User } from "src/users/entities/user.entity";
 import { Review } from "src/reviews/entities/review.entity";
 import { ResStatus } from "./resStatus.entity";

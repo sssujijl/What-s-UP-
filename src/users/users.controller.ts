@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Delete, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete, Res, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { validate } from 'class-validator';
 import { SignupDto } from './dto/signup.dto';
@@ -13,7 +13,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SendMailService } from 'src/users/sendMail.service';
 import { CheckVerification } from './dto/checkVerification.dto';
 
-@ApiTags('USER')
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(
@@ -22,7 +22,10 @@ export class UsersController {
     private readonly sendMailService: SendMailService
   ) {}
 
-  @ApiOperation({ summary: "회원가입 API" })
+  /**
+   * 회원가입
+   * @returns
+   */
   @Post('signup')
   async signup(
     @Body() signupDto: SignupDto) {
@@ -57,7 +60,10 @@ export class UsersController {
     }
   }
 
-  @ApiOperation({ summary: "로그인 API " })
+  /**
+   * 로그인
+   * @returns
+   */
   @Post('signin')
   async signin(
     @Body() signinDto: signinDto,
@@ -72,12 +78,14 @@ export class UsersController {
 
       return res.json({ message: "로그인이 완료되었습니다." });
     } catch (err) {
-      return { message: `${err}` }
+      return res.json({ message: `${err}` });
     }
   }
 
-  @ApiOperation({ summary: "내정보조회 API " })
-  @ApiBearerAuth("access-token")
+  /**
+   * 유저 정보 조회
+   * @returns
+   */
   @UseGuards(AuthGuard("jwt"))
   @Get()
   async getUser(@UserInfo() user: User) {
@@ -88,8 +96,10 @@ export class UsersController {
     }
   }
 
-  @ApiOperation({ summary: "내정보 수정 API " })
-  @ApiBearerAuth("access-token")
+  /**
+   * 유저 정보 수정
+   * @returns 
+   */
   @UseGuards(AuthGuard("jwt"))
   @Patch()
   async editUser(
@@ -105,8 +115,10 @@ export class UsersController {
     }
   }
 
-  @ApiOperation({ summary: "회원탈퇴 API " })
-  @ApiBearerAuth("access-token")
+  /**
+   * 탈퇴
+   * @returns 
+   */
   @UseGuards(AuthGuard("jwt"))
   @Delete()
   async deleteUser(
@@ -124,5 +136,62 @@ export class UsersController {
     } catch (err) {
       return { message: `${err}` }
     }
+  }
+
+  @UseGuards(AuthGuard("google"))
+  @Get("/signin/google")
+	async loginGoogle(
+    @Req() req: any,
+    @Res() res: any	
+  ) {
+    const user = await this.usersService.socialLogin(req, res);
+
+    await this.authService.createTokens(res, user.id);
+
+    return res.json({ message: "로그인이 완료되었습니다." });
+  }
+
+  @UseGuards(AuthGuard("google"))
+  @Get('/callback/google')
+  async googleCallback(@Req() req: any, @Res() res: any) {
+    res.redirect('/users')
+  }
+
+  @UseGuards(AuthGuard("naver"))
+  @Get('/signin/naver')
+  async signinNaver(
+    @Req() req: any,
+    @Res() res: any	
+  ) {
+    try {
+      const user = await this.usersService.socialLogin(req, res);
+      await this.authService.createTokens(res, user.id);
+  
+      return res.json({ message: "로그인이 완료되었습니다." });
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  @UseGuards(AuthGuard("naver"))
+  @Get('/callback/naver')
+  async naverCallback(@Req() req: any, @Res() res: any) {
+    res.redirect('/users')
+  }
+
+  @UseGuards(AuthGuard("kakao"))
+  @Get('/signin/kakao')
+  async signinKakao() {
+    try {
+      return;
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  @UseGuards(AuthGuard("kakao"))
+  @Get('/callback/kakao')
+  async kakaoCallback(@Req() req: any, @Res() res: any) {
+    res.redirect('/users')
   }
 }
