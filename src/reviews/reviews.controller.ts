@@ -15,22 +15,53 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { PlacesService } from 'src/places/places.service';
+import { validate } from 'class-validator';
+import { UserInfo } from 'src/utils/userInfo.decorator';
+import { User } from 'src/users/entities/user.entity';
+import { ReservationsService } from 'src/reservations/reservations.service';
 
 @ApiTags('Reviews')
-@Controller('reviews')
+@Controller('/place/:placeId/reviews')
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(
+    private readonly reviewsService: ReviewsService,
+    private readonly placesService: PlacesService,
+    private readonly reservationService: ReservationsService
+    ) {}
 
   /**
    * 리뷰 등록
-   * @param createReviewDto
+   * @param placeId
+   * @param reservationId?
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
-  @Post()
-  async create(@Body() createReviewDto: CreateReviewDto) {
+  @Post('/:reservationId')
+  async create(
+    @Param('placeId') placeId: number,
+    @Body() createReviewDto: CreateReviewDto,
+    @UserInfo() user: User,
+    @Param('reservationId') reservationId? : number
+  ) {
     try {
-      const data = await this.reviewsService.create(createReviewDto);
+      await validate(createReviewDto);
+
+      const place = await this.placesService.findPlaceById(placeId);
+      createReviewDto.placeId = placeId;
+      createReviewDto.userId = user.id;
+
+      if (reservationId) {
+        const reservation = await this.reservationService.findOneById(reservationId);
+        createReviewDto.reservationId = reservationId;
+
+        if (reservation.resStatus.missionId) {
+          createReviewDto.isMission = true;
+        }
+      }
+      
+      const data = await this.reviewsService.create(createReviewDto, place);
+
       return {
         statusCode: HttpStatus.CREATED,
         message: '리뷰 생성에 성공했습니다.',
@@ -43,11 +74,17 @@ export class ReviewsController {
 
   /**
    * 리뷰 상세 조회
+   * @param placeId
    * @returns
    */
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const data = await this.reviewsService.findOne(+id);
+  @Get(':reviewId')
+  async findOne(
+    @Param('reviewId') reviewId: number,
+    @Param('placeId') placeId: number,
+  ) {
+    await this.placesService.findPlaceById(placeId);
+    
+    const data = await this.reviewsService.findOne(reviewId);
     if (!data) {
       return {
         statusCode: HttpStatus.NOT_FOUND,
@@ -64,17 +101,25 @@ export class ReviewsController {
 
   /**
    * 리뷰 수정
-   * @param id
+   * @param reviewId
+   * @param placeId
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
-  @Patch(':id')
+  @Patch(':reviewId')
   async update(
-    @Param('id') id: string,
+    @Param('reviewId') reviewId: number,
+    @Param('placeId') placeId: number,
     @Body() updateReviewDto: UpdateReviewDto,
+    @UserInfo() user: User
   ) {
     try {
-      await this.reviewsService.update(+id, updateReviewDto);
+      await validate(updateReviewDto);
+
+      await this.placesService.findPlaceById(placeId);
+
+      updateReviewDto.userId = user.id
+      await this.reviewsService.update(reviewId, updateReviewDto);
       return {
         statusCode: HttpStatus.OK,
         message: '리뷰 수정에 성공했습니다.',
@@ -86,11 +131,14 @@ export class ReviewsController {
 
   /**
    * 리뷰 목록 조회
+   * @param placeId
    * @returns
    */
   @Get()
-  async findAll() {
-    const data = await this.reviewsService.findAll();
+  async findAll(@Param('placeId') placeId: number) {
+    await this.placesService.findPlaceById(placeId);
+
+    const data = await this.reviewsService.findAll(placeId);
 
     if (!data.length) {
       return {
@@ -109,14 +157,21 @@ export class ReviewsController {
 
   /**
    * 리뷰 삭제
-   * @param id
+   * @param reviewId
+   * @param placeId
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
+  @Delete(':reviewId')
+  async remove(
+    @Param('reviewId') reviewId: number,
+    @Param('placeId') placeId: number,
+    @UserInfo() user: User
+  ) {
     try {
-      await this.reviewsService.remove(+id);
+      await this.placesService.findPlaceById(placeId);
+
+      await this.reviewsService.remove(reviewId, user.id);
       return {
         statusCode: HttpStatus.OK,
         message: '리뷰 삭제에 성공했습니다.',

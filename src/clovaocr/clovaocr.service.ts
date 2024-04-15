@@ -28,12 +28,13 @@ export class ClovaocrService {
             formData.append('message', JSON.stringify(message));
 
             const response = await axios.post(
-                'https://edp0tsvahd.apigw.ntruss.com/custom/v1/29906/ab55a60854e1b699c68a692f0a4980dbc5771ac32e641c89b636c00bb05c7cf5/general', // APIGW Invoke URL
+                process.env.APIGW_Invoke_URL, // APIGW Invoke URL
                 formData,
                 {
                     headers: {
-                        'X-OCR-SECRET': 'YWx5blhobnlPcVZZa1hSRlpTU0xIRG1UbXZKZWZXbEg=',
-                        ...formData.getHeaders(),
+                        'X-OCR-SECRET': process.env.OCR_SECRET, // 시크릿 키
+                        ...formData.getHeaders(), // FormData의 헤더 추가
+
                     },
                 },
             );
@@ -61,7 +62,7 @@ export class ClovaocrService {
         const words = [...title, ...address, ...roadAddress];
 
         const wordCount = words.length;
-        const matchedCount = words.filter((word) => {return text.includes(word)}).length;
+        const matchedCount = words.filter((word) => { return text.includes(word) }).length;
         const percentage = (matchedCount / wordCount) * 100;
         return percentage >= 70;
     }
@@ -78,16 +79,16 @@ export class ClovaocrService {
         const address = place.address.match(pattern);
         const roadAddress = place.roadAddress.match(pattern);
         const title = place.title.split(' ');
-        
+
         console.log(address, roadAddress);
         // const a = '충청남도 천안시 서북구 성환읍 272-8';
         // const b = a.match(pattern);
         // console.log(b);
 
-        const titleLength = title.filter((a) => {return text.includes(a)}).length;
-        const addressLength = address.filter((a) => {return text.includes(a)}).length;
-        const roadAddressLength = roadAddress.filter((a) => {return text.includes(a)}).length;
-        
+        const titleLength = title.filter((a) => { return text.includes(a) }).length;
+        const addressLength = address.filter((a) => { return text.includes(a) }).length;
+        const roadAddressLength = roadAddress.filter((a) => { return text.includes(a) }).length;
+
         console.log(text, title, titleLength, addressLength, roadAddressLength);
 
         let compare = 0;
@@ -113,7 +114,7 @@ export class ClovaocrService {
         // if (test1 < 3 && test2 < 3) {
         //     throw new Error('지번, 도로명 모두 다름');
         // }
-        
+
         // ----------2-----------
         // if (test1 < 3 && test2 < 3) {
         //     if (title.length !== test) {
@@ -125,5 +126,5 @@ export class ClovaocrService {
 
         return true;
     }
-    
+
 }

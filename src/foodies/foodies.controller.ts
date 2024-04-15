@@ -17,7 +17,6 @@ export class FoodiesController {
 
   /**
    * 맛집인 등록
-   * @param createFoodieDto
    * @returns
    */
   // 게시물 생성
@@ -44,7 +43,7 @@ export class FoodiesController {
   // 게시물 전체조회
   @Get()
   async findAllFoodies() {
-    try {
+    try { 
       return await this.foodiesService.findAllFoodies();
     } catch (err) {
       return { message: `${err}` };
@@ -73,7 +72,6 @@ export class FoodiesController {
   /**
    * 밥친구 수정
    * @param foodieId
-   * @param updateFoodieDto
    * @returns
    */
   // 게시물 수정

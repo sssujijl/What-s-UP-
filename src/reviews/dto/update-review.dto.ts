@@ -40,4 +40,10 @@ export class UpdateReviewDto extends PickType(Review, ['content']) {
   @IsNotEmpty()
   @IsInt()
   readonly reservationId: number;
+
+  /**
+   * 유저ID
+   * @example '1'
+   */
+  userId: number;
 }

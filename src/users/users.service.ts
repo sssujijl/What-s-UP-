@@ -19,6 +19,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
+
     // private readonly snsService: SnsService
     @InjectRedis() private readonly redis: Redis
   ) {}

@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Logger } from '@nestjs/common';
 import { MissionsService } from './missions.service';
 import { AuthGuard } from '@nestjs/passport';
-import { UserInfo } from 'src/utils/userInfo.decorator';
-import { User } from 'src/users/entities/user.entity';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Missions')
 @Controller('missions')
 export class MissionsController {
   private readonly logger = new Logger(MissionsController.name);
@@ -58,6 +58,12 @@ export class MissionsController {
     }
   }
 
+  /**
+   * 미션 조회
+   * @param missionId
+   * @returns
+   */
+  @UseGuards(AuthGuard('jwt'))
   @Get('/:missionId')
   async findMission(
     @Param('missionId') missionId: number

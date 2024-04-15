@@ -130,12 +130,10 @@ export class ReservationsService {
     return {totalAmount, orders};
   }
 
-  async findOneById(userId: number, reservationId: number) {
-    const reservation = await this.reservationRepository.findOne({
-      where: {
-        userId,
-        id: reservationId
-      }
+  async findOneById(reservationId: number) {
+    const reservation = await this.reservationRepository.findOne({ 
+      where: {id: reservationId},
+      relations: ['resStatus']
     });
 
     if (!reservation) {
@@ -151,7 +149,7 @@ export class ReservationsService {
     await queryRunner.startTransaction();
 
     try {
-      const reservation = await this.findOneById(userId, reservationId);
+      const reservation = await this.findOneById(reservationId);
 
       await queryRunner.manager.update(ResStatus, 
         reservation.resStatusId, 
