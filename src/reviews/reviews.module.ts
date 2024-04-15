@@ -5,12 +5,14 @@ import { ReviewsService } from './reviews.service';
 import { Review } from './entities/review.entity';
 import { PlacesModule } from 'src/places/places.module';
 import { TitlesModule } from 'src/titles/titles.module';
+import { ReservationsModule } from 'src/reservations/reservations.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Review]), 
     PlacesModule,
-    TitlesModule
+    TitlesModule,
+    ReservationsModule
   ],
   controllers: [ReviewsController],
   providers: [ReviewsService],

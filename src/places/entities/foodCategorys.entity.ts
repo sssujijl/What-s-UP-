@@ -4,6 +4,7 @@ import { Category } from '../types/category.type';
 import { Title } from 'src/titles/entities/titles.entity';
 import { FoodMate } from 'src/foodmates/entities/foodmate.entity';
 import { Place } from './place.entity';
+import { Foodie } from 'src/foodies/entities/foodie.entity';
 
 @Entity({ name: 'foodCategorys' })
 export class FoodCategory {
@@ -22,4 +23,7 @@ export class FoodCategory {
 
   @OneToMany(() => Place, (place) => place.foodCategory)
   places: Place[];
+
+  @OneToMany(() => Foodie, (foodie) => foodie.foodCategory)
+  foodies: Foodie[];
 }

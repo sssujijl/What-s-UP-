@@ -7,7 +7,8 @@ export class CreateFoodieDto extends PickType(Foodie, [
     'title',
     'content',
     'images',
-    'level'
+    'level',
+    'foodCategoryId'
 ]) {
     /**
    * 제목
@@ -30,4 +31,9 @@ export class CreateFoodieDto extends PickType(Foodie, [
   @IsString()
   readonly images: string;
 
+  /**
+   * 음식카테고리ID
+   * @example '1'
+   */
+  readonly foodCategoryId: number;
 }

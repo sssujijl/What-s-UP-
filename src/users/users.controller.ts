@@ -38,6 +38,11 @@ export class UsersController {
    }
   }
 
+  /**
+   * 인증메일 발송
+   * @param email
+   * @returns
+   */
   @Post('/sendMail')
   async sendMailVerificationCode(@Body('email') email: string) {
     try {
@@ -49,6 +54,10 @@ export class UsersController {
     }
   }
 
+  /**
+   * 인증메일 확인
+   * @returns
+   */
   @Post('/checkVerification')
   async checkVerificationCode(@Body() checkVerification: CheckVerification) {
     try {
@@ -138,6 +147,10 @@ export class UsersController {
     }
   }
 
+  /**
+   * 구글 로그인
+   * @returns
+   */
   @UseGuards(AuthGuard("google"))
   @Get("/signin/google")
 	async loginGoogle(
@@ -157,6 +170,10 @@ export class UsersController {
     res.redirect('/users')
   }
 
+  /**
+   * 네이버 로그인
+   * @returns
+   */
   @UseGuards(AuthGuard("naver"))
   @Get('/signin/naver')
   async signinNaver(
@@ -179,6 +196,10 @@ export class UsersController {
     res.redirect('/users')
   }
 
+  /**
+   * 카카오 로그인
+   * @returns
+   */
   @UseGuards(AuthGuard("kakao"))
   @Get('/signin/kakao')
   async signinKakao() {

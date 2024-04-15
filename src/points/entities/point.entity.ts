@@ -1,13 +1,10 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { IsNumber } from "class-validator";
 import { User } from "src/users/entities/user.entity";
 
 @Entity({ name: "points" })
 export class Point {
-    @PrimaryGeneratedColumn()
-    id: number; 
-
-    @Column({ type: 'int', nullable: false })
+    @PrimaryColumn()
     userId: number;
 
     @IsNumber()

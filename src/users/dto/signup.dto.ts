@@ -17,7 +17,7 @@ export class SignupDto extends PickType(User, [
 ]) {
   /**
    * 이메일
-   * @example 'example@naver.com'
+   * @example 'jinni1226@naver.com'
    */
   @IsNotEmpty({ message: '이메일을 입력해주세요.' })
   @IsEmail()
@@ -57,7 +57,7 @@ export class SignupDto extends PickType(User, [
 
   /**
    * 닉네임
-   * @example 'nickName'
+   * @example '성진짱'
    */
   @IsNotEmpty({ message: '닉네임을 입력해주세요.' })
   @IsString()
@@ -72,7 +72,7 @@ export class SignupDto extends PickType(User, [
 
   /**
    * 성별
-   * @example 'F'
+   * @example 'M'
    */
   @IsNotEmpty({ message: '성별을 선택해주세요.' })
   @IsEnum(Gender)

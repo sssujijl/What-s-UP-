@@ -6,17 +6,25 @@ import { Review } from './entities/review.entity';
 import { Repository } from 'typeorm';
 import { TitlesService } from 'src/titles/titles.service';
 import { Place } from 'src/places/entities/place.entity';
+import { Title } from 'src/titles/entities/titles.entity';
+import { ReservationsService } from 'src/reservations/reservations.service';
 
 @Injectable()
 export class ReviewsService {
   constructor(
     @InjectRepository(Review) private readonly reviewRepository: Repository<Review>,
-    private readonly titleService: TitlesService
+    private readonly titleService: TitlesService,
   ) {}
 
   async create(createReviewDto: CreateReviewDto, place: Place) {
     const review = await this.reviewRepository.save(createReviewDto);
 
+    let count: number = 1;
+    if (createReviewDto.isMission === true) {
+      count = 2;
+    }
+
+    await this.titleService.givenTitle(createReviewDto.userId, place.foodCategoryId, count);
 
     return review;
   }

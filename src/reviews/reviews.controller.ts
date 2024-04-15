@@ -19,26 +19,30 @@ import { PlacesService } from 'src/places/places.service';
 import { validate } from 'class-validator';
 import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
+import { ReservationsService } from 'src/reservations/reservations.service';
 
 @ApiTags('Reviews')
 @Controller('/place/:placeId/reviews')
 export class ReviewsController {
   constructor(
     private readonly reviewsService: ReviewsService,
-    private readonly placesService: PlacesService
+    private readonly placesService: PlacesService,
+    private readonly reservationService: ReservationsService
     ) {}
 
   /**
    * 리뷰 등록
    * @param placeId
+   * @param reservationId?
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
-  @Post()
+  @Post('/:reservationId')
   async create(
     @Param('placeId') placeId: number,
     @Body() createReviewDto: CreateReviewDto,
-    @UserInfo() user: User
+    @UserInfo() user: User,
+    @Param('reservationId') reservationId? : number
   ) {
     try {
       await validate(createReviewDto);
@@ -47,6 +51,15 @@ export class ReviewsController {
       createReviewDto.placeId = placeId;
       createReviewDto.userId = user.id;
 
+      if (reservationId) {
+        const reservation = await this.reservationService.findOneById(reservationId);
+        createReviewDto.reservationId = reservationId;
+
+        if (reservation.resStatus.missionId) {
+          createReviewDto.isMission = true;
+        }
+      }
+      
       const data = await this.reviewsService.create(createReviewDto, place);
 
       return {

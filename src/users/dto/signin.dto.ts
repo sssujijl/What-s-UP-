@@ -5,7 +5,7 @@ import { IsNotEmpty, IsEmail, IsString } from 'class-validator';
 export class signinDto extends PickType(User, ['email', 'password']) {
   /**
    * 이메일
-   * @example 'example@naver.com'
+   * @example 'jinni1226@naver.com'
    */
   @IsNotEmpty({ message: '이메일을 입력해주세요.' })
   @IsEmail()

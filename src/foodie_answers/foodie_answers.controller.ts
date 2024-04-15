@@ -8,18 +8,22 @@ import { User } from 'src/users/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
 import { validate } from 'class-validator';
 import { ApiTags } from '@nestjs/swagger';
+import { TitlesService } from 'src/titles/titles.service';
+import { Title } from 'src/titles/entities/titles.entity';
+import { userInfo } from 'os';
 
 @ApiTags('Foodie_Answer')
 @Controller('/foodie/:foodieId/foodie_answer')
 export class FoodieAnswersController {
   constructor(
     private readonly foodieAnswersService: FoodieAnswersService,
-    private readonly foodiesService: FoodiesService
+    private readonly foodiesService: FoodiesService,
   ) { }
 
   /**
    * 맛집인 답글 등록
-   * @param createFoodieAnswerDto
+   * @param foodieId
+   * @example "인정하는 부분입니다."
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
@@ -44,8 +48,25 @@ export class FoodieAnswersController {
     }
   }
 
+  // 칭호레벨 확인로직
+  @UseGuards(AuthGuard('jwt'))
+  @Get()
+  async CheckTitle(
+    @Param("foodieId") foodieId: number,
+    @UserInfo() user: User
+  ) {
+    try {
+      const foodie = await this.foodiesService.findOneById(foodieId);
+
+      return await this.foodieAnswersService.CheckTitle(foodie, user);
+    } catch (err) {
+      return { message: `${err}` };
+    }
+  }
+
   /**
    * 맛집인 답글 목록 조회
+   * @param foodieId
    * @returns
    */
   @Get()
@@ -62,10 +83,10 @@ export class FoodieAnswersController {
   }
 
   /**
-   * 밥친구 수정
+   * 맛집인 답글 수정
    * @param foodieId
    * @param foodieAnswerId
-   * @param updateFoodieAnswerDto
+   * @example "인정 못합니다."
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
@@ -88,7 +109,7 @@ export class FoodieAnswersController {
   }
 
   /**
-   * 보드 삭제
+   * 맛집인 답글 삭제
    * @param foodieId
    * @param foodieAnswerId
    * @returns

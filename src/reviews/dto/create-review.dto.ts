@@ -38,7 +38,7 @@ export class CreateReviewDto extends PickType(Review, ['content']) {
    * 예약ID
    * @example "1"
    */
-  readonly reservationId?: number;
+  reservationId?: number;
 
   /**
    * 가게ID
@@ -52,4 +52,10 @@ export class CreateReviewDto extends PickType(Review, ['content']) {
    * @example '1'
    */
   userId: number;
+
+  /**
+   * 미션여부
+   * @example false
+   */
+  isMission?: boolean;
 }

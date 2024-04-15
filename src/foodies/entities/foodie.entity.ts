@@ -4,16 +4,20 @@ import { Status } from "../types/status.type";
 import { Foodie_Answer } from "src/foodie_answers/entities/foodie_answer.entity";
 import { User } from "src/users/entities/user.entity";
 import { Level } from "src/titles/types/level.type";
+import { FoodCategory } from "src/places/entities/foodCategorys.entity";
 
 @Entity({ name: "foodies" })
 export class Foodie {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'int', nullable: false})
+    @Column({ type: 'int', nullable: false })
     userId: number;
 
-    @Column({ type: 'enum', enum: Level, nullable: false})
+    @Column({ type: 'int', nullable: false })
+    foodCategoryId: number; 
+
+    @Column({ type: 'enum', enum: Level, nullable: false })
     level: Level;
 
     @IsString()
@@ -50,4 +54,8 @@ export class Foodie {
     @ManyToOne(() => User, (user) => user.foodies)
     @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
     user: User;
+
+    @ManyToOne(() => FoodCategory, (foodCategory) => foodCategory.foodies)
+    @JoinColumn({ name: 'foodCategoryId', referencedColumnName: 'id' })
+    foodCategory: FoodCategory;
 }
