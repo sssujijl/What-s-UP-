@@ -40,7 +40,7 @@ export class MissionsService {
   }
 
   // 10시 또는 15시에 랜덤으로 스케줄링 시작
-  @Cron(`${getRandom('01', '06')} * * * *`)
+  @Cron(`0 ${getRandom('01', '06')} * * *`)
   async createRandomMissions() {
     let createMissionDto: CreateMissionDto = {
       capacity: 0,
@@ -49,14 +49,14 @@ export class MissionsService {
     }
     createMissionDto.capacity = getRandomAttendees();
 
-    // createMissionDto.date = new Date().toISOString().slice(0, 10);
-    // const currentHour = new Date().getHours();
+    createMissionDto.date = new Date().toISOString().slice(0, 10);
+    const currentHour = new Date().getHours();
 
-    // if (currentHour === 10) {
-    //   createMissionDto.time = Time.TEN_AM; // 12 ~ 15시
-    // } else {
-    //   createMissionDto.time = Time.THREE_PM; // 17 ~ 20시
-    // }
+    if (currentHour === 10) {
+      createMissionDto.time = Time.TEN_AM; // 12 ~ 15시
+    } else {
+      createMissionDto.time = Time.THREE_PM; // 17 ~ 20시
+    }
     return await this.createMission(createMissionDto);
   }
 

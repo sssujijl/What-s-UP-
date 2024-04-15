@@ -7,6 +7,7 @@ import { CreateMenuDto } from 'src/menus/dto/create-menu.dto';
 import { Menu } from 'src/menus/entities/menu.entity';
 import { FoodCategory } from 'src/places/entities/foodCategorys.entity';
 import { Place } from 'src/places/entities/place.entity';
+import { Title } from 'src/titles/entities/titles.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -18,7 +19,9 @@ export class PuppeteerService {
     private readonly menuRepository: Repository<Menu>,
     @InjectRepository(Place)
     private readonly placeRepository: Repository<Place>,
-    @InjectRedis() private readonly redis: Redis
+
+    @InjectRedis() private readonly redis: Redis,
+    @InjectRepository(Title) private readonly titleRepository: Repository<Title>
   ) {}
 
   async saveCategoryIfNotExists(category: string): Promise<FoodCategory> {

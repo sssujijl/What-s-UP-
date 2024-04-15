@@ -19,8 +19,9 @@ export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
-    @InjectRedis() private readonly redis: Redis
+
     // private readonly snsService: SnsService
+    @InjectRedis() private readonly redis: Redis
   ) {}
 
   async signup(signupDto: SignupDto) {
