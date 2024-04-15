@@ -61,7 +61,7 @@ export class ReservationsController {
     @Param('reservationId') reservationId: number
   ) {
     try {
-      return await this.reservationsService.findOneById(user.id, reservationId);
+      return await this.reservationsService.findOneById(reservationId);
     } catch (err) {
       return { message: `${err}` }
     }

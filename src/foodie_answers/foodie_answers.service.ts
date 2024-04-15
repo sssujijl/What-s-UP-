@@ -15,8 +15,6 @@ export class FoodieAnswersService {
   constructor(
     @InjectRepository(Foodie_Answer) private readonly foodieAnswerRepository: Repository<Foodie_Answer>,
     private readonly titleService: TitlesService,
-    private readonly usersService: UsersService,
-    private readonly foodiesService: FoodiesService
   ) {}
 
   async CheckTitle(foodie: Foodie, user: User) {

@@ -21,7 +21,6 @@ export class PuppeteerService {
     private readonly placeRepository: Repository<Place>,
 
     @InjectRedis() private readonly redis: Redis,
-    @InjectRepository(Title) private readonly titleRepository: Repository<Title>
   ) {}
 
   async saveCategoryIfNotExists(category: string): Promise<FoodCategory> {
