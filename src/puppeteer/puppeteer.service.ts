@@ -20,7 +20,6 @@ export class PuppeteerService {
     @InjectRepository(Place)
     private readonly placeRepository: Repository<Place>,
     @InjectRedis() private readonly redis: Redis,
-    @InjectRepository(Title) private readonly titleRepository: Repository<Title>
   ) {}
 
   async saveCategoryIfNotExists(category: string): Promise<FoodCategory> {
@@ -32,14 +31,6 @@ export class PuppeteerService {
         category,
       });
       const foodCategory = await this.foodCategoryRepository.save(newCategory);
-
-      for (let i=0; i<7; i++) {
-        const newTitle = this.titleRepository.create({
-            foodCategoryId: foodCategory.id,
-            level: i,
-        });
-        await this.titleRepository.save(newTitle);
-      }
 
       return foodCategory;
     }

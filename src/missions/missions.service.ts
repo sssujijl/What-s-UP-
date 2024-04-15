@@ -43,7 +43,17 @@ export class MissionsService {
   }
 
   async test() {
-    return await this.resStatusRepository.find({where: {missionId: 14}});
+    const places = await this.placeRepository.find();
+
+    places.map(async (place) => {
+      const resStatus = {
+        placeId: place.id,
+        dateTime: '2024-04-15T15:00:00'
+      }
+      await this.resStatusRepository.save(resStatus);
+    })
+
+    return '완료';
   }
 
   // 10시 또는 15시에 랜덤으로 스케줄링 시작
@@ -125,7 +135,7 @@ export class MissionsService {
   private async checkAndRepeat(placesByDong: {}, selectedPlaceIds: {}, mission: Mission, count: number) {
     const resStatusId = await this.findResStatus(Object.values(selectedPlaceIds), mission);
     const { reSearch, availableResStatusIds } = await this.checkResStatus(selectedPlaceIds, resStatusId, mission.capacity);
-
+    console.log('-------', reSearch);
     if (Object.keys(reSearch).length > 0) {
       const selectedPlaces = await this.selectedPlaceIds(placesByDong);
 
