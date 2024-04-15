@@ -12,7 +12,7 @@ export class ClovaocrController {
     @Post()
     async test() {
         const text = await this.clovaocrService.requestWithFile();
-        const place = await this.placeService.findPlaceById(87);
+        const place = await this.placeService.findPlaceById(259);
         return await this.clovaocrService.test2(text, place);
     }
 }

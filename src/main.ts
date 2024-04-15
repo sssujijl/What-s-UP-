@@ -3,11 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import cookieParser from "cookie-parser";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-<<<<<<< HEAD
-import dotenv from "dotenv";
-=======
 import dotenv from 'dotenv' 
->>>>>>> 6a7e619f9708b78350ac664da8c1eb7d57bdf0ba
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
