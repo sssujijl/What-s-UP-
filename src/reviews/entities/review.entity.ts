@@ -19,7 +19,6 @@ export class Review {
     @Column({ type: 'int', nullable: true })
     reservationId: number;
 
-    @IsString()
     @Column({ type: 'varchar', nullable: true })
     images: string;
 

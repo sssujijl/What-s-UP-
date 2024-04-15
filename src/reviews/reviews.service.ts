@@ -18,7 +18,6 @@ export class ReviewsService {
 
   async create(createReviewDto: CreateReviewDto, place: Place) {
     const review = await this.reviewRepository.save(createReviewDto);
-
     let count: number = 1;
     if (createReviewDto.isMission === true) {
       count = 2;
