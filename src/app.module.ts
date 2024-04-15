@@ -24,12 +24,11 @@ import { Point } from './points/entities/point.entity';
 import { Saved_Place } from './place-lists/entities/savedPlaces.entity';
 import { PlaceList } from './place-lists/entities/place-list.entity';
 import { FoodCategory } from './places/entities/foodCategorys.entity';
-import { User_Title } from './titles/entities/user_titles.entity';
 import { Follow } from './follows/entities/follow.entity';
 import { Coupon } from './coupons/entities/coupon.entity';
 import { Mission } from './missions/entities/mission.entity';
 import { Reservation } from './reservations/entities/reservation.entity';
-import { Title } from './titles/entities/title.entity';
+import { Title } from './titles/entities/titles.entity';
 import { User_ChatRoom } from './chat-rooms/entities/user_chatRoom.entity';
 import { ChatRoom } from './chat-rooms/entities/chat-room.entity';
 import { Message } from './messages/entities/message.entity';
@@ -45,6 +44,13 @@ import { PuppeteerModule } from './puppeteer/puppeteer.module';
 import { ResStatus } from './reservations/entities/resStatus.entity';
 import { BullModule } from '@nestjs/bull';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { ProducerModule } from './producer/producer.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-ioredis';
+import dotenv from 'dotenv';
+import { ClovaocrModule } from './clovaocr/clovaocr.module';
+dotenv.config();
+import { RecommendModule } from './recommend/recommend.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -62,7 +68,6 @@ const typeOrmModuleOptions = {
       Saved_Place,
       PlaceList,
       FoodCategory,
-      User_Title,
       Follow,
       Coupon,
       Mission,
@@ -83,7 +88,7 @@ const typeOrmModuleOptions = {
       Order_Menus
     ],
     synchronize: configService.get('DB_SYNC'),
-    logging: true,
+    logging: true
   }),
   inject: [ConfigService],
 };
@@ -104,15 +109,20 @@ const typeOrmModuleOptions = {
     }),
     BullModule.forRoot({
       redis: {
-        host: 'localhost',
-        port: 6379,
+        host: process.env.REDIS_HOST,
+        port: +process.env.REDIS_PORT,
       },
     }),
     RedisModule.forRootAsync({
       useFactory: () => ({
         type: 'single',
-        url: "redis://127.0.0.1:6379"
+        url: process.env.REDIS_URL
       })
+    }),
+    CacheModule.register({
+      store: redisStore,
+      host: process.env.REDIS_HOST,
+      port: +process.env.REDIS_PORT,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UsersModule,
@@ -133,6 +143,9 @@ const typeOrmModuleOptions = {
     ReviewsModule,
     FollowsModule,
     PuppeteerModule,
+    ClovaocrModule,
+    ProducerModule,
+    RecommendModule,
   ],
   controllers: [],
   providers: [],

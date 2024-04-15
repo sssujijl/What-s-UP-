@@ -1,8 +1,8 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 import { Gender } from "../types/gender.types";
-import { IsEmail, IsEnum, IsMobilePhone, IsString } from "class-validator";
+import { IsBoolean, IsEmail, IsEnum, IsMobilePhone, IsString } from "class-validator";
 import { Point } from "src/points/entities/point.entity";
-import { User_Title } from "src/titles/entities/user_titles.entity";
+import { Title } from "src/titles/entities/titles.entity";
 import { Follow } from "src/follows/entities/follow.entity";
 import { Coupon } from "src/coupons/entities/coupon.entity";
 import { User_ChatRoom } from "src/chat-rooms/entities/user_chatRoom.entity";
@@ -13,6 +13,7 @@ import { Foodie_Answer } from "src/foodie_answers/entities/foodie_answer.entity"
 import { FoodMate } from "src/foodmates/entities/foodmate.entity";
 import { User_FoodMate } from "src/foodmates/entities/user_foodmates.entity";
 import { PlaceList } from "src/place-lists/entities/place-list.entity";
+import { Review } from "src/reviews/entities/review.entity";
 
 @Entity({ name: "users" })
 @Unique(['email'])
@@ -25,6 +26,9 @@ export class User {
     @IsEmail()
     @Column({ type: 'varchar', nullable: false })
     email: string;
+
+    @Column({ type: 'boolean', default: false })
+    isVerified: boolean
 
     @Column({ type: 'varchar', nullable: true })
     profileImage: string;
@@ -52,6 +56,9 @@ export class User {
     @Column({ type: 'varchar', nullable: false })
     nickName: string;
 
+    @Column({ type: 'boolean', nullable: false, default: true })
+    smsConsent: boolean;
+
     @CreateDateColumn()
     createdAt: Date;
 
@@ -64,11 +71,14 @@ export class User {
     @OneToOne(() => Point, (point) => point.user, { cascade: true })
     point: Point;
 
+    @OneToMany(() => Review, (review) => review.user)
+    reviews: Review;
+
     @OneToMany(() => PlaceList, (placeList) => placeList.user, { cascade: true })
     placeLists: PlaceList[];
 
-    @OneToMany(() => User_Title, (userTitle) => userTitle.user, { cascade: true })
-    userTitles: User_Title[];
+    @OneToMany(() => Title, (title) => title.user, { cascade: true })
+    titles: Title[];
 
     @OneToMany(() => Follow, (follow) => follow.follower, { cascade: true })
     follower: Follow[];

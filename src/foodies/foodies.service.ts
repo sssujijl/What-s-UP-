@@ -42,7 +42,12 @@ export class FoodiesService {
     
     const views = await this.redis.get(`foodie:${foodieId}:views`);
     Foodie.views = +views;
-    //---------------------------------------------------
+
+    return Foodie;  
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_3AM, { timeZone: 'Asia/Seoul' })
+  async savedFoodieViews() {
     const keys = await this.redis.keys('foodie:*:views');
 
     const viewsResults = await Promise.all(keys.map(async (key) => {
@@ -51,34 +56,12 @@ export class FoodiesService {
       return { foodieId, views };
     }));
 
-    console.log(viewsResults);
-
-    return Foodie;  
-  }
-
-  @Cron(CronExpression.EVERY_DAY_AT_3AM, { timeZone: 'Asia/Seoul' })
-  async savedFoodieViews() {
-    const foodiesViews = await this.redis.keys('foodie:*:views');
-  }
-
-  async moveViewsFromRedisToDatabase() {
-    // Redis에서 모든 음식의 조회수 가져오기
-    const keys = await this.redis.keys('foodie:*:views');
-    const viewsPromises = keys.map(async key => {
-        const foodieId = key.split(':')[1];
-        const views = await this.redis.get(key);
-        return { foodieId, views: parseInt(views) };
-    });
-    const views = await Promise.all(viewsPromises);
-
-    // 데이터베이스에 조회수 저장
-    await Promise.all(views.map(async view => {
-        await this.foodieRepository.update(view.foodieId, { views: view.views });
+    await Promise.all(viewsResults.map(async (view) => {
+      await this.foodieRepository.update(view.foodieId, { views: +view.views });
     }));
 
-    // Redis 데이터 삭제
     await Promise.all(keys.map(key => this.redis.del(key)));
-}
+  }
 
   async findAllFoodies() {
     const foodie = await this.foodieRepository.find();

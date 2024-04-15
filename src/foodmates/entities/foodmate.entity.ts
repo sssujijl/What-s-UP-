@@ -10,12 +10,12 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { IsDate, IsEnum, IsNumber, IsString } from 'class-validator';
-import { Status } from '../types/status.type';
 import { Gender } from '../types/gender.type';
 import { Age } from '../types/age.type';
 import { User } from 'src/users/entities/user.entity';
 import { FoodCategory } from 'src/places/entities/foodCategorys.entity';
 import { User_FoodMate } from './user_foodmates.entity';
+import { Status } from '../types/status.type';
 
 @Entity({ name: 'foodmates' })
 export class FoodMate {

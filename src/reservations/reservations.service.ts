@@ -7,12 +7,10 @@ import { ResStatus } from './entities/resStatus.entity';
 import { Order_Menus } from './entities/orderMenus.entity';
 import { MenusService } from 'src/menus/menus.service';
 import { PointsService } from 'src/points/points.service';
-import { Status } from './types/status.type';
+import { Status } from './types/reservation.status.type';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectRedis } from '@nestjs-modules/ioredis';
-import { Redis } from 'ioredis';
 
 @Injectable()
 export class ReservationsService {
@@ -22,8 +20,7 @@ export class ReservationsService {
     private dataSource: DataSource,
     private readonly menuService: MenusService,
     private readonly pointService: PointsService,
-    @InjectQueue('reservationQueue') private reservationQueu: Queue,
-    @InjectRedis() private readonly redis: Redis
+    @InjectQueue('reservationQueue') private reservationQueue: Queue,
   ) {}
 
   async findReservationsByUserId(userId: number) {
@@ -37,7 +34,7 @@ export class ReservationsService {
   }
 
   async addReservationQueue(resStatusId: number, createReservationDto: CreateReservationDto) {
-    const job = await this.reservationQueu.add('reservation', {
+    const job = await this.reservationQueue.add('reservation', {
       resStatusId, createReservationDto
     },
     { removeOnComplete: true, removeOnFail: true }
@@ -118,7 +115,8 @@ export class ReservationsService {
     const orders = menus.map((menu) => {
       const quantity = orderMenus[menu.id];
       const price = menu.price;
-      const totalPrice = quantity * price;
+      // 엔티티 변경으로 실행을 위해 임시로 price에 parseInt를 끼웠습니다ㅠㅠ
+      const totalPrice = quantity * parseInt(price);
       const reservationId = 0;
       totalAmount += totalPrice;
       return {
@@ -132,12 +130,10 @@ export class ReservationsService {
     return {totalAmount, orders};
   }
 
-  async findOneById(userId: number, reservationId: number) {
-    const reservation = await this.reservationRepository.findOne({
-      where: {
-        userId,
-        id: reservationId
-      }
+  async findOneById(reservationId: number) {
+    const reservation = await this.reservationRepository.findOne({ 
+      where: {id: reservationId},
+      relations: ['resStatus']
     });
 
     if (!reservation) {
@@ -153,7 +149,7 @@ export class ReservationsService {
     await queryRunner.startTransaction();
 
     try {
-      const reservation = await this.findOneById(userId, reservationId);
+      const reservation = await this.findOneById(reservationId);
 
       await queryRunner.manager.update(ResStatus, 
         reservation.resStatusId, 

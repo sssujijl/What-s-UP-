@@ -1,18 +1,15 @@
 import { IsEnum, IsString } from 'class-validator';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Category } from '../types/category.type';
-import { Title } from 'src/titles/entities/title.entity';
+import { Title } from 'src/titles/entities/titles.entity';
 import { FoodMate } from 'src/foodmates/entities/foodmate.entity';
 import { Place } from './place.entity';
+import { Foodie } from 'src/foodies/entities/foodie.entity';
 
 @Entity({ name: 'foodCategorys' })
 export class FoodCategory {
   @PrimaryGeneratedColumn()
   id: number;
-
-  //   @IsEnum(Category)
-  //   @Column({ type: 'enum', enum: Category })
-  //   category: Category;
 
   @IsString()
   @Column({ type: 'varchar', nullable: false })
@@ -26,4 +23,7 @@ export class FoodCategory {
 
   @OneToMany(() => Place, (place) => place.foodCategory)
   places: Place[];
+
+  @OneToMany(() => Foodie, (foodie) => foodie.foodCategory)
+  foodies: Foodie[];
 }

@@ -1,4 +1,4 @@
-import { PickType } from "@nestjs/mapped-types";
+import { PickType } from "@nestjs/swagger";
 import { Mission } from "../entities/mission.entity";
 
-export class CreateMissionDto extends PickType(Mission, ['capacity', 'dateTime']) {}
+export class CreateMissionDto extends PickType(Mission, ['capacity', 'date', 'time']) {}
