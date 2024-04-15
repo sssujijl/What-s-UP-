@@ -31,16 +31,13 @@ export class PuppeteerController {
   @ApiBody({
     schema: {
       example: {
-        region: '부산 동래구',
-        x: '129.0839281906404',
-        y: '35.201762680832985',
+        region: 'x=129.0839281906404&y=35.201762680832985'
       },
     },
   })
   @Post('/scraping')
   async getPlaces(
-    @Body()
-    { region, x, y }: { region: string; x: string; y: string },
+    @Body() region: string,
   ): Promise<string> {
     try {
       const startTime = Date.now();
@@ -50,7 +47,7 @@ export class PuppeteerController {
       const restaurants = [];
 
       await page.goto(
-        `https://pcmap.place.naver.com/restaurant/list?query=${region} 음식점&x=${x}&y=${y}`,
+        `https://pcmap.place.naver.com/restaurant/list?query=${region}`,
       );
 
       let hasNextPage = true;
