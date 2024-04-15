@@ -38,23 +38,29 @@ export class PuppeteerService {
     return existingCategory;
   }
 
+  async isExistingRestaurant(title: string, address: string) {
+    const existingRestaurant = await this.placeRepository.findOne({
+      where: { title: title, address: address },
+    });
+    return existingRestaurant;
+  }
+
   async createRestaurant(restaurantData: {
     title: string;
     foodCategoryId: number;
     link: string;
-    description: string;
     address: string;
     roadAddress: string;
-    mapx: number;
-    mapy: number;
     hasMenu: boolean;
   }) {
-    const existingRestaurant = await this.placeRepository.findOne({
-      where: { mapx: restaurantData.mapx, mapy: restaurantData.mapy },
-    });
+    const existingRestaurant = await this.isExistingRestaurant(
+      restaurantData.title,
+      restaurantData.address,
+    );
 
     if (existingRestaurant) {
-      return existingRestaurant;
+      console.log('이미 있는데요?');
+      return null;
     }
 
     const newRestaurant = this.placeRepository.create(restaurantData);

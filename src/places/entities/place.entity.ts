@@ -34,28 +34,12 @@ export class Place {
   link: string;
 
   @IsString()
-  @Column({ type: 'varchar', nullable: true })
-  description: string;
-
-  @IsString()
-  @Column({ type: 'varchar', nullable: true })
-  telephone: string;
-
-  @IsString()
   @Column({ type: 'varchar', nullable: false })
   address: string;
 
   @IsString()
   @Column({ type: 'varchar', nullable: false })
   roadAddress: string;
-
-  @IsNumber()
-  @Column({ type: 'int', nullable: false })
-  mapx: number;
-
-  @IsString()
-  @Column({ type: 'int', nullable: false })
-  mapy: number;
 
   @IsBoolean()
   @Column({ type: 'boolean', nullable: false })
