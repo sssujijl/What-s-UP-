@@ -31,16 +31,14 @@ export class PuppeteerController {
   @ApiBody({
     schema: {
       example: {
-        region: '부산 동래구',
-        x: '129.0839281906404',
-        y: '35.201762680832985',
+        coordinate: '&x=129.0839281906404&y=35.201762680832985',
       },
     },
   })
   @Post('/scraping')
   async getPlaces(
     @Body()
-    { region, x, y }: { region: string; x: string; y: string },
+    { coordinate }: { coordinate: string },
   ): Promise<string> {
     try {
       const startTime = Date.now();
@@ -50,9 +48,9 @@ export class PuppeteerController {
       const restaurants = [];
 
       await page.goto(
-        `https://pcmap.place.naver.com/restaurant/list?query=${region} 음식점&x=${x}&y=${y}`,
+        `https://pcmap.place.naver.com/restaurant/list?query=%EC%9D%8C%EC%8B%9D%EC%A0%90${coordinate}`,
       );
-
+      console.log(`https://pcmap.place.naver.com/restaurant/list?query=%EC%9D%8C%EC%8B%9D%EC%A0%90${coordinate}`);
       let hasNextPage = true;
       let isEndOfScroll = false;
       let pageIndex = 1;
@@ -92,6 +90,9 @@ export class PuppeteerController {
         const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
         await Promise.all(
           lists.map(async (list) => {
+            const region = await page
+              .$eval('.Pb4bU', (node) => node.textContent.trim())
+              .catch(() => null);
             const name = await list.$eval(
               'div.CHC5F > a > div > div > span.TYaxT',
               (node) => node.textContent.trim(),
@@ -229,7 +230,6 @@ export class PuppeteerController {
             button = await page.$('a.fvwqf');
           }
 
-          await page.waitForSelector('.E2jtL');
           const menuContainers = await page.$$('.E2jtL');
 
           if (menuContainers.length !== 0) {
