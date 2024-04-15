@@ -181,11 +181,12 @@ export class PuppeteerController {
 
           const [image, link, roadAddress, address] = await Promise.all([
             page
-              .$eval('.K0PDV _div', (element: HTMLElement) =>
-                element.style.backgroundImage
-                  .replace('url("', '')
-                  .replace('")', ''),
-              )
+              .$eval('.K0PDV', (element) => {
+                const backgroundImage = window
+                  .getComputedStyle(element)
+                  .getPropertyValue('background-image');
+                return backgroundImage.match(/url\("(.+)"\)/)[1];
+              })
               .catch(() => null),
             page
               .$eval('.jO09N', (element) => element.textContent)
@@ -217,7 +218,6 @@ export class PuppeteerController {
             roadAddress: roadAddress,
             hasMenu: false,
           };
-
           await page.goto(
             `https://pcmap.place.naver.com/restaurant/${storeCode}/menu/list`,
           );
@@ -238,7 +238,6 @@ export class PuppeteerController {
 
           const newRestaurant =
             await this.puppeteerService.createRestaurant(restaurantData);
-
           if (!newRestaurant || newRestaurant.hasMenu === false) {
             continue;
           }
