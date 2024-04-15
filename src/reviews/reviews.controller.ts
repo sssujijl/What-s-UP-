@@ -37,7 +37,7 @@ export class ReviewsController {
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
-  @Post('/:reservationId')
+  @Post('/:reservationId?')
   async create(
     @Param('placeId') placeId: number,
     @Body() createReviewDto: CreateReviewDto,
@@ -59,7 +59,7 @@ export class ReviewsController {
           createReviewDto.isMission = true;
         }
       }
-      
+
       const data = await this.reviewsService.create(createReviewDto, place);
 
       return {

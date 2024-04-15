@@ -4,7 +4,6 @@ import {
   Get,
   HttpStatus,
   Logger,
-  Param,
   Post,
   Query,
   Res,
@@ -12,7 +11,6 @@ import {
 import { PuppeteerService } from './puppeteer.service';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import axios from 'axios';
-import { CreateMenuDto } from 'src/menus/dto/create-menu.dto';
 
 @ApiTags('Puppeteer')
 @Controller('puppeteer')
@@ -22,6 +20,273 @@ export class PuppeteerController {
 
   delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // SECTION - 최신 스크래핑 코드
+  /**
+   * 사용자 근처 음식점을 스크래핑한다.
+   * @param Body 지역명, 위도, 경도
+   * @returns
+   */
+  @ApiBody({
+    schema: {
+      example: {
+        region: '부산 동래구',
+        x: '129.0839281906404',
+        y: '35.201762680832985',
+      },
+    },
+  })
+  @Post('/scraping')
+  async getPlaces(
+    @Body()
+    { region, x, y }: { region: string; x: string; y: string },
+  ): Promise<string> {
+    try {
+      const startTime = Date.now();
+      const browser = await this.puppeteerService.getBrowserInstance();
+
+      const page = await browser.newPage();
+      const restaurants = [];
+
+      await page.goto(
+        `https://pcmap.place.naver.com/restaurant/list?query=${region} 음식점&x=${x}&y=${y}`,
+      );
+
+      let hasNextPage = true;
+      let isEndOfScroll = false;
+      let pageIndex = 1;
+
+      page.waitForSelector('#_pcmap_list_scroll_container > ul > li');
+
+      // 페이지 넘기는 while문
+      while (hasNextPage) {
+        // 스크롤하는 while문
+        while (!isEndOfScroll) {
+          const previousListLength = await page.$$eval(
+            '#_pcmap_list_scroll_container > ul > li',
+            (lists) => lists.length,
+          );
+
+          await page.evaluate(() => {
+            const scrollableElement = document.querySelector(
+              '#_pcmap_list_scroll_container',
+            );
+            if (scrollableElement) {
+              scrollableElement.scrollTop = scrollableElement.scrollHeight;
+            }
+          });
+
+          await page.waitForNetworkIdle();
+
+          const currentListLength = await page.$$eval(
+            '#_pcmap_list_scroll_container > ul > li',
+            (lists) => lists.length,
+          );
+
+          if (previousListLength === currentListLength) {
+            isEndOfScroll = true;
+          }
+        }
+
+        const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
+        await Promise.all(
+          lists.map(async (list) => {
+            const name = await list.$eval(
+              'div.CHC5F > a > div > div > span.TYaxT',
+              (node) => node.textContent.trim(),
+            );
+            const category = await list.$eval(
+              'div.CHC5F > a > div > div > span.KCMnt',
+              (node) => node.textContent.trim(),
+            );
+            const categoryId = (
+              await this.puppeteerService.saveCategoryIfNotExists(category)
+            ).id;
+            restaurants.push({ region, name, categoryId });
+          }),
+        );
+        console.log(pageIndex, restaurants[restaurants.length - 1]);
+
+        const nextButtons = await page.$$('.eUTV2[aria-disabled="false"]');
+        if (nextButtons) {
+          const indexNow = pageIndex;
+          for (const nextButton of nextButtons) {
+            const buttonText = await nextButton.$eval(
+              'span.place_blind',
+              (span) => span.textContent,
+            );
+            if (buttonText === '다음페이지') {
+              await nextButton.click();
+              await page.waitForNetworkIdle();
+              pageIndex++;
+            }
+          }
+          if (indexNow === pageIndex) {
+            hasNextPage = false;
+          }
+        } else {
+          hasNextPage = false;
+        }
+      }
+
+      for (const restaurant of restaurants) {
+        const query = encodeURIComponent(
+          restaurant.region + ' ' + restaurant.name,
+        );
+
+        try {
+          // 메뉴 상세주소로 가기 위해 코드를 받아오는 작업
+          await page.goto(
+            `https://search.naver.com/search.naver?where=nexearch&sm=top_sly.hst&fbm=0&acr=3&ie=utf8&query=${query}`,
+          );
+
+          const storeCode = await page
+            .evaluate(() => {
+              const aTag = document.querySelector('#_title > a');
+              const element = document.querySelector(
+                'li[data-cbm-doc-id], li[data-loc_plc-doc-id]',
+              );
+
+              if (aTag) {
+                const href = aTag.getAttribute('href');
+                const match = href.match(/place\/(\d+)\?/);
+                if (match) return match[1];
+              }
+
+              if (element) {
+                return (
+                  element.getAttribute('data-cbm-doc-id') ||
+                  element.getAttribute('data-loc_plc-doc-id')
+                );
+              }
+
+              return null;
+            })
+            .catch(() => null);
+
+          if (!storeCode) {
+            continue;
+          }
+
+          await page.goto(
+            `https://pcmap.place.naver.com/restaurant/${storeCode}/home`,
+          );
+
+          page.waitForSelector('.PkgBl');
+
+          const addressBtn = await page.$('.PkgBl');
+          await addressBtn.click();
+          page.waitForSelector('.Y31Sf');
+
+          const [image, link, roadAddress, address] = await Promise.all([
+            page
+              .$eval('.K0PDV', (element) => {
+                const backgroundImage = window
+                  .getComputedStyle(element)
+                  .getPropertyValue('background-image');
+                return backgroundImage.match(/url\("(.+)"\)/)[1];
+              })
+              .catch(() => null),
+            page
+              .$eval('.jO09N', (element) => element.textContent)
+              .catch(() => null),
+            page
+              .$eval('.LDgIH', (element) => element.textContent)
+              .catch(() => null),
+            page
+              .$$('.nQ7Lh')
+              .then((elements) => {
+                if (elements[1]) {
+                  return elements[1].evaluate((node) =>
+                    node.textContent.slice(2, -2),
+                  );
+                }
+                return null;
+              })
+              .catch(() => null),
+          ]);
+
+          const baseAddress = this.extractAddress(roadAddress);
+
+          const restaurantData = {
+            image: image,
+            title: restaurant.name,
+            foodCategoryId: restaurant.categoryId,
+            link: link,
+            address: baseAddress + ' ' + address,
+            roadAddress: roadAddress,
+            hasMenu: false,
+          };
+          await page.goto(
+            `https://pcmap.place.naver.com/restaurant/${storeCode}/menu/list`,
+          );
+
+          // 더보기 버튼 클릭
+          let button = await page.$('a.fvwqf');
+          while (button) {
+            await button.click();
+            button = await page.$('a.fvwqf');
+          }
+
+          await page.waitForSelector('.E2jtL');
+          const menuContainers = await page.$$('.E2jtL');
+
+          if (menuContainers.length !== 0) {
+            restaurantData.hasMenu = true;
+          }
+
+          const newRestaurant =
+            await this.puppeteerService.createRestaurant(restaurantData);
+          if (!newRestaurant || newRestaurant.hasMenu === false) {
+            continue;
+          }
+
+          const menuPromises = menuContainers.map(async (container) => {
+            const menuName = await container
+              .$eval('.lPzHi', (element) => element.textContent)
+              .catch(() => null);
+            const menuImage = await container
+              .$eval('.K0PDV', (element) => {
+                const backgroundImage = window
+                  .getComputedStyle(element)
+                  .getPropertyValue('background-image');
+                return backgroundImage.match(/url\("(.+)"\)/)[1];
+              })
+              .catch(() => null);
+            const menuDescription = await container
+              .$eval('.kPogF', (element) => element.textContent)
+              .catch(() => null);
+            const menuPrice = await container
+              .$eval('.GXS1X', (element) => element.textContent)
+              .catch(() => null);
+
+            return this.puppeteerService.createMenu({
+              placeId: newRestaurant.id,
+              name: menuName,
+              images: menuImage,
+              description: menuDescription,
+              price: menuPrice,
+            });
+          });
+
+          await Promise.all(menuPromises);
+        } catch (error) {
+          console.error('오류 발생!:', error);
+          break;
+        }
+      }
+
+      await page.close();
+      await browser.close();
+      const endTime = Date.now();
+      const executionTime = endTime - startTime;
+      this.logger.log(`execution time: ${executionTime}ms`);
+      this.logger.log('웹 스크래핑이 성공적으로 완료되었습니다.');
+      return '웹 스크래핑이 성공적으로 완료되었습니다.';
+    } catch (error) {
+      this.logger.error('웹 스크래핑 중 오류가 발생했습니다:', error);
+    }
   }
 
   /**
@@ -240,6 +505,7 @@ export class PuppeteerController {
 
         const data = response.data.items[0];
         const restaurantData = {
+          image: '',
           title: restaurant.name,
           foodCategoryId: restaurant.categoryId,
           link: data.link,
@@ -540,6 +806,7 @@ export class PuppeteerController {
           const baseAddress = this.extractAddress(roadAddress);
 
           const restaurantData = {
+            image: '',
             title: restaurant.name,
             foodCategoryId: restaurant.categoryId,
             link: link,

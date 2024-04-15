@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { IsBoolean, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsString } from 'class-validator';
 import { Menu } from 'src/menus/entities/menu.entity';
 import { Coupon } from 'src/coupons/entities/coupon.entity';
 import { FoodCategory } from './foodCategorys.entity';
@@ -28,6 +28,10 @@ export class Place {
   @IsString()
   @Column({ type: 'varchar', nullable: false })
   title: string;
+
+  @IsString()
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  image: string;
 
   @IsString()
   @Column({ type: 'varchar', nullable: true })
