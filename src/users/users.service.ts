@@ -140,7 +140,7 @@ export class UsersService {
     return editUser;
   }
 
-  async deleteUser(user: User, deleteUserDto: DeleteUserDto) {
+  async secession(user: User, deleteUserDto: DeleteUserDto) {
     const findUser = await this.findUserWithPassword(user.id);
 
     if (!(await bcrypt.compare(deleteUserDto.password, findUser.password))) {

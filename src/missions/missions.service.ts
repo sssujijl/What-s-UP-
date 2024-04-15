@@ -35,6 +35,13 @@ export class MissionsService {
     return mission;
   }
 
+  async findTodayMission() {
+    const today = new Date().toISOString().slice(0, 10);
+    const mission = await this.missionRepository.findOneBy({ date: today });
+
+    return mission;
+  }
+
   async test() {
     return await this.resStatusRepository.find({where: {missionId: 14}});
   }

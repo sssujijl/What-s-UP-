@@ -121,13 +121,13 @@ export class UsersController {
    */
   @UseGuards(AuthGuard("jwt"))
   @Delete()
-  async deleteUser(
+  async secession(
     @UserInfo() user: User,
     @Body() deleteUserDto: DeleteUserDto,
     @Res() res: any
   ) {
     try {
-      await this.usersService.deleteUser(user, deleteUserDto);
+      await this.usersService.secession(user, deleteUserDto);
 
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
