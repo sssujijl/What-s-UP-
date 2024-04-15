@@ -46,6 +46,7 @@ export class PuppeteerService {
   }
 
   async createRestaurant(restaurantData: {
+    image: string;
     title: string;
     foodCategoryId: number;
     link: string;
