@@ -8,14 +8,14 @@ import { Place } from 'src/places/entities/place.entity';
 export class ClovaocrService {
     async requestWithFile() {
         try {
-            const filePath = '/Users/isuji/Desktop/sparta/team/whatsup/해족왕.jpeg'; // 이미지 파일 경로
+            const filePath = '/Users/t2023-m0003/Desktop/sparta/team/Whats_up/피제이피자.jpeg'; // 이미지 파일 경로
             const fileStream = fs.createReadStream(filePath);
 
             const message = {
                 images: [
                     {
-                        format: 'jpg',
-                        name: '카츠혼또.jpeg'
+                        format: 'jpeg',
+                        name: '피제이피자.jpeg'
                     }
                 ],
                 requestId: 'str',
