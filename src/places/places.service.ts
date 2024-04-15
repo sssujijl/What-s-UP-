@@ -20,7 +20,9 @@ export class PlacesService {
   }
 
   async findAllPlace() {
-    const places = await this.placeRepository.find();
+    const places = await this.placeRepository.find({
+      relations: ['foodCategory', 'reviews']
+    });
 
     if (!places) {
       throw new NotFoundException('장소들을 찾을  수 없습니다.');

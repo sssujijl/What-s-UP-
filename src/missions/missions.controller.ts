@@ -52,7 +52,7 @@ export class MissionsController {
   @Get()
   async findTodayMission() {
     try {
-      return await this.missionsService.createRandomMissions();
+      return await this.missionsService.findTodayMission();
     } catch (err) {
       return { message: `${err}` }
     }

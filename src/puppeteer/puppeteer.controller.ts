@@ -131,7 +131,7 @@ export class PuppeteerController {
     const browser = await this.puppeteerService.getBrowserInstance();
     const page = await browser.newPage();
 
-    const gu = '충남 천안시 서북구 두정동';
+    const gu = '충남 천안시 서북구';
 
     const restaurants = [];
 
