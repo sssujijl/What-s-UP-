@@ -17,12 +17,12 @@ export class RecommendController {
   async recommendRestaurant(@Req() req: any): Promise<any> {
     const userId = req.user.id;
 
-    const prefferedCategories =
+    const preferredCategories =
       await this.recommendService.getUserPreferredCategories(userId);
 
     const places =
       await this.recommendService.getPlacesByFoodCategories(
-        prefferedCategories,
+        preferredCategories,
       );
 
     const recommendedPlaces = this.recommendService.filterGoodPlaces(places);
