@@ -11,16 +11,15 @@ import {
 import { PuppeteerService } from './puppeteer.service';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import axios from 'axios';
-import { privateDecrypt } from 'crypto';
 import { SendMailService } from 'src/users/sendMail.service';
-import { throwError } from 'rxjs';
 
 @ApiTags('Puppeteer')
 @Controller('puppeteer')
 export class PuppeteerController {
   private readonly logger = new Logger(PuppeteerController.name);
-  constructor(private readonly puppeteerService: PuppeteerService,
-    private readonly sendMailService: SendMailService
+  constructor(
+    private readonly puppeteerService: PuppeteerService,
+    private readonly sendMailService: SendMailService,
   ) {}
 
   delay(ms: number) {
