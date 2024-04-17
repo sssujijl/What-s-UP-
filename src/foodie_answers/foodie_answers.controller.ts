@@ -7,14 +7,25 @@ import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
 import { validate } from 'class-validator';
+import { ApiTags } from '@nestjs/swagger';
+import { TitlesService } from 'src/titles/titles.service';
+import { Title } from 'src/titles/entities/titles.entity';
+import { userInfo } from 'os';
 
+@ApiTags('Foodie_Answer')
 @Controller('/foodie/:foodieId/foodie_answer')
 export class FoodieAnswersController {
   constructor(
     private readonly foodieAnswersService: FoodieAnswersService,
-    private readonly foodiesService: FoodiesService
+    private readonly foodiesService: FoodiesService,
   ) { }
 
+  /**
+   * 맛집인 답글 등록
+   * @param foodieId
+   * @example "인정하는 부분입니다."
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Post()
   async createAnswer(
@@ -37,6 +48,27 @@ export class FoodieAnswersController {
     }
   }
 
+  // 칭호레벨 확인로직
+  @UseGuards(AuthGuard('jwt'))
+  @Get()
+  async CheckTitle(
+    @Param("foodieId") foodieId: number,
+    @UserInfo() user: User
+  ) {
+    try {
+      const foodie = await this.foodiesService.findOneById(foodieId);
+
+      return await this.foodieAnswersService.CheckTitle(foodie, user);
+    } catch (err) {
+      return { message: `${err}` };
+    }
+  }
+
+  /**
+   * 맛집인 답글 목록 조회
+   * @param foodieId
+   * @returns
+   */
   @Get()
   async findAllAnswers(
     @Param("foodieId") foodieId: number
@@ -50,6 +82,13 @@ export class FoodieAnswersController {
     }
   }
 
+  /**
+   * 맛집인 답글 수정
+   * @param foodieId
+   * @param foodieAnswerId
+   * @example "인정 못합니다."
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Patch('/:foodieAnswerId')
   async updateAnswer(
@@ -69,6 +108,12 @@ export class FoodieAnswersController {
     }
   }
 
+  /**
+   * 맛집인 답글 삭제
+   * @param foodieId
+   * @param foodieAnswerId
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Delete('/:foodieAnswerId')
   async deleteAnswer(

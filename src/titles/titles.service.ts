@@ -1,53 +1,132 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Title } from './entities/title.entity';
-import { User_Title } from './entities/user_titles.entity';
+import { Point } from 'src/points/entities/point.entity';
+import { DataSource, Repository } from 'typeorm';
+import { Title } from './entities/titles.entity';
+import { Level } from './types/level.type';
 
 @Injectable()
 export class TitlesService {
-  constructor (
+  constructor(
     @InjectRepository(Title) private readonly titleRepository: Repository<Title>,
-    @InjectRepository(User_Title) private readonly userTitleRepository: Repository<User_Title>
-  ) {}
+    private dataSource: DataSource,
+  ) { }
 
-  async findUserTitle(userId: number, titleId: number) {
-    // Foodie 조건 Title -> 이하는 답변달수없음
-    const title = await this.findTitle(titleId);
+  async givenTitle(userId: number, foodCategoryId: number, count: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const userTitle = await this.userTitleRepository
-    .createQueryBuilder("userTitle")
-    .innerJoinAndSelect("userTitle.title", "title")
-    .innerJoin("title.foodCategory", "foodCategory")
-    .where("userTitle.userId = :userId", { userId })
-    .andWhere("title.level >= :level", { level: title.level })
-    .andWhere("foodCategory.id = :foodCategoryId", { foodCategoryId: title.foodCategoryId })
-    .getOne();
+    try {
+      const title = await this.findTitle(userId, foodCategoryId);
 
-    if (!userTitle) {
-      throw new UnauthorizedException('해당 유저는 답변 권한이 없습니다.');
+      if (!title) {
+        const title = await queryRunner.manager.save(Title, { userId, foodCategoryId });
+        
+        await queryRunner.manager.save(Point, { userId, point: 1000 });
+        await queryRunner.commitTransaction();
+
+        return title;
+      }
+
+      title.count += count;
+      const newTitle = await this.upgradeTitle(title);
+
+      const upgradeTitle = await queryRunner.manager.update(Title, title.id, newTitle);
+
+      if (title.level !== newTitle.level) {
+        const point = await this.paymentPoint(newTitle.level);
+
+        await queryRunner.manager.save(Point, {userId, point});
+      }
+
+      await queryRunner.commitTransaction();
+
+      return upgradeTitle;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      return { message: `${err}` }
+    } finally {
+      await queryRunner.release();
     }
-
-    return userTitle;
   }
 
-  async findTitle(titleId: number) {
-    const title = await this.titleRepository.findOneBy({ id: titleId });
+  async findTitle(userId: number, foodCategoryId: number) {
+    const title = await this.titleRepository.findOneBy({ userId, foodCategoryId });
 
-    if (!title) {
-      throw new NotFoundException('해당 칭호를 찾을 수 없습니다.');
+    return title;
+  }
+
+  async findAllTitles(userId: number) {
+    const titles = await this.titleRepository.findBy({ userId });
+
+    return titles;
+  }
+
+  async Top3_Titles(userId: number) {
+    const titles = await this.findAllTitles(userId);
+
+    const top3 = titles.sort((a, b) => {
+      if (b.count !== a.count) {
+        return b.count - a.count; 
+      } else {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      }
+    }).slice(0, 3);
+
+    if (!titles) {
+      throw new NotFoundException('칭호가 없습니다.')
+    }
+    return top3;
+  }
+
+  async upgradeTitle(title: Title) {
+
+    if (title.count > 10) {
+      title.level = Level.초보
+
+    } else if (title.count > 30) {
+      title.level = Level.중수
+
+    } else if (title.count > 50) {
+      title.level = Level.고수
+
+    } else if (title.count > 80) {
+      title.level = Level.전문가
+
+    } else if (title.count > 120) {
+      title.level = Level.신
+
+    } else if (title.count > 200) {
+      title.level = Level.음식
     }
 
     return title;
   }
 
-  async findTitlesByFoodCategoryId(foodCategoryId: number) {
-    const titles = await this.titleRepository.find({ where: {foodCategoryId} });
+  async paymentPoint(level: Level) {
+    let point:number = 0;
 
-    if (!titles) {
-      throw new NotFoundException('해당 카테고리별 칭호를 찾을 수 없습니다.');
+    if (level === Level.초보) {
+      point = 3000;
+
+    } else if (level === Level.중수) {
+      point = 5000;
+
+    } else if (level === Level.고수) {
+      point = 8000;
+
+    } else if (level === Level.전문가) {
+      point = 12000;
+
+    } else if (level === Level.신) {
+      point = 15000;
+
+    } else if (level === Level.음식) {
+      point = 20000;
     }
 
-    return titles;
+    return point;
   }
+
 }

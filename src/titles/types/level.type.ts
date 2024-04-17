@@ -1,7 +1,9 @@
-export enum level {
-    level1,
-    level2,
-    level3,
-    level4,
-    level5,
+export enum Level {
+    입문,
+    초보,
+    중수,
+    고수,
+    전문가,
+    신,
+    음식
 }

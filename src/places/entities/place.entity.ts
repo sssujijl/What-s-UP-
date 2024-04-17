@@ -1,11 +1,21 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { IsBoolean, IsNumber, IsString  } from "class-validator";
-import { Menu } from "src/menus/entities/menu.entity";
-import { Coupon } from "src/coupons/entities/coupon.entity";
-import { FoodCategory } from "./foodCategorys.entity";
-import { ResStatus } from "src/reservations/entities/resStatus.entity";
-import { Saved_Place } from "src/place-lists/entities/savedPlaces.entity";
-
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { IsBoolean, IsNumber, IsString } from 'class-validator';
+import { Menu } from 'src/menus/entities/menu.entity';
+import { Coupon } from 'src/coupons/entities/coupon.entity';
+import { FoodCategory } from './foodCategorys.entity';
+import { ResStatus } from 'src/reservations/entities/resStatus.entity';
+import { Saved_Place } from 'src/place-lists/entities/savedPlaces.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 
 @Entity({ name: 'places' })
 export class Place {
@@ -24,14 +34,6 @@ export class Place {
   link: string;
 
   @IsString()
-  @Column({ type: 'varchar', nullable: true })
-  description: string;
-
-  @IsString()
-  @Column({ type: 'varchar', nullable: true })
-  telephone: string;
-
-  @IsString()
   @Column({ type: 'varchar', nullable: false })
   address: string;
 
@@ -39,16 +41,8 @@ export class Place {
   @Column({ type: 'varchar', nullable: false })
   roadAddress: string;
 
-  @IsNumber()
-  @Column({ type: 'int', nullable: false })
-  mapx: number;
-
-  @IsString()
-  @Column({ type: 'int', nullable: false })
-  mapy: number;
-
   @IsBoolean()
-  @Column({ type: 'boolean', nullable: false, default: true })
+  @Column({ type: 'boolean', nullable: false })
   hasMenu: boolean;
 
   @CreateDateColumn()
@@ -63,7 +57,9 @@ export class Place {
   @OneToMany(() => Menu, (menu) => menu.place, { cascade: true })
   menus: Menu[];
 
-  @OneToMany(() => Saved_Place, (savedPlace) => savedPlace.place, { cascade: true })
+  @OneToMany(() => Saved_Place, (savedPlace) => savedPlace.place, {
+    cascade: true,
+  })
   savedPlaces: Saved_Place[];
 
   @OneToMany(() => Coupon, (coupon) => coupon.place, { cascade: true })
@@ -71,6 +67,9 @@ export class Place {
 
   @OneToMany(() => ResStatus, (resStatus) => resStatus.place, { cascade: true })
   resStatus: ResStatus[];
+
+  @OneToMany(() => Review, (review) => review.place, { cascade: true })
+  reviews: Review[];
 
   @ManyToOne(() => FoodCategory, (foodCategory) => foodCategory.places)
   @JoinColumn({ name: 'foodCategoryId', referencedColumnName: 'id' })

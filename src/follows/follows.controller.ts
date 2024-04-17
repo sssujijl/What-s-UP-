@@ -4,7 +4,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/users/entities/user.entity';
 import { UserInfo } from 'src/utils/userInfo.decorator';
 import { UsersService } from 'src/users/users.service';
+import { ApiTags } from '@nestjs/swagger'
 
+@ApiTags('Follows')
 @Controller('follows')
 export class FollowsController {
   constructor(
@@ -12,6 +14,11 @@ export class FollowsController {
     private readonly userService: UsersService
   ) {}
 
+  /**
+   * 팔로우하기
+   * @param userId
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Post('/:userId')
   async follow(
@@ -27,6 +34,10 @@ export class FollowsController {
     }
   }
 
+  /**
+   * 팔로워 확인
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Get()
   async findFollower(
@@ -39,6 +50,10 @@ export class FollowsController {
     }
   }
 
+  /**
+   * 팔로잉 확인
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Get('/:userId')
   async findFollowing(
