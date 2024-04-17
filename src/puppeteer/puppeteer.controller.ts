@@ -11,12 +11,17 @@ import {
 import { PuppeteerService } from './puppeteer.service';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import axios from 'axios';
+import { privateDecrypt } from 'crypto';
+import { SendMailService } from 'src/users/sendMail.service';
+import { throwError } from 'rxjs';
 
 @ApiTags('Puppeteer')
 @Controller('puppeteer')
 export class PuppeteerController {
   private readonly logger = new Logger(PuppeteerController.name);
-  constructor(private readonly puppeteerService: PuppeteerService) {}
+  constructor(private readonly puppeteerService: PuppeteerService,
+    private readonly sendMailService: SendMailService
+  ) {}
 
   delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -50,7 +55,6 @@ export class PuppeteerController {
       await page.goto(
         `https://pcmap.place.naver.com/restaurant/list?query=%EC%9D%8C%EC%8B%9D%EC%A0%90${coordinate}`,
       );
-      console.log(`https://pcmap.place.naver.com/restaurant/list?query=%EC%9D%8C%EC%8B%9D%EC%A0%90${coordinate}`);
       let hasNextPage = true;
       let isEndOfScroll = false;
       let pageIndex = 1;
@@ -272,7 +276,8 @@ export class PuppeteerController {
 
           await Promise.all(menuPromises);
         } catch (error) {
-          console.error('오류 발생!:', error);
+          this.logger.error('웹 스크래핑 중 오류가 발생했습니다:', error);
+          this.sendMailService.sendAlertEmail(error);
           break;
         }
       }
@@ -286,6 +291,7 @@ export class PuppeteerController {
       return '웹 스크래핑이 성공적으로 완료되었습니다.';
     } catch (error) {
       this.logger.error('웹 스크래핑 중 오류가 발생했습니다:', error);
+      this.sendMailService.sendAlertEmail(error);
     }
   }
 
@@ -529,7 +535,6 @@ export class PuppeteerController {
     return savedPlaces;
   }
 
-  // SECTION - 최신 스크래핑 코드
   /**
    * 스크래핑 실험 - 통합
    * 현재 상태: 구 정보가 저장된 임의의 배열로 스크래핑한다.
