@@ -1,85 +1,77 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { IsNumber, IsString } from "class-validator";
-import { Menu } from "src/menus/entities/menu.entity";
-import { PlaceList } from "src/place-lists/entities/place-list.entity";
-import { Coupon } from "src/coupons/entities/coupon.entity";
-import { Reservation } from "src/reservations/entities/reservation.entity";
-import { Mission } from "src/missions/entities/mission.entity";
-import { FoodCategory } from "./foodCategorys.entity";
-import { Like } from "src/likes/entities/like.entity";
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { IsBoolean, IsNumber, IsString } from 'class-validator';
+import { Menu } from 'src/menus/entities/menu.entity';
+import { Coupon } from 'src/coupons/entities/coupon.entity';
+import { FoodCategory } from './foodCategorys.entity';
+import { ResStatus } from 'src/reservations/entities/resStatus.entity';
+import { Saved_Place } from 'src/place-lists/entities/savedPlaces.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 
-@Entity({ name: "places" })
+@Entity({ name: 'places' })
 export class Place {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ type: 'int', nullable: false})
-    foodCategoryId: number;
+  @Column({ type: 'int', nullable: false })
+  foodCategoryId: number;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: false })
-    title: string;
+  @IsString()
+  @Column({ type: 'varchar', nullable: false })
+  title: string;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: true })
-    link: string;
+  @IsString()
+  @Column({ type: 'varchar', nullable: true })
+  link: string;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: true })
-    description: string;
+  @IsString()
+  @Column({ type: 'varchar', nullable: false })
+  address: string;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: true })
-    telephone: string;
+  @IsString()
+  @Column({ type: 'varchar', nullable: false })
+  roadAddress: string;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: false })
-    address: string;
+  @IsBoolean()
+  @Column({ type: 'boolean', nullable: false })
+  hasMenu: boolean;
 
-    @IsString()
-    @Column({ type: 'varchar', nullable: false })
-    roadAddress: string;
+  @CreateDateColumn()
+  createdAt: Date;
 
-    @IsNumber()
-    @Column({ type: 'int', nullable: false })
-    mapx: number;
+  @UpdateDateColumn()
+  updatedAt: Date;
 
-    @IsString()
-    @Column({ type: 'int', nullable: false })
-    mapy: number;
+  @DeleteDateColumn()
+  deletedAt: Date;
 
-    @IsString()
-    @Column({ type: 'int', nullable: false, default: 0 })
-    likes: number;
+  @OneToMany(() => Menu, (menu) => menu.place, { cascade: true })
+  menus: Menu[];
 
-    @CreateDateColumn()
-    createdAt: Date;
+  @OneToMany(() => Saved_Place, (savedPlace) => savedPlace.place, {
+    cascade: true,
+  })
+  savedPlaces: Saved_Place[];
 
-    @UpdateDateColumn()
-    updatedAt: Date;
+  @OneToMany(() => Coupon, (coupon) => coupon.place, { cascade: true })
+  coupons: Coupon[];
 
-    @DeleteDateColumn()
-    deletedAt: Date;
+  @OneToMany(() => ResStatus, (resStatus) => resStatus.place, { cascade: true })
+  resStatus: ResStatus[];
 
-    @OneToMany(() => Menu, (menu) => menu.place, { cascade: true })
-    menus: Menu[];
+  @OneToMany(() => Review, (review) => review.place, { cascade: true })
+  reviews: Review[];
 
-    @OneToMany(() => PlaceList, (placeList) => placeList.place, { cascade: true })
-    placeLists: PlaceList[];
-
-    @OneToMany(() => Like, (like) => like.place, { cascade: true })
-    Likes: Like[];
-
-    @OneToMany(() => Coupon, (coupon) => coupon.place, { cascade: true })
-    coupons: Coupon[];
-
-    @OneToMany(() => Mission, (mission) => mission.place, { cascade: true })
-    missions: Mission[];
-
-    @OneToMany(() => Reservation, (reservation) => reservation.place, { cascade: true })
-    reservations: Reservation[];
-
-    @ManyToOne(() => FoodCategory, (foodCategory) => foodCategory.places)
-    @JoinColumn({ name: 'foodCategoryId', referencedColumnName: 'id' })
-    foodCategory: FoodCategory;
+  @ManyToOne(() => FoodCategory, (foodCategory) => foodCategory.places)
+  @JoinColumn({ name: 'foodCategoryId', referencedColumnName: 'id' })
+  foodCategory: FoodCategory;
 }

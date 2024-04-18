@@ -1,34 +1,34 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Get } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { User } from 'src/users/entities/user.entity';
+import { UserInfo } from 'src/utils/userInfo.decorator';
 import { TitlesService } from './titles.service';
-import { CreateTitleDto } from './dto/create-title.dto';
-import { UpdateTitleDto } from './dto/update-title.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Titles')
 @Controller('titles')
 export class TitlesController {
-  constructor(private readonly titlesService: TitlesService) {}
+  constructor(
+    private readonly titlesService: TitlesService
+  ) {}
 
-  @Post()
-  create(@Body() createTitleDto: CreateTitleDto) {
-    return this.titlesService.create(createTitleDto);
-  }
-
+  @UseGuards(AuthGuard('jwt'))
   @Get()
-  findAll() {
-    return this.titlesService.findAll();
+  async findAllTitles(@UserInfo() user: User) {
+    try {
+      return await this.titlesService.findAllTitles(user.id); 
+    } catch (err) {
+      return { message: `${err}` };
+    }
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.titlesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTitleDto: UpdateTitleDto) {
-    return this.titlesService.update(+id, updateTitleDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.titlesService.remove(+id);
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/top3')
+  async Top3_Titles(@UserInfo() user:User) {
+    try {
+      return await this.titlesService.Top3_Titles(user.id)
+    } catch (err) {
+      return { message: `${err}`};
+    }
   }
 }

@@ -1,21 +1,24 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
+import { IsEnum, IsNumber, IsString } from "class-validator";
 import { Status } from "../types/status.type";
 import { Foodie_Answer } from "src/foodie_answers/entities/foodie_answer.entity";
 import { User } from "src/users/entities/user.entity";
-import { Title } from "src/titles/entities/title.entity";
-import { Like } from "src/likes/entities/like.entity";
+import { Level } from "src/titles/types/level.type";
+import { FoodCategory } from "src/places/entities/foodCategorys.entity";
 
 @Entity({ name: "foodies" })
 export class Foodie {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'int', nullable: false})
+    @Column({ type: 'int', nullable: false })
     userId: number;
 
-    @Column({ type: 'int', nullable: false})
-    titleId: number;
+    @Column({ type: 'int', nullable: false })
+    foodCategoryId: number; 
+
+    @Column({ type: 'enum', enum: Level, nullable: false })
+    level: Level;
 
     @IsString()
     @Column({ type: 'varchar', nullable: false })
@@ -25,13 +28,8 @@ export class Foodie {
     @Column({ type: 'varchar', nullable: false })
     content: string;
 
-    @IsString()
     @Column({ type: 'varchar', nullable: true })
     images: string;
-
-    @IsNumber()
-    @Column({ type: 'int', nullable: false, default: 0 })
-    likes: number;
 
     @IsNumber()
     @Column({ type: 'int', nullable: false, default: 0 })
@@ -50,9 +48,6 @@ export class Foodie {
     @DeleteDateColumn()
     deletedAt: Date;
 
-    @OneToMany(() => Like, (like) => like.foodie, { cascade: true })
-    Likes: Like[];
-
     @OneToMany(() => Foodie_Answer, (foodieAnswer) => foodieAnswer.foodie, { cascade: true })
     foodieAnswers: Foodie_Answer[];
 
@@ -60,7 +55,7 @@ export class Foodie {
     @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
     user: User;
 
-    @ManyToOne(() => Title, (title) => title.foodies)
-    @JoinColumn({ name: 'titleId', referencedColumnName: 'id' })
-    Title: Title;
+    @ManyToOne(() => FoodCategory, (foodCategory) => foodCategory.foodies)
+    @JoinColumn({ name: 'foodCategoryId', referencedColumnName: 'id' })
+    foodCategory: FoodCategory;
 }

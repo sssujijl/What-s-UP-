@@ -5,6 +5,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
+import { PlaceListsModule } from 'src/place-lists/place-lists.module';
+import { AuthorStrategy } from './author.strategy';
+import { JwtGoogleStrategy } from './google.strategy';
+import { JwtNaverStrategy } from './naver.strategy';
+import { JwtKakaoStrategy } from './kakao.strategy';
 
 @Module({
   imports: [
@@ -15,9 +20,18 @@ import { JwtStrategy } from './jwt.strategy';
       }),
       inject: [ConfigService],
     }),
-    forwardRef(() => UsersModule)
+    forwardRef(() => UsersModule),
+    forwardRef(() => PlaceListsModule)
   ],
-  providers: [AuthService, JwtStrategy],
+  controllers: [],
+  providers: [
+    AuthService, 
+    JwtStrategy, 
+    AuthorStrategy,
+    JwtGoogleStrategy,
+    JwtNaverStrategy,
+    JwtKakaoStrategy
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

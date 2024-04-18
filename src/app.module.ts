@@ -1,5 +1,4 @@
 import Joi from 'joi';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -16,7 +15,6 @@ import { PointsModule } from './points/points.module';
 import { PlaceListsModule } from './place-lists/place-lists.module';
 import { MissionsModule } from './missions/missions.module';
 import { ReservationsModule } from './reservations/reservations.module';
-import { LikesModule } from './likes/likes.module';
 import { PlacesModule } from './places/places.module';
 import { MenusModule } from './menus/menus.module';
 import { ReviewsModule } from './reviews/reviews.module';
@@ -26,13 +24,11 @@ import { Point } from './points/entities/point.entity';
 import { Saved_Place } from './place-lists/entities/savedPlaces.entity';
 import { PlaceList } from './place-lists/entities/place-list.entity';
 import { FoodCategory } from './places/entities/foodCategorys.entity';
-import { User_Title } from './titles/entities/user_titles.entity';
-import { Like } from './likes/entities/like.entity';
 import { Follow } from './follows/entities/follow.entity';
 import { Coupon } from './coupons/entities/coupon.entity';
 import { Mission } from './missions/entities/mission.entity';
 import { Reservation } from './reservations/entities/reservation.entity';
-import { Title } from './titles/entities/title.entity';
+import { Title } from './titles/entities/titles.entity';
 import { User_ChatRoom } from './chat-rooms/entities/user_chatRoom.entity';
 import { ChatRoom } from './chat-rooms/entities/chat-room.entity';
 import { Message } from './messages/entities/message.entity';
@@ -44,12 +40,22 @@ import { Foodie } from './foodies/entities/foodie.entity';
 import { Foodie_Answer } from './foodie_answers/entities/foodie_answer.entity';
 import { FoodMate } from './foodmates/entities/foodmate.entity';
 import { User_FoodMate } from './foodmates/entities/user_foodmates.entity';
+import { PuppeteerModule } from './puppeteer/puppeteer.module';
+import { ResStatus } from './reservations/entities/resStatus.entity';
+import { BullModule } from '@nestjs/bull';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { ProducerModule } from './producer/producer.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-ioredis';
+import dotenv from 'dotenv';
+import { ClovaocrModule } from './clovaocr/clovaocr.module';
+dotenv.config();
+import { RecommendModule } from './recommend/recommend.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
     configService: ConfigService,
   ): Promise<TypeOrmModuleOptions> => ({
-    namingStrategy: new SnakeNamingStrategy(),
     type: 'mysql',
     username: configService.get('DB_USERNAME'),
     password: configService.get('DB_PASSWORD'),
@@ -62,8 +68,6 @@ const typeOrmModuleOptions = {
       Saved_Place,
       PlaceList,
       FoodCategory,
-      User_Title,
-      Like,
       Follow,
       Coupon,
       Mission,
@@ -80,9 +84,11 @@ const typeOrmModuleOptions = {
       Foodie_Answer,
       FoodMate,
       User_FoodMate,
+      ResStatus,
+      Order_Menus
     ],
     synchronize: configService.get('DB_SYNC'),
-    logging: true,
+    logging: true
   }),
   inject: [ConfigService],
 };
@@ -101,6 +107,23 @@ const typeOrmModuleOptions = {
         DB_SYNC: Joi.boolean().required(),
       }),
     }),
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST,
+        port: +process.env.REDIS_PORT,
+      },
+    }),
+    RedisModule.forRootAsync({
+      useFactory: () => ({
+        type: 'single',
+        url: process.env.REDIS_URL
+      })
+    }),
+    CacheModule.register({
+      store: redisStore,
+      host: process.env.REDIS_HOST,
+      port: +process.env.REDIS_PORT,
+    }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UsersModule,
     AuthModule,
@@ -115,11 +138,14 @@ const typeOrmModuleOptions = {
     PlaceListsModule,
     MissionsModule,
     ReservationsModule,
-    LikesModule,
     PlacesModule,
     MenusModule,
     ReviewsModule,
     FollowsModule,
+    PuppeteerModule,
+    ClovaocrModule,
+    ProducerModule,
+    RecommendModule,
   ],
   controllers: [],
   providers: [],

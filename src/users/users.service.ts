@@ -3,18 +3,25 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from "bcryptjs";
-import { PointsService } from 'src/points/points.service';
 import { SignupDto } from './dto/signup.dto';
 import { signinDto } from './dto/signin.dto';
 import { EditUserDto } from './dto/editUser.dto';
 import { DeleteUserDto } from './dto/deleteUser.dto';
+import { Point } from 'src/points/entities/point.entity';
+import { SendMailService } from 'src/users/sendMail.service';
+import { number } from 'joi';
+import Redis from 'ioredis';
+import { CheckVerification } from './dto/checkVerification.dto';
+import { InjectRedis } from '@nestjs-modules/ioredis';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
-    private readonly pointService: PointsService,
+
+    // private readonly snsService: SnsService
+    @InjectRedis() private readonly redis: Redis
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -23,8 +30,6 @@ export class UsersService {
     await queryRunner.startTransaction();
 
     try {
-      await this.validate(signupDto.email, signupDto.phone, signupDto.nickName);
-
       if (signupDto.password !== signupDto.checkPassword) {
         throw new Error('비밀번호가 일치하지 않습니다.');
       }
@@ -32,9 +37,19 @@ export class UsersService {
       const salt = await bcrypt.genSalt();
       signupDto.password = await bcrypt.hash(signupDto.password, salt);
 
+      const verification = await this.redis.get(`VerificationCheck:${signupDto.email}`);
+
+      if (!verification) {
+        throw new UnauthorizedException('이메일 인증을 완료해주세요.');
+      } else {
+        await this.redis.del(`VerificationCheck:${signupDto.email}`);
+        signupDto.isVerified = true;
+      }
+
       const user = await queryRunner.manager.save(User, signupDto);
 
-      await this.pointService.createPoint(user.id, 3000);
+      const userPoint = { userId: user.id, point: 3000};
+      await queryRunner.manager.save(Point, userPoint);
 
       await queryRunner.commitTransaction();
 
@@ -47,16 +62,21 @@ export class UsersService {
     }
   }
 
-  async validate(email: string, phone: string, nickName: string) {
-    const duplicateUsers = await this.userRepository
-      .createQueryBuilder('user')
-      .where('user.deletedAt IS NULL')
-      .andWhere('(user.email = :email OR user.phone = :phone OR user.nickName = :nickName)', { email, phone, nickName })
-      .getMany();
+  async checkVerificationCode(checkVerification: CheckVerification) {
+    const verificationCode = await this.redis.get(`verificationCode:${checkVerification.email}`);
 
-    if (duplicateUsers.length > 0) {
-      throw new Error('중복된 사용자 정보가 있습니다.');
+    if (!verificationCode) {
+      throw new NotFoundException('인증시간이 만료되었습니다.');
+    } else {
+      await this.redis.del(`verificationCode:${checkVerification.email}`);
     }
+
+    if (checkVerification.checkVerificationCode !== verificationCode) {
+      throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
+    }
+
+    await this.redis.setex(`VerificationCheck:${checkVerification.email}`, 1800, 'true');
+    return verificationCode;
   }
 
   async findUserById(id: number) {
@@ -130,5 +150,25 @@ export class UsersService {
 
     user.deletedAt = new Date();
     return await this.userRepository.save(user);
+  }
+
+  async findUserByNickName(nickName: string) {
+    const user = await this.userRepository.findOneBy({ nickName });
+
+    if (!user) {
+      throw new NotFoundException('해당 닉네임의 유저를 찾을 수 없습니다.');
+    }
+
+    return user;
+  }
+
+  async socialLogin(req: any, res: any) {
+    let user = await this.userRepository.findOneBy({ email: req.user.email });
+
+    if (!user) {
+      user = await this.userRepository.save(req.user);
+    }
+
+    return user;
   }
 }

@@ -107,8 +107,8 @@ export class ReviewsService {
     }
   }
 
-  async findAll() {
-    const reviews = await this.reviewRepository.find();
+  async findAll(placeId: number) {
+    const reviews = await this.reviewRepository.findBy({ placeId });
     return reviews;
   }
 
@@ -119,18 +119,31 @@ export class ReviewsService {
 
   async update(id: number, updateReviewDto: UpdateReviewDto) {
     const { content, images, rating } = updateReviewDto;
+
     const review = await this.reviewRepository.findOne({ where: { id } });
+
     if (!review) {
       throw new NotFoundException('리뷰를 찾을 수 없습니다.');
     }
+
+    if (review.userId !== updateReviewDto.userId) {
+      throw new UnauthorizedException('리뷰를 수정할 권한이 없습니다.');
+    }
+
     await this.reviewRepository.update(id, { content, images, rating });
   }
 
-  async remove(id: number) {
+  async remove(id: number, userId: number) {
     const review = await this.reviewRepository.findOne({ where: { id } });
+
     if (!review) {
       throw new NotFoundException('리뷰를 찾을 수 없습니다.');
     }
+
+    if (review.userId !== userId) {
+      throw new UnauthorizedException('리뷰를 수정할 권한이 없습니다.');
+    }
+
     await this.reviewRepository.delete(id);
   }
 }

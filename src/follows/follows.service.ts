@@ -1,26 +1,47 @@
-import { Injectable } from '@nestjs/common';
-import { CreateFollowDto } from './dto/create-follow.dto';
-import { UpdateFollowDto } from './dto/update-follow.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Follow } from './entities/follow.entity';
+import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class FollowsService {
-  create(createFollowDto: CreateFollowDto) {
-    return 'This action adds a new follow';
+  constructor (
+    @InjectRepository(Follow) private readonly followRepository: Repository<Follow>
+  ) {}
+
+  async follow(followerId: number, followeeId: number) {
+    const follow = await this.findAll(followerId, followeeId);
+
+    if (follow) {
+      return await this.followRepository.delete({ followerId, followeeId });
+    }
+
+    return await this.followRepository.save({followerId, followeeId});
   }
 
-  findAll() {
-    return `This action returns all follows`;
+  async findAll(followerId: number, followeeId: number) {
+    const follow = await this.followRepository.findOneBy({followerId, followeeId});
+
+    return follow;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} follow`;
+  async findFollower(userId: number) {
+    const follower = await this.followRepository.findBy({ followerId: userId });
+
+    if (!follower) {
+      throw new NotFoundException('팔로우 목록을 찾을 수 없습니다.');
+    }
+
+    return follower;
   }
 
-  update(id: number, updateFollowDto: UpdateFollowDto) {
-    return `This action updates a #${id} follow`;
-  }
+  async findFollowing(userId: number) {
+    const following = await this.followRepository.findBy({ followeeId: userId });
 
-  remove(id: number) {
-    return `This action removes a #${id} follow`;
+    if (!following) {
+      throw new NotFoundException('팔로잉 목록을 찾을 수 없습니다.');
+    }
+
+    return following;
   }
 }

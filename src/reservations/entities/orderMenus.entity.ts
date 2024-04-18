@@ -17,13 +17,13 @@ export class Order_Menus {
 
     @IsNumber()
     @Column({ type: 'int', nullable: false})
-    price: number;
+    totalPrice: number;
 
-    @ManyToOne(() => Reservation, (reservation) => reservation.orderMenus, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Reservation, (reservation) => reservation.orderMenus)
     @JoinColumn({ name: 'reservationId', referencedColumnName: 'id' })
-    reservation: Reservation[];
+    reservation: Reservation;
 
     @ManyToOne(() => Menu, (menu) => menu.orderMenus, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'menuId', referencedColumnName: 'id' })
-    menu: Menu[];
+    menu: Menu;
 }

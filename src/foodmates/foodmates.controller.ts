@@ -96,7 +96,7 @@ export class FoodmatesController {
   /**
    * 밥친구 수정
    * @param id
-   * @param updateBoardDto
+   * @param updateFoodmateDto
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
