@@ -1,14 +1,14 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { PlacesService } from './places.service';
 
 @Controller('places')
 export class PlacesController {
   constructor(private readonly placesService: PlacesService) {}
 
-  @Get()
-  async findAllPlace() {
+  @Post()
+  async findAllPlace(@Body() { dong }: { dong: string }) {
     try {
-      return await this.placesService.findAllPlace();
+      return await this.placesService.findAllPlace(dong);
     } catch (err) {
       return { message: `${err}` }
     }

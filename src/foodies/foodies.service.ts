@@ -64,7 +64,9 @@ export class FoodiesService {
   }
 
   async findAllFoodies() {
-    const foodie = await this.foodieRepository.find();
+    const foodie = await this.foodieRepository.find({
+      relations: ['foodieAnswers', 'foodCategory']
+    });
 
     if (!foodie) {
       throw new NotFoundException('맛집인 게시물을 찾을 수 없습니다.');

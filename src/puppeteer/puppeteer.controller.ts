@@ -43,7 +43,7 @@ export class PuppeteerController {
     try {
       const startTime = Date.now();
       const browser = await this.puppeteerService.getBrowserInstance();
-
+      console.log('----------', coordinate);
       const page = await browser.newPage();
       const restaurants = [];
 

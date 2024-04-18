@@ -167,7 +167,12 @@ export class UsersController {
   @UseGuards(AuthGuard("google"))
   @Get('/callback/google')
   async googleCallback(@Req() req: any, @Res() res: any) {
-    res.redirect('/users')
+    console.log('-------------', req.user);
+    const user = await this.usersService.socialLogin(req, res);
+
+    await this.authService.createTokens(res, user.id);
+
+    return res.json({ message: "로그인이 완료되었습니다." });
   }
 
   /**

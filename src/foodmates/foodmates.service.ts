@@ -29,7 +29,9 @@ export class FoodmatesService {
   }
 
   async findAll() {
-    return await this.foodmateRepository.find();
+    return await this.foodmateRepository.find({
+      relations: ['userFoodMates', 'foodCategory']
+    });
   }
 
   async findOne(id: number) {

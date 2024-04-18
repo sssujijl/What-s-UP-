@@ -2,6 +2,8 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Logger } 
 import { MissionsService } from './missions.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
+import { CreateMissionDto } from './dto/create-mission.dto';
+import { Time } from './types/mission_time.type';
 
 @ApiTags('Missions')
 @Controller('missions')
@@ -53,6 +55,13 @@ export class MissionsController {
   async findTodayMission() {
     try {
       return await this.missionsService.findTodayMission();
+      // const createMissionDto: CreateMissionDto = {
+      //   capacity: 0,
+      //   date: '',
+      //   time: Time.TEN_AM
+      // };
+      // return await this.missionsService.test();
+      // return await this.missionsService.createRandomMissions(createMissionDto);
     } catch (err) {
       return { message: `${err}` }
     }

@@ -28,7 +28,6 @@ export class CreateFoodieDto extends PickType(Foodie, [
    * 사진
    * @example "사진"
    */
-  @IsString()
   readonly images: string;
 
   /**

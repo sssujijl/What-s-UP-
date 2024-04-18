@@ -30,6 +30,10 @@ export class FoodMate {
 
   @IsString()
   @Column({ type: 'varchar', nullable: false })
+  title: string;
+
+  @IsString()
+  @Column({ type: 'varchar', nullable: false })
   content: string;
 
   @IsString()

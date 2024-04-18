@@ -9,14 +9,15 @@ import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.int
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   dotenv.config();
-  app.use(cookieParser());
-  app.useGlobalPipes(new ValidationPipe())
 
   const corsOptions: CorsOptions = {
     origin: 'http://localhost:4000',
     credentials: true
   };
   app.enableCors(corsOptions);
+  
+  app.use(cookieParser());
+  app.useGlobalPipes(new ValidationPipe())
 
   const config = new DocumentBuilder()
     .setTitle('Whats_UP')
