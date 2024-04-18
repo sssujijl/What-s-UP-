@@ -10,6 +10,7 @@ import {
   UseGuards,
   BadRequestException,
   Req,
+  Query,
 } from '@nestjs/common';
 import { FoodmatesService } from './foodmates.service';
 import { CreateFoodmateDto } from './dto/create-foodmate.dto';
@@ -51,8 +52,8 @@ export class FoodmatesController {
    * @returns
    */
   @Get()
-  async findAll() {
-    const data = await this.foodmatesService.findAll();
+  async findAll(@Query('orderBy') orderBy: string) {
+    const data = await this.foodmatesService.findAll(orderBy);
 
     if (!data.length) {
       return {

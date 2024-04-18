@@ -13,13 +13,14 @@ import { number } from 'joi';
 import Redis from 'ioredis';
 import { CheckVerification } from './dto/checkVerification.dto';
 import { InjectRedis } from '@nestjs-modules/ioredis';
+import { CheckDuplicateDto } from './dto/checkDuplicate.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
-
+    private readonly sendMailService: SendMailService,
     // private readonly snsService: SnsService
     @InjectRedis() private readonly redis: Redis
   ) {}
@@ -77,6 +78,27 @@ export class UsersService {
 
     await this.redis.setex(`VerificationCheck:${checkVerification.email}`, 1800, 'true');
     return verificationCode;
+  }
+
+  async checkDuplicate(data: CheckDuplicateDto) {
+    const { email, nickName, phone } = data;
+    console.log(email);
+    const checkDuplicate = await this.userRepository.findOne({
+      where: [
+        { email },
+        { nickName },
+        { phone }
+      ]
+    });
+
+    if (checkDuplicate) {
+      throw new Error(`${JSON.stringify(data)} 가 중복되었습니다.`)
+    }
+
+    if (email) {
+      await this.sendMailService.sendVerificationCode(email);
+    }
+    return true;
   }
 
   async findUserById(id: number) {

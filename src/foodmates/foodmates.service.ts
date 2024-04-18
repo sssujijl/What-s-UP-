@@ -28,9 +28,10 @@ export class FoodmatesService {
     return foodmate;
   }
 
-  async findAll() {
+  async findAll(orderBy: string) {
     return await this.foodmateRepository.find({
-      relations: ['userFoodMates', 'foodCategory']
+      relations: ['userFoodMates', 'foodCategory'],
+      order: orderBy === 'views' ? { views: 'DESC' } : { createdAt: 'DESC' }
     });
   }
 

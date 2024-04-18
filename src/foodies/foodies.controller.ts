@@ -7,6 +7,7 @@ import { User } from 'src/users/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { validate } from 'class-validator';
 import { ApiTags } from '@nestjs/swagger';
+import { orderBy } from 'lodash';
 
 @ApiTags('Foodies')
 @Controller('foodies')
@@ -42,9 +43,9 @@ export class FoodiesController {
    */
   // 게시물 전체조회
   @Get()
-  async findAllFoodies() {
+  async findAllFoodies(@Query('orderBy') orderBy: string) {
     try { 
-      return await this.foodiesService.findAllFoodies();
+      return await this.foodiesService.findAllFoodies(orderBy);
     } catch (err) {
       return { message: `${err}` };
     }

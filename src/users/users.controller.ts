@@ -12,6 +12,7 @@ import { DeleteUserDto } from './dto/deleteUser.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SendMailService } from 'src/users/sendMail.service';
 import { CheckVerification } from './dto/checkVerification.dto';
+import { CheckDuplicateDto } from './dto/checkDuplicate.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -66,6 +67,25 @@ export class UsersController {
       return { message: '인증이 완료되었습니다.' };
     } catch (err) {
       return { message: `${err}` }
+    }
+  }
+
+  /**
+   * 이메일, 비밀번호, 휴대전화번호 중복확인
+   * @returns
+   */
+  @Post('/checkDuplicate')
+  async checkDuplicate(
+    @Body() data: CheckDuplicateDto,
+    @Res() res: any
+  ) {
+    try {
+      console.log(data);
+      const result = await this.usersService.checkDuplicate(data);
+      console.log(result);
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ message: `${err}` });
     }
   }
 

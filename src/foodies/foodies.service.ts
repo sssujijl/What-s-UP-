@@ -63,9 +63,11 @@ export class FoodiesService {
     await Promise.all(keys.map(key => this.redis.del(key)));
   }
 
-  async findAllFoodies() {
+  async findAllFoodies(orderBy: string) {
+    console.log(orderBy.toString());
     const foodie = await this.foodieRepository.find({
-      relations: ['foodieAnswers', 'foodCategory']
+      relations: ['foodieAnswers', 'foodCategory'],
+      order: orderBy === 'views' ? { views: 'DESC' } : { createdAt: 'DESC' }
     });
 
     if (!foodie) {
