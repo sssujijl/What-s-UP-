@@ -5,6 +5,7 @@ import { Place } from 'src/places/entities/place.entity';
 import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import { Reservation } from 'src/reservations/entities/reservation.entity';
 import { Review } from 'src/reviews/entities/review.entity';
+import { Rating } from 'src/reviews/types/rating.types';
 import { Repository } from 'typeorm';
 import { In } from 'typeorm';
 
@@ -25,7 +26,7 @@ export class RecommendService {
 
   async getUserPreferredCategories(userId: number) {
     const reviews = await this.reviewRepository.find({
-      where: { rating: In(['Rating_4', 'Rating_5']) },
+      where: { rating: In([Rating.Rating_4, Rating.Rating_5]) },
     });
 
     const userReservations = await Promise.all(
@@ -36,9 +37,11 @@ export class RecommendService {
       (reservation) => reservation.resStatus.placeId,
     );
 
-    const preferredCategories = await Promise.all(
+    const preferredAllCategories = await Promise.all(
       placeIds.map((placeId) => this.getFoodCategoryId(placeId)),
     );
+
+    const preferredCategories = [...new Set(preferredAllCategories)];
 
     return preferredCategories;
   }
@@ -81,31 +84,48 @@ export class RecommendService {
   async filterGoodPlaces(places: Place[]) {
     const goodPlaces = await Promise.all(
       places.map(async (place) => {
-        const resStatus = await this.resStatusRepository.findOne({
+        const resStatusList = await this.resStatusRepository.find({
           where: { placeId: place.id },
         });
-        if (!resStatus) return null;
+        if (!resStatusList || resStatusList.length === 0) return null;
 
-        const reservation = await this.reservationRepository.findOne({
-          where: { resStatusId: resStatus.id },
-        });
-        if (!reservation) return null;
+        const reservations = await Promise.all(
+          resStatusList.map((resStatus) =>
+            this.reservationRepository.findOne({
+              where: { resStatusId: resStatus.id },
+            }),
+          ),
+        );
+        if (!reservations || resStatusList.length === 0) return null;
 
-        const goodReviews = await this.reviewRepository.find({
-          where: {
-            reservationId: reservation.id,
-            rating: In(['Rating_4', 'Rating_5']),
-          },
-        });
-
-        const reviews = await this.reviewRepository.find({
-          where: {
-            reservationId: reservation.id,
-            rating: In(['Rating_4', 'Rating_5']),
-          },
-        });
-
+        const goodReviews = await Promise.all(
+          reservations.map((reservation) =>
+            this.reviewRepository.find({
+              where: {
+                reservationId: reservation.id,
+                rating: In([Rating.Rating_4, Rating.Rating_5]),
+              },
+            }),
+          ),
+        );
+        // console.log(goodReviews);
+        const reviews = await Promise.all(
+          reservations.map((reservation) =>
+            this.reviewRepository.find({
+              where: { reservationId: reservation.id },
+            }),
+          ),
+        );
+        // console.log(reviews);
         const goodRate = goodReviews.length / reviews.length;
+
+        console.log(
+          '좋은 리뷰:',
+          goodReviews.length,
+          '전체 리뷰:',
+          reviews.length,
+        );
+        console.log('좋은 리뷰 비율:', goodRate);
 
         return goodRate > 0.6 ? place : null;
       }),

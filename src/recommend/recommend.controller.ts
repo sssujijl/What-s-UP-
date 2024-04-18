@@ -20,10 +20,14 @@ export class RecommendController {
     const preferredCategories =
       await this.recommendService.getUserPreferredCategories(userId);
 
+    console.log('좋아하네요:', preferredCategories);
+
     const places =
       await this.recommendService.getPlacesByFoodCategories(
         preferredCategories,
       );
+
+    console.log('이런 곳들 있어요:', places);
 
     const recommendedPlaces = this.recommendService.filterGoodPlaces(places);
     return recommendedPlaces;
