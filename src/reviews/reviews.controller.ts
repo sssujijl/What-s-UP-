@@ -15,11 +15,22 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { PlacesService } from 'src/places/places.service';
+import { validate } from 'class-validator';
+import { UserInfo } from 'src/utils/userInfo.decorator';
+import { User } from 'src/users/entities/user.entity';
+import { ReservationsService } from 'src/reservations/reservations.service';
+import { MissionsService } from 'src/missions/missions.service';
 
 @ApiTags('Reviews')
 @Controller('reviews')
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(
+    private readonly reviewsService: ReviewsService,
+    private readonly placesService: PlacesService,
+    private readonly reservationService: ReservationsService,
+    private readonly missionService: MissionsService,
+  ) {}
 
   /**
    * 리뷰 등록
@@ -27,17 +38,54 @@ export class ReviewsController {
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
-  @Post()
-  async create(@Body() createReviewDto: CreateReviewDto) {
+  @Post('/:reservationId?')
+  async create(
+    @Param('placeId') placeId: number,
+    @Body() createReviewDto: CreateReviewDto,
+    @UserInfo() user: User,
+    @Param('reservationId') reservationId?: number,
+  ) {
     try {
-      const data = await this.reviewsService.create(createReviewDto);
+      const place = await this.placesService.findPlaceById(placeId);
+
+      if (reservationId) {
+        const reservation =
+          await this.reservationService.findOneById(reservationId);
+        if (reservation.resStatus.missionId) {
+          const mission = await this.missionService.findMission(
+            reservation.resStatus.missionId,
+          );
+          const data = await this.reviewsService.createMissionReview(
+            createReviewDto,
+            user.id,
+            reservationId,
+            place,
+            mission,
+          );
+          if (data) {
+            return {
+              statusCode: HttpStatus.CREATED,
+              message: `미션 리뷰가 등록되었습니다!`,
+              data,
+            };
+          }
+        }
+      }
+
+      const data = await this.reviewsService.create(
+        createReviewDto,
+        user.id,
+        reservationId,
+        place,
+      );
+
       return {
         statusCode: HttpStatus.CREATED,
-        message: '리뷰 생성에 성공했습니다.',
+        message: '일반 리뷰 생성에 성공했습니다.',
         data,
       };
     } catch (error) {
-      throw new BadRequestException('리뷰 생성에 실패했습니다.');
+      throw new BadRequestException(error);
     }
   }
 
@@ -45,9 +93,14 @@ export class ReviewsController {
    * 리뷰 상세 조회
    * @returns
    */
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const data = await this.reviewsService.findOne(+id);
+  @Get(':reviewId')
+  async findOne(
+    @Param('reviewId') reviewId: number,
+    @Param('placeId') placeId: number,
+  ) {
+    await this.placesService.findPlaceById(placeId);
+
+    const data = await this.reviewsService.findOne(reviewId);
     if (!data) {
       return {
         statusCode: HttpStatus.NOT_FOUND,
@@ -72,9 +125,15 @@ export class ReviewsController {
   async update(
     @Param('id') id: string,
     @Body() updateReviewDto: UpdateReviewDto,
+    @UserInfo() user: User,
   ) {
     try {
-      await this.reviewsService.update(+id, updateReviewDto);
+      await validate(updateReviewDto);
+
+      await this.placesService.findPlaceById(placeId);
+
+      updateReviewDto.userId = user.id;
+      await this.reviewsService.update(reviewId, updateReviewDto);
       return {
         statusCode: HttpStatus.OK,
         message: '리뷰 수정에 성공했습니다.',
@@ -113,8 +172,12 @@ export class ReviewsController {
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
+  @Delete(':reviewId')
+  async remove(
+    @Param('reviewId') reviewId: number,
+    @Param('placeId') placeId: number,
+    @UserInfo() user: User,
+  ) {
     try {
       await this.reviewsService.remove(+id);
       return {

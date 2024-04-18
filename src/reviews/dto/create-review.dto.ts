@@ -1,11 +1,5 @@
-import { PickType } from '@nestjs/mapped-types';
-import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-} from 'class-validator';
+import { PickType } from '@nestjs/swagger';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 import { Rating } from '../types/rating.types';
 import { Review } from '../entities/review.entity';
 
@@ -32,12 +26,4 @@ export class CreateReviewDto extends PickType(Review, ['content']) {
   @IsOptional()
   @IsEnum(Rating)
   readonly rating?: Rating;
-
-  /**
-   * 예약ID
-   * @example "1"
-   */
-  @IsNotEmpty()
-  @IsInt()
-  readonly reservationId: number;
 }
