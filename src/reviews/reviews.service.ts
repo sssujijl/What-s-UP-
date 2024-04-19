@@ -135,10 +135,6 @@ export class ReviewsService {
       throw new NotFoundException('리뷰를 찾을 수 없습니다.');
     }
 
-    if (review.userId !== updateReviewDto.userId) {
-      throw new UnauthorizedException('리뷰를 수정할 권한이 없습니다.');
-    }
-
     await this.reviewRepository.update(id, { content, images, rating });
   }
 

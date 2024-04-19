@@ -134,9 +134,29 @@ export class ReviewsController {
     try {
       await validate(updateReviewDto);
 
-      await this.placesService.findPlaceById(placeId);
+      const review = await this.reviewsService.findOne(reviewId);
+      if (!review) {
+        return {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: '해당 리뷰가 존재하지 않습니다.',
+        };
+      }
+      if (review.userId !== user.id) {
+        return {
+          statusCode: HttpStatus.FORBIDDEN,
+          message: '수정 권한이 없습니다.',
+        };
+      }
 
-      updateReviewDto.userId = user.id;
+      const place = await this.placesService.findPlaceById(placeId);
+
+      if (!place) {
+        return {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: '해당 가게가 존재하지 않습니다.',
+        };
+      }
+
       await this.reviewsService.update(reviewId, updateReviewDto);
       return {
         statusCode: HttpStatus.OK,
