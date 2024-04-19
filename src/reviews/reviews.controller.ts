@@ -47,7 +47,6 @@ export class ReviewsController {
     @Param('reservationId') reservationId?: number,
   ) {
     try {
-      const user = { id: 2 };
       const place = await this.placesService.findPlaceById(placeId);
 
       if (reservationId) {
