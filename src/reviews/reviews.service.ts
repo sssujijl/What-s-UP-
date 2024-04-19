@@ -146,7 +146,7 @@ export class ReviewsService {
     }
 
     if (review.userId !== userId) {
-      throw new UnauthorizedException('리뷰를 수정할 권한이 없습니다.');
+      throw new UnauthorizedException('리뷰를 삭제할 권한이 없습니다.');
     }
 
     await this.reviewRepository.delete(id);

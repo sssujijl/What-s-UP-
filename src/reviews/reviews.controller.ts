@@ -181,7 +181,7 @@ export class ReviewsController {
     if (!data.length) {
       return {
         statusCode: HttpStatus.NOT_FOUND,
-        message: '보드 목록이 존재하지 않습니다.',
+        message: '리뷰 목록이 존재하지 않습니다.',
         data,
       };
     }
@@ -207,7 +207,13 @@ export class ReviewsController {
     @UserInfo() user: User,
   ) {
     try {
-      await this.placesService.findPlaceById(placeId);
+      const place = await this.placesService.findPlaceById(placeId);
+      if (!place) {
+        return {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: '해당 가게가 존재하지 않습니다.',
+        };
+      }
 
       await this.reviewsService.remove(reviewId, user.id);
       return {
