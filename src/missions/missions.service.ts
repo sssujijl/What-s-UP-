@@ -11,42 +11,53 @@ import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import { MessageProducer } from 'src/producer/producer.service';
 import { Redis } from 'ioredis';
 import { InjectRedis } from '@nestjs-modules/ioredis';
+import { Reservation } from 'src/reservations/entities/reservation.entity';
+import { Review } from 'src/reviews/entities/review.entity';
+import { Status } from './types/status.types';
 
 @Injectable()
 export class MissionsService {
-
   constructor(
-    @InjectRepository(Mission) private readonly missionRepository: Repository<Mission>,
-    @InjectRepository(Place) private readonly placeRepository: Repository<Place>,
-    @InjectRepository(ResStatus) private readonly resStatusRepository: Repository<ResStatus>,
+    @InjectRepository(Mission)
+    private readonly missionRepository: Repository<Mission>,
+    @InjectRepository(Place)
+    private readonly placeRepository: Repository<Place>,
+    @InjectRepository(ResStatus)
+    private readonly resStatusRepository: Repository<ResStatus>,
+    @InjectRepository(Reservation)
+    private readonly reservationRepository: Repository<Reservation>,
+    @InjectRepository(Review)
+    private readonly reviewRepository: Repository<Review>,
     private dataSource: DataSource,
     private readonly messageProducer: MessageProducer,
-    @InjectRedis() private readonly redis: Redis
+    @InjectRedis() private readonly redis: Redis,
   ) {}
 
   async findMission(id: number) {
-    const mission =  await this.missionRepository.findOneBy({ id });
+    const mission = await this.missionRepository.findOneBy({ id });
 
     if (!mission) {
       throw new NotFoundException('해당 미션을 찾을 수 없습니다.');
     }
 
-    await this.messageProducer.sendMessage(`[${mission.date}] 미션이 생성되었습니다!!`);
+    await this.messageProducer.sendMessage(
+      `[${mission.date}] 미션이 생성되었습니다!!`,
+    );
     return mission;
   }
 
   async test() {
-    return await this.resStatusRepository.find({where: {missionId: 14}});
+    return await this.resStatusRepository.find({ where: { missionId: 14 } });
   }
 
   // 10시 또는 15시에 랜덤으로 스케줄링 시작
   @Cron(`0 ${getRandom('01', '06')} * * *`)
   async createRandomMissions() {
-    let createMissionDto: CreateMissionDto = {
+    const createMissionDto: CreateMissionDto = {
       capacity: 0,
       date: '2024-04-09',
-      time: Time.TEN_AM
-    }
+      time: Time.TEN_AM,
+    };
     createMissionDto.capacity = getRandomAttendees();
 
     createMissionDto.date = new Date().toISOString().slice(0, 10);
@@ -71,9 +82,16 @@ export class MissionsService {
 
       const placesByDong = await this.placesByDong();
       const selectedPlaceIds = await this.selectedPlaceIds(placesByDong);
-      const resStatusIds = await this.checkAndRepeat(placesByDong, selectedPlaceIds, mission, 0);
+      const resStatusIds = await this.checkAndRepeat(
+        placesByDong,
+        selectedPlaceIds,
+        mission,
+        0,
+      );
       console.log(resStatusIds);
-      await queryRunner.manager.update(ResStatus, resStatusIds, {missionId: mission.id});
+      await queryRunner.manager.update(ResStatus, resStatusIds, {
+        missionId: mission.id,
+      });
 
       await queryRunner.commitTransaction();
 
@@ -89,11 +107,13 @@ export class MissionsService {
 
     const placesByDong: { [key: string]: string[] } = {};
 
-    await Promise.all(keys.map(async (key) => {
-      const dong = key.replace('PlaceIds: ', '');
-      const placeId = await this.redis.smembers(key);
-      placesByDong[dong] = placeId;
-    }));
+    await Promise.all(
+      keys.map(async (key) => {
+        const dong = key.replace('PlaceIds: ', '');
+        const placeId = await this.redis.smembers(key);
+        placesByDong[dong] = placeId;
+      }),
+    );
 
     return placesByDong;
   }
@@ -115,17 +135,34 @@ export class MissionsService {
   }
 
   // 장소별 mission 인원수에 맞는 예약가능상태 확인, 찾을 때까지 반복
-  private async checkAndRepeat(placesByDong: {}, selectedPlaceIds: {}, mission: Mission, count: number) {
-    const resStatusId = await this.findResStatus(Object.values(selectedPlaceIds), mission);
-    const { reSearch, availableResStatusIds } = await this.checkResStatus(selectedPlaceIds, resStatusId, mission.capacity);
+  private async checkAndRepeat(
+    placesByDong: {},
+    selectedPlaceIds: {},
+    mission: Mission,
+    count: number,
+  ) {
+    const resStatusId = await this.findResStatus(
+      Object.values(selectedPlaceIds),
+      mission,
+    );
+    const { reSearch, availableResStatusIds } = await this.checkResStatus(
+      selectedPlaceIds,
+      resStatusId,
+      mission.capacity,
+    );
 
     if (Object.keys(reSearch).length > 0) {
       const selectedPlaces = await this.selectedPlaceIds(placesByDong);
 
       if (count < 5) {
-        await this.checkAndRepeat(placesByDong, selectedPlaces, mission, count+1);
+        await this.checkAndRepeat(
+          placesByDong,
+          selectedPlaces,
+          mission,
+          count + 1,
+        );
       } else {
-        return resStatusId
+        return resStatusId;
       }
     }
 
@@ -146,7 +183,10 @@ export class MissionsService {
       .createQueryBuilder('resStatus')
       .where('resStatus.placeId IN (:...placeIds)', { placeIds })
       .andWhere('DATE(resStatus.dateTime) = :date', { date: mission.date })
-      .andWhere('HOUR(resStatus.dateTime) BETWEEN :startTimeHour AND :endTimeHour', { startTimeHour, endTimeHour },)
+      .andWhere(
+        'HOUR(resStatus.dateTime) BETWEEN :startTimeHour AND :endTimeHour',
+        { startTimeHour, endTimeHour },
+      )
       .andWhere('resStatus.status = :status', { status: true })
       .getRawMany();
 
@@ -154,42 +194,41 @@ export class MissionsService {
   }
 
   // 찾은 resStatus가 mission.capacity보다 적은 동, placeId 걸러내기
-  private async checkResStatus(selectedPlaces: any, resStatusList: any[], capacity: number) {
+  private async checkResStatus(
+    selectedPlaces: any,
+    resStatusList: any[],
+    capacity: number,
+  ) {
     const reSearch = [];
     const availableResStatusIds = [];
 
     for (const placeId of Object.values(selectedPlaces)) {
-      const count = resStatusList.filter((resStatus) => resStatus.resStatus_placeId === +placeId);
+      const count = resStatusList.filter(
+        (resStatus) => resStatus.resStatus_placeId === +placeId,
+      );
 
       if (count.length < capacity) {
         reSearch.push(placeId);
       } else {
         const slicedCount = count.slice(0, capacity);
-        slicedCount.forEach((resStatus) => availableResStatusIds.push(resStatus.resStatus_id));
+        slicedCount.forEach((resStatus) =>
+          availableResStatusIds.push(resStatus.resStatus_id),
+        );
       }
     }
 
     return { reSearch, availableResStatusIds };
   }
 
-
-
-
-
-
-
-
-
-
   // 만약 reStatus가 없는경우 다시 장소 랜덤찾기
-  async reSearch(reSearch: {[dong: string]: number[]}) {
+  async reSearch(reSearch: { [dong: string]: number[] }) {
     let reSearchPlaces = [];
 
     for (const dong in reSearch) {
       const placeIds = reSearch[dong];
       const reSearchPlace = await this.placeRepository
         .createQueryBuilder('place')
-        .where('place.address LIKE :dong', { dong: `%${dong}%`})
+        .where('place.address LIKE :dong', { dong: `%${dong}%` })
         .andWhere('place.id NOT IN (:...placeIds)', { placeIds })
         .select([
           "SUBSTRING_INDEX(SUBSTRING_INDEX(place.address, ' ', 3), ' ', -1) AS dong",
@@ -197,7 +236,7 @@ export class MissionsService {
         ])
         .groupBy('dong')
         .getRawMany();
-      
+
       reSearchPlaces = reSearchPlaces.concat(reSearchPlace);
     }
 
@@ -296,10 +335,45 @@ export class MissionsService {
 
   random(number: number[]) {
     const index1 = Math.floor(Math.random() * number.length);
-    const index2 = Math.random() > 0.5 ? Math.floor(Math.random() * number.length) : null;
+    const index2 =
+      Math.random() > 0.5 ? Math.floor(Math.random() * number.length) : null;
     return index2 !== null ? [index1, index2] : [index1];
   }
-  
+
+  async updateMissionStatus(missionId: number) {
+    const mission = await this.missionRepository.findOne({
+      where: { id: missionId },
+    });
+    const reviewCount = await this.getReviewCount(missionId);
+    if (reviewCount >= mission.capacity) {
+      mission.status = Status.GARDEN_FULL;
+      return await this.missionRepository.save(mission);
+    } else {
+      mission.status = Status.BEFORE_MISSION;
+      return await this.missionRepository.save(mission);
+    }
+  }
+
+  private async getReviewCount(missionId: number): Promise<number> {
+    const missionResStatus = await this.resStatusRepository.find({
+      where: { missionId },
+    });
+    const reservations = [];
+    for (const resStatus of missionResStatus) {
+      const reservation = await this.reservationRepository.find({
+        where: { resStatusId: resStatus.id },
+      });
+      reservations.push(...reservation);
+    }
+    const reviews = [];
+    for (const reservation of reservations) {
+      const currentReviews = await this.reviewRepository.find({
+        where: { reservationId: reservation.id },
+      });
+      reviews.push(...currentReviews);
+    }
+    return reviews.length;
+  }
 }
 
 function getRandom(a: string | number, b: string | number): string | number {

@@ -14,6 +14,10 @@ import { Place } from 'src/places/entities/place.entity';
 import { Mission } from 'src/missions/entities/mission.entity';
 import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import { Reservation } from 'src/reservations/entities/reservation.entity';
+import { MissionsService } from 'src/missions/missions.service';
+import { Status } from 'src/missions/types/status.types';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class ReviewsService {
@@ -26,6 +30,8 @@ export class ReviewsService {
     @InjectRepository(Reservation)
     private readonly reservationRepository: Repository<Reservation>,
     private readonly titleService: TitlesService,
+    private readonly missionService: MissionsService,
+    @InjectQueue('mission-review') private readonly missionReviewQueue: Queue,
   ) {}
 
   async create(
@@ -49,6 +55,24 @@ export class ReviewsService {
     return data;
   }
 
+  async addMissionReviewQueue(
+    createReviewDto: CreateReviewDto,
+    userId: number,
+    reservationId: number,
+    place: Place,
+    mission: Mission,
+  ) {
+    const job = await this.missionReviewQueue.add('createMissionReview', {
+      createReviewDto,
+      userId,
+      reservationId,
+      place,
+      mission,
+    });
+    const result = await job.finished();
+    return result;
+  }
+
   async createMissionReview(
     createReviewDto: CreateReviewDto,
     userId: number,
@@ -61,25 +85,9 @@ export class ReviewsService {
     await queryRunner.startTransaction();
 
     try {
-      const missionResStatus = await this.resStatusRepository.find({
-        where: { missionId: mission.id },
-      });
-      const reservations = [];
-      for (const resStatus of missionResStatus) {
-        const reservation = await this.reservationRepository.find({
-          where: { resStatusId: resStatus.id },
-        });
-        reservations.push(...reservation);
-      }
-      const reviews = [];
-      for (const reservation of reservations) {
-        const currentReviews = await this.reviewRepository.find({
-          where: { reservationId: reservation.id },
-        });
-        reviews.push(...currentReviews);
-      }
+      mission = await this.missionService.updateMissionStatus(mission.id);
 
-      if (reviews.length < mission.capacity) {
+      if (mission.status !== Status.GARDEN_FULL) {
         const placeId = place.id;
         const count = 2;
         const review = this.reviewRepository.create({
@@ -91,12 +99,13 @@ export class ReviewsService {
         const data = await this.reviewRepository.save(review);
         await this.titleService.givenTitle(userId, place.foodCategoryId, count);
         await queryRunner.manager.save(review);
+        await this.missionService.updateMissionStatus(mission.id);
         await queryRunner.commitTransaction();
         return data;
       } else {
         await queryRunner.rollbackTransaction();
         console.log(
-          '미션 수용 인원을 초과하여 리뷰를 등록할 수 없습니다. 일반 리뷰 등록을 시도합니다.',
+          '미션 수용 인원을 초과하여 미션 리뷰를 등록할 수 없습니다. 일반 리뷰 등록을 시도합니다.',
         );
       }
     } catch (error) {

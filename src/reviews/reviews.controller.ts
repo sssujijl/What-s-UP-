@@ -47,6 +47,7 @@ export class ReviewsController {
     @Param('reservationId') reservationId?: number,
   ) {
     try {
+      const user = { id: 2 };
       const place = await this.placesService.findPlaceById(placeId);
 
       if (reservationId) {
@@ -56,7 +57,8 @@ export class ReviewsController {
           const mission = await this.missionService.findMission(
             reservation.resStatus.missionId,
           );
-          const data = await this.reviewsService.createMissionReview(
+          await this.missionService.updateMissionStatus(mission.id);
+          const data = await this.reviewsService.addMissionReviewQueue(
             createReviewDto,
             user.id,
             reservationId,
@@ -66,7 +68,7 @@ export class ReviewsController {
           if (data) {
             return {
               statusCode: HttpStatus.CREATED,
-              message: `미션 리뷰가 등록되었습니다!`,
+              message: '미션 리뷰 생성에 성공했습니다!',
               data,
             };
           }

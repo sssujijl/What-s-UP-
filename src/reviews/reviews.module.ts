@@ -13,6 +13,7 @@ import { Place } from 'src/places/entities/place.entity';
 import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import { MessageProducer } from 'src/producer/producer.service';
 import { Reservation } from 'src/reservations/entities/reservation.entity';
+import { MissionReviewProcessor } from './mission-review.processor';
 
 @Module({
   imports: [
@@ -25,7 +26,12 @@ import { Reservation } from 'src/reservations/entities/reservation.entity';
     ReservationsModule,
   ],
   controllers: [ReviewsController],
-  providers: [ReviewsService, MissionsService, MessageProducer],
+  providers: [
+    ReviewsService,
+    MissionsService,
+    MessageProducer,
+    MissionReviewProcessor,
+  ],
   exports: [ReviewsService],
 })
 export class ReviewsModule {}
