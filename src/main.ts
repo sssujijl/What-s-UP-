@@ -4,12 +4,14 @@ import { AppModule } from "./app.module";
 import cookieParser from "cookie-parser";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import dotenv from 'dotenv' 
+import { IoAdapter } from '@nestjs/platform-socket.io'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   dotenv.config();
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe())
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   const config = new DocumentBuilder()
     .setTitle('Whats_UP')
