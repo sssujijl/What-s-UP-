@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import dotenv from 'dotenv' 
 import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
+import { IoAdapter } from '@nestjs/platform-socket.io'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,6 +19,7 @@ async function bootstrap() {
   
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe())
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   const config = new DocumentBuilder()
     .setTitle('Whats_UP')
