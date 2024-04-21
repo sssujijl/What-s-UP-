@@ -76,10 +76,11 @@ export class ReservationsController {
   @Delete('/:reservationId')
   async cancelReservation(
     @UserInfo() user: User,
+    @Param('resStatusId') resStatusId: number,
     @Param('reservationId') reservationId: number
   ) {
     try {
-      return await this.reservationsService.cancelReservation(user.id, reservationId);
+      return await this.reservationsService.cancelReservation(user.id, resStatusId, reservationId);
     } catch (err) {
       return { message: `${err}` }
     }

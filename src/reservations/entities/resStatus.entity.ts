@@ -19,8 +19,7 @@ export class ResStatus {
     @Column({ type: 'datetime', nullable: false })
     dateTime: Date;
 
-    @IsBoolean()
-    @Column({ type: 'boolean', nullable: false})
+    @Column({ type: 'boolean', nullable: false, default: true })
     status: boolean;
 
     @ManyToOne(() => Place, (place) => place.resStatus, { onDelete: 'CASCADE' })

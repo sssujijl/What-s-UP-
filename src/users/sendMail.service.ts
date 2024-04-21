@@ -80,6 +80,24 @@ export class SendMailService {
     return result;
   }
 
+  async sendAlertEmail(error: Error) {
+    try {
+      const mailOptions = {
+        from: process.env.MAILER_EMAIL,
+        to: process.env.ALERT_EMAIL,
+        subject: '스크래핑 중 오류가 발생했습니다.',
+        text: `작업 중 오류가 발생했습니다.
+        아래의 오류 내용을 참조하여 코드를 수정해 주십시오.
+        ${error}`,
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('Email sent:', info.response);
+    } catch (error) {
+      console.error('Error occurred:', error);
+      throw error;
+    }
+  }
 }
 
 

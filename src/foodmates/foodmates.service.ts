@@ -7,6 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FoodMate } from './entities/foodmate.entity';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
+import Redis from 'ioredis';
+import { InjectRedis } from '@nestjs-modules/ioredis';
 
 @Injectable()
 export class FoodmatesService {
@@ -15,6 +17,7 @@ export class FoodmatesService {
     private foodmateRepository: Repository<FoodMate>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRedis() private readonly redis: Redis  
   ) {}
 
   async create(createFoodmateDto: CreateFoodmateDto, userId: number) {
@@ -28,9 +31,27 @@ export class FoodmatesService {
     return foodmate;
   }
 
-  async findAll() {
-    return await this.foodmateRepository.find();
+  async findAll(orderBy: string, category?: string) {
+    let query = this.foodmateRepository.createQueryBuilder('foodmate')
+      .leftJoinAndSelect('foodmate.userFoodMates', 'userFoodMates')
+      .leftJoinAndSelect('foodmate.foodCategory', 'foodCategory');
+
+    if (category) {
+      const categoryIds = await this.redis.smembers(`FoodCateogry: ${category}`);
+      query = query.andWhere('foodCategory.id IN (:...categoryIds)', { categoryIds });
+    }
+
+    const foodmates = await query
+      .orderBy(orderBy === 'views' ? 'foodmate.views' : 'foodmate.createdAt', 'DESC')
+      .getMany();
+
+    if (!foodmates || foodmates.length === 0) {
+      throw new NotFoundException('음식친구 게시물을 찾을 수 없습니다.');
+    }
+
+    return foodmates;
   }
+
 
   async findOne(id: number) {
     return await this.foodmateRepository.findOne({ where: { id } });

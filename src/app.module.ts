@@ -111,20 +111,22 @@ const typeOrmModuleOptions = {
     }),
     BullModule.forRoot({
       redis: {
-        host: process.env.REDIS_HOST,
-        port: +process.env.REDIS_PORT,
+        host: 'localhost',
+        port: 6379,
       },
     }),
     RedisModule.forRootAsync({
       useFactory: () => ({
         type: 'single',
-        url: process.env.REDIS_URL
+        url: "redis://127.0.0.1:6379"
       })
     }),
     CacheModule.register({
       store: redisStore,
-      host: process.env.REDIS_HOST,
-      port: +process.env.REDIS_PORT,
+      host: 'localhost',
+      port: 6379,
+      ttl: 86400,
+      isGlobal: true
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UsersModule,

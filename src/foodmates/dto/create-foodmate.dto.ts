@@ -6,6 +6,7 @@ import { Age } from '../types/age.type';
 import { Type } from 'class-transformer';
 
 export class CreateFoodmateDto extends PickType(FoodMate, [
+  'title',
   'content',
   'gender',
   'age',
@@ -13,6 +14,13 @@ export class CreateFoodmateDto extends PickType(FoodMate, [
   'dateTime',
   'capacity',
 ]) {
+  /**
+   * 제목
+   * @example "오늘 삼겹살 먹을 사람"
+   */
+  @IsString()
+  readonly title: string;
+  
   /**
    * 내용
    * @example "아무나 환영합니다"
@@ -30,11 +38,11 @@ export class CreateFoodmateDto extends PickType(FoodMate, [
 
   /**
    * 나이
-   * @example "TEENS"
+   * @example "10대"
    */
   @IsNotEmpty()
   @IsString()
-  readonly age: Age;
+  readonly age: string;
 
   /**
    *  지역
@@ -54,11 +62,11 @@ export class CreateFoodmateDto extends PickType(FoodMate, [
 
   /**
    * 인원
-   * @example "3"
+   * @example "3명"
    */
   @IsNotEmpty()
-  @IsInt()
-  readonly capacity: number;
+  @IsString()
+  readonly capacity: string;
 
   /**
    * 카테고리ID

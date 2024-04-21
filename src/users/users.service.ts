@@ -13,13 +13,14 @@ import { number } from 'joi';
 import Redis from 'ioredis';
 import { CheckVerification } from './dto/checkVerification.dto';
 import { InjectRedis } from '@nestjs-modules/ioredis';
+import { CheckDuplicateDto } from './dto/checkDuplicate.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
-
+    private readonly sendMailService: SendMailService,
     // private readonly snsService: SnsService
     @InjectRedis() private readonly redis: Redis
   ) {}
@@ -79,6 +80,27 @@ export class UsersService {
     return verificationCode;
   }
 
+  async checkDuplicate(data: CheckDuplicateDto) {
+    const { email, nickName, phone } = data;
+    console.log(email);
+    const checkDuplicate = await this.userRepository.findOne({
+      where: [
+        { email },
+        { nickName },
+        { phone }
+      ]
+    });
+
+    if (checkDuplicate) {
+      throw new Error(`${JSON.stringify(data)} 가 중복되었습니다.`)
+    }
+
+    if (email) {
+      await this.sendMailService.sendVerificationCode(email);
+    }
+    return true;
+  }
+
   async findUserById(id: number) {
     const user = await this.userRepository.findOneBy({ id });
 
@@ -90,6 +112,7 @@ export class UsersService {
   }
 
   async signin(signinDto: signinDto) {
+    console.log(signinDto);
     const user = await this.userRepository.findOne({
       where: { email: signinDto.email },
       select: ['id', 'email', 'password']
@@ -141,7 +164,7 @@ export class UsersService {
     return editUser;
   }
 
-  async deleteUser(user: User, deleteUserDto: DeleteUserDto) {
+  async secession(user: User, deleteUserDto: DeleteUserDto) {
     const findUser = await this.findUserWithPassword(user.id);
 
     if (!(await bcrypt.compare(deleteUserDto.password, findUser.password))) {

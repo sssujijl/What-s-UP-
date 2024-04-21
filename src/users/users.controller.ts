@@ -12,6 +12,7 @@ import { DeleteUserDto } from './dto/deleteUser.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SendMailService } from 'src/users/sendMail.service';
 import { CheckVerification } from './dto/checkVerification.dto';
+import { CheckDuplicateDto } from './dto/checkDuplicate.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -30,6 +31,7 @@ export class UsersController {
   async signup(
     @Body() signupDto: SignupDto) {
     try {
+      console.log(signupDto);
      const newUser = await this.usersService.signup(signupDto);
  
      return newUser;
@@ -70,6 +72,25 @@ export class UsersController {
   }
 
   /**
+   * 이메일, 비밀번호, 휴대전화번호 중복확인
+   * @returns
+   */
+  @Post('/checkDuplicate')
+  async checkDuplicate(
+    @Body() data: CheckDuplicateDto,
+    @Res() res: any
+  ) {
+    try {
+      console.log(data);
+      const result = await this.usersService.checkDuplicate(data);
+      console.log(result);
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ message: `${err}` });
+    }
+  }
+
+  /**
    * 로그인
    * @returns
    */
@@ -83,8 +104,8 @@ export class UsersController {
 
       const user = await this.usersService.signin(signinDto);
 
-      await this.authService.createTokens(res, user.id);
-
+      const access = await this.authService.createTokens(res, user.id);
+      console.log(access)
       return res.json({ message: "로그인이 완료되었습니다." });
     } catch (err) {
       return res.json({ message: `${err}` });
@@ -130,13 +151,13 @@ export class UsersController {
    */
   @UseGuards(AuthGuard("jwt"))
   @Delete()
-  async deleteUser(
+  async secession(
     @UserInfo() user: User,
     @Body() deleteUserDto: DeleteUserDto,
     @Res() res: any
   ) {
     try {
-      await this.usersService.deleteUser(user, deleteUserDto);
+      await this.usersService.secession(user, deleteUserDto);
 
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
@@ -167,7 +188,12 @@ export class UsersController {
   @UseGuards(AuthGuard("google"))
   @Get('/callback/google')
   async googleCallback(@Req() req: any, @Res() res: any) {
-    res.redirect('/users')
+    console.log('-------------', req.user);
+    const user = await this.usersService.socialLogin(req, res);
+
+    await this.authService.createTokens(res, user.id);
+
+    return res.json({ message: "로그인이 완료되었습니다." });
   }
 
   /**

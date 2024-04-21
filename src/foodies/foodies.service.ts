@@ -63,15 +63,27 @@ export class FoodiesService {
     await Promise.all(keys.map(key => this.redis.del(key)));
   }
 
-  async findAllFoodies() {
-    const foodie = await this.foodieRepository.find();
+  async findAllFoodies(orderBy: string, category?: string) {
+    let query = this.foodieRepository.createQueryBuilder('foodie')
+      .leftJoinAndSelect('foodie.foodieAnswers', 'foodieAnswers')
+      .leftJoinAndSelect('foodie.foodCategory', 'foodCategory');
 
-    if (!foodie) {
+    if (category) {
+      const categoryIds = await this.redis.smembers(`FoodCateogry: ${category}`);
+      query = query.andWhere('foodCategory.id IN (:...categoryIds)', { categoryIds });
+    }
+
+    const foodie = await query
+      .orderBy(orderBy === 'views' ? 'foodie.views' : 'foodie.createdAt', 'DESC')
+      .getMany();
+
+    if (!foodie || foodie.length === 0) {
       throw new NotFoundException('맛집인 게시물을 찾을 수 없습니다.');
     }
 
     return foodie;
   }
+
     
 
   async updateFoodie(foodieId: number, userId: number, updateFoodieDto: UpdateFoodieDto) {

@@ -32,11 +32,11 @@ export class UpdateFoodmateDto extends PickType(FoodMate, [
 
   /**
    * 나이
-   * @example "TEENS"
+   * @example "10대"
    */
   @IsNotEmpty()
   @IsString()
-  readonly age: Age;
+  readonly age: string;
 
   /**
    *  지역
@@ -59,8 +59,8 @@ export class UpdateFoodmateDto extends PickType(FoodMate, [
    * @example "5"
    */
   @IsNotEmpty()
-  @IsInt()
-  readonly capacity: number;
+  @IsString()
+  readonly capacity: string;
 
   /**
    * 상태

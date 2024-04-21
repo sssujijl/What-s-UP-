@@ -14,14 +14,18 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       jwtFromRequest: (req: any) => {
         const { accessToken } = req.cookies;
 
-        return accessToken;
+        return accessToken || null;
       },
-      ignoreExpiration: false,
+      ignoreExpiration: true,
       secretOrKey: configService.get("ACCESS_TOKEN_SECRET_KEY"),
     });
   }
 
   async validate(accessToken: any) {
+    console.log(accessToken);
+    if (!accessToken) {
+      throw new Error('없지')
+    }
     const user = await this.userService.findUserById(accessToken.id);
 
     if (!user) {

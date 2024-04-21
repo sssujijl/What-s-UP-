@@ -10,6 +10,7 @@ import {
   UseGuards,
   BadRequestException,
   Req,
+  Query,
 } from '@nestjs/common';
 import { FoodmatesService } from './foodmates.service';
 import { CreateFoodmateDto } from './dto/create-foodmate.dto';
@@ -51,22 +52,21 @@ export class FoodmatesController {
    * @returns
    */
   @Get()
-  async findAll() {
-    const data = await this.foodmatesService.findAll();
+  async findAll(
+    @Query('orderBy') orderBy: string,
+    @Query('category') category: string,
+  ) {
+    try {
+      const data = await this.foodmatesService.findAll(orderBy, category);
 
-    if (!data.length) {
       return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: '글 목록이 존재하지 않습니다.',
+        statusCode: HttpStatus.OK,
+        message: '글 목록 조회에 성공했습니다.',
         data,
       };
+    } catch (err) {
+      return { message: `${err}` }
     }
-
-    return {
-      statusCode: HttpStatus.OK,
-      message: '글 목록 조회에 성공했습니다.',
-      data,
-    };
   }
 
   /**

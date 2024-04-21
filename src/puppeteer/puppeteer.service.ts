@@ -2,6 +2,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Redis } from 'ioredis';
+import _ from 'lodash';
 import * as puppeteer from 'puppeteer';
 import { CreateMenuDto } from 'src/menus/dto/create-menu.dto';
 import { Menu } from 'src/menus/entities/menu.entity';
@@ -23,19 +24,89 @@ export class PuppeteerService {
     @InjectRedis() private readonly redis: Redis,
   ) {}
 
-  async saveCategoryIfNotExists(category: string): Promise<FoodCategory> {
+  async saveCategoryIfNotExists(mainCategory: string, category: string): Promise<FoodCategory> {
     const existingCategory = await this.foodCategoryRepository.findOne({
       where: { category: category },
     });
+
     if (!existingCategory) {
       const newCategory = this.foodCategoryRepository.create({
         category,
       });
       const foodCategory = await this.foodCategoryRepository.save(newCategory);
+      await this.redis.sadd(`Categories: ${mainCategory}`, foodCategory.id);
 
       return foodCategory;
     }
+
     return existingCategory;
+  }
+
+  async groupByMainCategory(category: string) {
+    const text = category.split(',');
+
+    const categoriesMap = {
+      Korean: [
+        '한식',
+        '국',
+        '순댓국',
+        '샤브샤브',
+        '백숙',
+        '삼계탕',
+        '찌개',
+        '전골',
+        '전',
+        '닭볶음탕',
+        '낙지',
+        '전통',
+        '찜',
+        '밥',
+        '탕',
+        '두부',
+        '국수',
+        '한정식',
+        '요리',
+        '만두',
+      ],
+      Western: ['양식', '파스타', '스파게티', '스테이크', '이탈리아'],
+      Chinese: ['중식', '중식당', '마라'],
+      Japanese: [
+        '일식',
+        '회',
+        '초밥',
+        '이자카야',
+        '일본식',
+        '일식당',
+        '우동',
+        '소바',
+        '라멘',
+        '돈가스',
+      ],
+      Asian: ['아시아', '쌀국수', '퓨전음식'],
+      NightFood: [
+        '바',
+        '술집',
+        '요리주점',
+        '포장마차',
+        '맥주',
+        '호프',
+        '닭발',
+        '와인',
+      ],
+      Snack: ['떡볶이', '순대', '오뎅', '분식', '김밥'],
+      FastFood: ['햄버거', '피자', '치킨'],
+      Dessert: ['카페', '베이커리', '디저트', '빵', '케이크'],
+      Meat: ['돼지', '소', '양', '닭', '구이', '고기', '갈비', '육류'],
+    };
+
+    for (const textItem of text) {
+      for (const [mainCategory, keywords] of Object.entries(categoriesMap)) {
+        if (keywords.some((word) => textItem.includes(word))) {
+          // await this.redis.sadd(`FoodCateogry: ${mainCategory}`, `${foodCategory.category}: ${foodCategory.id}`);
+          return mainCategory;
+        }
+      }
+    }
   }
 
   async isExistingRestaurant(title: string, address: string) {
