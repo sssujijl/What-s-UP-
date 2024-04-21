@@ -23,7 +23,10 @@ export class PuppeteerService {
     @InjectRedis() private readonly redis: Redis,
   ) {}
 
-  async saveCategoryIfNotExists(category: string): Promise<FoodCategory> {
+  async saveCategoryIfNotExists(
+    mainCategory: string,
+    category: string,
+  ): Promise<FoodCategory> {
     const existingCategory = await this.foodCategoryRepository.findOne({
       where: { category: category },
     });
@@ -32,6 +35,7 @@ export class PuppeteerService {
         category,
       });
       const foodCategory = await this.foodCategoryRepository.save(newCategory);
+      await this.redis.sadd(`Categories: ${mainCategory}`, foodCategory.id);
 
       return foodCategory;
     }
@@ -46,7 +50,6 @@ export class PuppeteerService {
   }
 
   async createRestaurant(restaurantData: {
-    image: string;
     title: string;
     foodCategoryId: number;
     link: string;

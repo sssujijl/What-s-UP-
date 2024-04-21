@@ -90,26 +90,108 @@ export class PuppeteerController {
           }
         }
 
+        const categoryMapping = {
+          돈가스: '일식',
+          일식당: '일식',
+          일본식라면: '일식',
+          샤브샤브: '일식',
+          오니기리: '일식',
+          오므라이스: '일식',
+          '우동,소바': '일식',
+          '일식튀김,꼬치': '일식',
+          '초밥,롤': '일식',
+          카레: '일식',
+          마라탕: '중식',
+          양꼬치: '중식',
+          이탈리아음식: '양식',
+          햄버거: '양식',
+          '멕시코,남미음식': '양식',
+          '스테이크,립': '양식',
+          피자: '양식',
+          샌드위치: '양식',
+          핫도그: '양식',
+          후렌치후라이: '양식',
+          토스트: '분식',
+          막국수: '한식',
+          냉면: '한식',
+          '찌개,전골': '한식',
+          추어탕: '한식',
+          감자탕: '한식',
+          해장국: '한식',
+          '곰탕,설렁탕': '한식',
+          갈비탕: '한식',
+          두부요리: '한식',
+          '칼국수,만두': '한식',
+          '전,빈대떡': '한식',
+          '해물,생선요리': '한식',
+          한정식: '한식',
+          '육류,고기요리': '한식',
+          쌈밥: '한식',
+          보리밥: '한식',
+          비빔밥: '한식',
+          죽: '한식',
+          국밥: '한식',
+          국수: '한식',
+          요리주점: '술집',
+          '맥주,호프': '술집',
+          '바(BAR)': '술집',
+          와인: '술집',
+          이자카야: '술집',
+          '오뎅,꼬치': '술집',
+          '전통,민속주점': '술집',
+          포장마차: '술집',
+          베이커리: '카페,디저트',
+          케이크전문: '카페,디저트',
+          도넛: '카페,디저트',
+          와플: '카페,디저트',
+          슈: '카페,디저트',
+          커피번: '카페,디저트',
+          호두과자: '카페,디저트',
+          카페: '카페,디저트',
+          테이크아웃커피: '카페,디저트',
+          아이스크림: '카페,디저트',
+          빙수: '카페,디저트',
+          차: '카페,디저트',
+          초콜릿전문점: '카페,디저트',
+          '과일,주스전문점': '카페,디저트',
+          테마카페: '카페,디저트',
+          한식뷔페: '한식',
+          '백반,가정식': '한식',
+          떡카페: '카페,디저트',
+          애슐리: '패밀리레스토랑',
+          '일식,초밥뷔페': '뷔페',
+          고기뷔페: '뷔페',
+          해산물뷔페: '뷔페',
+          '다이어트,샐러드': '도시락,컵밥',
+          반찬가게: '반찬가게',
+          '채식,샐러드뷔페': '뷔페',
+          북카페: '카페,디저트',
+          마카롱: '카페,디저트',
+          브런치카페: '카페,디저트',
+        };
+
         const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
-        await Promise.all(
-          lists.map(async (list) => {
-            const region = await page
-              .$eval('.Pb4bU', (node) => node.textContent.trim())
-              .catch(() => null);
-            const name = await list.$eval(
-              'div.CHC5F > a > div > div > span.TYaxT',
-              (node) => node.textContent.trim(),
-            );
-            const category = await list.$eval(
-              'div.CHC5F > a > div > div > span.KCMnt',
-              (node) => node.textContent.trim(),
-            );
-            const categoryId = (
-              await this.puppeteerService.saveCategoryIfNotExists(category)
-            ).id;
-            restaurants.push({ region, name, categoryId });
-          }),
-        );
+        for (const list of lists) {
+          const region = await page
+            .$eval('.Pb4bU', (node) => node.textContent.trim())
+            .catch(() => null);
+          const name = await list.$eval(
+            'div.CHC5F > a > div > div > span.TYaxT',
+            (node) => node.textContent.trim(),
+          );
+          const category = await list.$eval(
+            'div.CHC5F > a > div > div > span.KCMnt',
+            (node) => node.textContent.trim(),
+          );
+          const mainCategory = categoryMapping[category];
+          const categoryId = (
+            await this.puppeteerService.saveCategoryIfNotExists(
+              mainCategory,
+              category,
+            )
+          ).id;
+          restaurants.push({ region, name, categoryId });
+        }
         console.log(pageIndex, restaurants[restaurants.length - 1]);
 
         const nextButtons = await page.$$('.eUTV2[aria-disabled="false"]');
@@ -346,21 +428,120 @@ export class PuppeteerController {
         }
       }
 
-      const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
+      const categoryMapping = {
+        일식: '일식',
+        돈가스: '일식',
+        일식당: '일식',
+        일본식라면: '일식',
+        샤브샤브: '일식',
+        오니기리: '일식',
+        오므라이스: '일식',
+        '우동,소바': '일식',
+        '일식튀김,꼬치': '일식',
+        '초밥,롤': '일식',
+        카레: '일식',
+        중식: '중식',
+        마라탕: '중식',
+        양꼬치: '중식',
+        양식: '양식',
+        이탈리아음식: '양식',
+        햄버거: '양식',
+        '멕시코,남미음식': '양식',
+        '스테이크,립': '양식',
+        피자: '양식',
+        샌드위치: '양식',
+        핫도그: '양식',
+        후렌치후라이: '양식',
+        분식: '분식',
+        토스트: '분식',
+        한식: '한식',
+        막국수: '한식',
+        냉면: '한식',
+        '찌개,전골': '한식',
+        추어탕: '한식',
+        감자탕: '한식',
+        해장국: '한식',
+        '곰탕,설렁탕': '한식',
+        갈비탕: '한식',
+        두부요리: '한식',
+        '칼국수,만두': '한식',
+        '전,빈대떡': '한식',
+        '해물,생선요리': '한식',
+        한정식: '한식',
+        '육류,고기요리': '한식',
+        쌈밥: '한식',
+        보리밥: '한식',
+        비빔밥: '한식',
+        죽: '한식',
+        국밥: '한식',
+        국수: '한식',
+        술집: '술집',
+        요리주점: '술집',
+        '맥주,호프': '술집',
+        '바(BAR)': '술집',
+        와인: '술집',
+        이자카야: '술집',
+        '오뎅,꼬치': '술집',
+        '전통,민속주점': '술집',
+        포장마차: '술집',
+        '카페, 디저트': '카페, 디저트',
+        베이커리: '카페,디저트',
+        케이크전문: '카페,디저트',
+        도넛: '카페,디저트',
+        와플: '카페,디저트',
+        슈: '카페,디저트',
+        커피번: '카페,디저트',
+        호두과자: '카페,디저트',
+        카페: '카페,디저트',
+        테이크아웃커피: '카페,디저트',
+        아이스크림: '카페,디저트',
+        빙수: '카페,디저트',
+        차: '카페,디저트',
+        초콜릿전문점: '카페,디저트',
+        '과일,주스전문점': '카페,디저트',
+        테마카페: '카페,디저트',
+        한식뷔페: '한식',
+        '백반,가정식': '한식',
+        떡카페: '카페,디저트',
+        애슐리: '패밀리레스토랑',
+        뷔페: '뷔페',
+        '일식,초밥뷔페': '뷔페',
+        고기뷔페: '뷔페',
+        해산물뷔페: '뷔페',
+        '도시락,컵밥': '도시락,컵밥',
+        '다이어트,샐러드': '도시락,컵밥',
+        반찬가게: '반찬가게',
+        '채식,샐러드뷔페': '뷔페',
+        북카페: '카페,디저트',
+        마카롱: '카페,디저트',
+        브런치카페: '카페,디저트',
+      };
 
-      await Promise.all(
-        lists.map(async (list) => {
-          const name = await list.$eval(
-            'div.CHC5F > a > div > div > span.TYaxT',
-            (node) => node.textContent.trim(),
-          );
-          const category = await list.$eval(
-            'div.CHC5F > a > div > div > span.KCMnt',
-            (node) => node.textContent.trim(),
-          );
-          restaurants.push({ name, category });
-        }),
-      );
+      const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
+      for (const list of lists) {
+        const region = await page
+          .$eval('.Pb4bU', (node) => node.textContent.trim())
+          .catch(() => null);
+        const name = await list.$eval(
+          'div.CHC5F > a > div > div > span.TYaxT',
+          (node) => node.textContent.trim(),
+        );
+        const category = await list.$eval(
+          'div.CHC5F > a > div > div > span.KCMnt',
+          (node) => node.textContent.trim(),
+        );
+        const mainCategory = categoryMapping[category];
+        if (!mainCategory) {
+          continue;
+        }
+        const categoryId = (
+          await this.puppeteerService.saveCategoryIfNotExists(
+            mainCategory,
+            category,
+          )
+        ).id;
+        restaurants.push({ region, name, categoryId });
+      }
       console.log(pageIndex, restaurants[restaurants.length - 1]);
 
       const nextButtons = await page.$$('.eUTV2[aria-disabled="false"]');
@@ -386,7 +567,6 @@ export class PuppeteerController {
     }
 
     await page.close();
-    await browser.close();
     console.log(restaurants);
     return restaurants.length.toString();
   }
@@ -450,24 +630,117 @@ export class PuppeteerController {
         }
       });
 
-      const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
+      const categoryMapping = {
+        일식: '일식',
+        돈가스: '일식',
+        일식당: '일식',
+        일본식라면: '일식',
+        샤브샤브: '일식',
+        오니기리: '일식',
+        오므라이스: '일식',
+        '우동,소바': '일식',
+        '일식튀김,꼬치': '일식',
+        '초밥,롤': '일식',
+        카레: '일식',
+        중식: '중식',
+        마라탕: '중식',
+        양꼬치: '중식',
+        양식: '양식',
+        이탈리아음식: '양식',
+        햄버거: '양식',
+        '멕시코,남미음식': '양식',
+        '스테이크,립': '양식',
+        피자: '양식',
+        샌드위치: '양식',
+        핫도그: '양식',
+        후렌치후라이: '양식',
+        분식: '분식',
+        토스트: '분식',
+        한식: '한식',
+        막국수: '한식',
+        냉면: '한식',
+        '찌개,전골': '한식',
+        추어탕: '한식',
+        감자탕: '한식',
+        해장국: '한식',
+        '곰탕,설렁탕': '한식',
+        갈비탕: '한식',
+        두부요리: '한식',
+        '칼국수,만두': '한식',
+        '전,빈대떡': '한식',
+        '해물,생선요리': '한식',
+        한정식: '한식',
+        '육류,고기요리': '한식',
+        쌈밥: '한식',
+        보리밥: '한식',
+        비빔밥: '한식',
+        죽: '한식',
+        국밥: '한식',
+        국수: '한식',
+        술집: '술집',
+        요리주점: '술집',
+        '맥주,호프': '술집',
+        '바(BAR)': '술집',
+        와인: '술집',
+        이자카야: '술집',
+        '오뎅,꼬치': '술집',
+        '전통,민속주점': '술집',
+        포장마차: '술집',
+        '카페, 디저트': '카페, 디저트',
+        베이커리: '카페,디저트',
+        케이크전문: '카페,디저트',
+        도넛: '카페,디저트',
+        와플: '카페,디저트',
+        슈: '카페,디저트',
+        커피번: '카페,디저트',
+        호두과자: '카페,디저트',
+        카페: '카페,디저트',
+        테이크아웃커피: '카페,디저트',
+        아이스크림: '카페,디저트',
+        빙수: '카페,디저트',
+        차: '카페,디저트',
+        초콜릿전문점: '카페,디저트',
+        '과일,주스전문점': '카페,디저트',
+        테마카페: '카페,디저트',
+        한식뷔페: '한식',
+        '백반,가정식': '한식',
+        떡카페: '카페,디저트',
+        애슐리: '패밀리레스토랑',
+        뷔페: '뷔페',
+        '일식,초밥뷔페': '뷔페',
+        고기뷔페: '뷔페',
+        해산물뷔페: '뷔페',
+        '도시락,컵밥': '도시락,컵밥',
+        '다이어트,샐러드': '도시락,컵밥',
+        반찬가게: '반찬가게',
+        '채식,샐러드뷔페': '뷔페',
+        북카페: '카페,디저트',
+        마카롱: '카페,디저트',
+        브런치카페: '카페,디저트',
+      };
 
-      await Promise.all(
-        lists.map(async (list) => {
-          const name = await list.$eval(
-            'div.CHC5F > a > div > div > span.TYaxT',
-            (node) => node.textContent.trim(),
-          );
-          const category = await list.$eval(
-            'div.CHC5F > a > div > div > span.KCMnt',
-            (node) => node.textContent.trim(),
-          );
-          const categoryId = (
-            await this.puppeteerService.saveCategoryIfNotExists(category)
-          ).id;
-          restaurants.push({ gu, name, categoryId });
-        }),
-      );
+      const lists = await page.$$('#_pcmap_list_scroll_container > ul > li');
+      for (const list of lists) {
+        const region = await page
+          .$eval('.Pb4bU', (node) => node.textContent.trim())
+          .catch(() => null);
+        const name = await list.$eval(
+          'div.CHC5F > a > div > div > span.TYaxT',
+          (node) => node.textContent.trim(),
+        );
+        const category = await list.$eval(
+          'div.CHC5F > a > div > div > span.KCMnt',
+          (node) => node.textContent.trim(),
+        );
+        const mainCategory = categoryMapping[category];
+        const categoryId = (
+          await this.puppeteerService.saveCategoryIfNotExists(
+            mainCategory,
+            category,
+          )
+        ).id;
+        restaurants.push({ region, name, categoryId });
+      }
       console.log(pageIndex, restaurants[restaurants.length - 1]);
 
       const nextButtons = await page.$$('.eUTV2[aria-disabled="false"]');
@@ -547,109 +820,109 @@ export class PuppeteerController {
 
       // 이게 맞나...싶지만 일차적으로 이렇게 했습니다ㅠㅠ
       const allGu = [
-        // '서울 강남구',
-        // '서울 강동구',
-        // '서울 강북구',
-        // '서울 강서구',
-        // '서울 관악구',
-        // '서울 광진구',
-        // '서울 구로구',
-        // '서울 금천구',
-        // '서울 노원구',
-        // '서울 도봉구',
-        // '서울 동대문구',
-        // '서울 동작구',
-        // '서울 마포구',
-        // '서울 서대문구',
-        // '서울 서초구',
-        // '서울 성동구',
-        // '서울 성북구',
-        // '서울 송파구',
-        // '서울 양천구',
-        // '서울 영등포구',
-        // '서울 용산구',
-        // '서울 은평구',
-        // '서울 종로구',
-        // '서울 중구',
-        // '서울 중랑구',
-        // '부산 강서구',
-        // '부산 금정구',
-        // '부산 남구',
-        // '부산 동구',
-        // '부산 동래구',
-        // '부산 부산진구',
-        // '부산 북구',
-        // '부산 사상구',
-        // '부산 사하구',
-        // '부산 서구',
-        // '부산 수영구',
-        // '부산 연제구',
-        // '부산 영도구',
-        // '부산 중구',
-        // '부산 해운대구',
-        // '인천 중구',
-        // '인천 동구',
-        // '인천 미추홀구',
-        // '인천 연수구',
-        // '인천 남동구',
-        // '인천 부평구',
-        // '인천 계양구',
-        // '인천 서구',
-        // '대구 남구',
-        // '대구 달서구',
-        // '대구 동구',
-        // '대구 북구',
-        // '대구 서구',
-        // '대구 수성구',
-        // '대구 중구',
-        // '광주 광산구',
-        // '광주 남구',
-        // '광주 동구',
-        // '광주 북구',
-        // '광주 서구',
-        // '대전 대덕구',
-        // '대전 동구',
-        // '대전 서구',
-        // '대전 유성구',
-        // '대전 중구',
-        // '울산 남구',
-        // '울산 동구',
-        // '울산 북구',
-        // '울산 중구',
-        // '수원 권선구',
-        // '수원 영통구',
-        // '수원 장안구',
-        // '수원 팔달구',
-        // '성남 분당구',
-        // '성남 수정구',
-        // '성남 중원구',
-        // '안양 동안구',
-        // '안양 만안구',
-        // '고양 덕양구',
-        // '고양 일산동구',
-        // '고양 일산서구',
-        // '안산 단원구',
-        // '안산 상록구',
-        // '용인 기흥구',
-        // '용인 수지구',
-        // '용인 처인구',
-        // '부천 원미구',
-        // '부천 소사구',
-        // '부천 오정구',
-        // '청주 상당구',
-        // '청주 흥덕구',
-        // '청주 청원구',
-        // '청주 서원구',
-        // '천안 동남구',
-        // '천안 서북구',
-        // '전주 덕진구',
-        // '전주 완산구',
-        // '포항 남구',
-        // '포항 북구',
-        // '창원 의창구',
-        // '창원 성산구',
-        // '창원 마산합포구',
-        // '창원 마산회원구',
+        '서울 강남구',
+        '서울 강동구',
+        '서울 강북구',
+        '서울 강서구',
+        '서울 관악구',
+        '서울 광진구',
+        '서울 구로구',
+        '서울 금천구',
+        '서울 노원구',
+        '서울 도봉구',
+        '서울 동대문구',
+        '서울 동작구',
+        '서울 마포구',
+        '서울 서대문구',
+        '서울 서초구',
+        '서울 성동구',
+        '서울 성북구',
+        '서울 송파구',
+        '서울 양천구',
+        '서울 영등포구',
+        '서울 용산구',
+        '서울 은평구',
+        '서울 종로구',
+        '서울 중구',
+        '서울 중랑구',
+        '부산 강서구',
+        '부산 금정구',
+        '부산 남구',
+        '부산 동구',
+        '부산 동래구',
+        '부산 부산진구',
+        '부산 북구',
+        '부산 사상구',
+        '부산 사하구',
+        '부산 서구',
+        '부산 수영구',
+        '부산 연제구',
+        '부산 영도구',
+        '부산 중구',
+        '부산 해운대구',
+        '인천 중구',
+        '인천 동구',
+        '인천 미추홀구',
+        '인천 연수구',
+        '인천 남동구',
+        '인천 부평구',
+        '인천 계양구',
+        '인천 서구',
+        '대구 남구',
+        '대구 달서구',
+        '대구 동구',
+        '대구 북구',
+        '대구 서구',
+        '대구 수성구',
+        '대구 중구',
+        '광주 광산구',
+        '광주 남구',
+        '광주 동구',
+        '광주 북구',
+        '광주 서구',
+        '대전 대덕구',
+        '대전 동구',
+        '대전 서구',
+        '대전 유성구',
+        '대전 중구',
+        '울산 남구',
+        '울산 동구',
+        '울산 북구',
+        '울산 중구',
+        '수원 권선구',
+        '수원 영통구',
+        '수원 장안구',
+        '수원 팔달구',
+        '성남 분당구',
+        '성남 수정구',
+        '성남 중원구',
+        '안양 동안구',
+        '안양 만안구',
+        '고양 덕양구',
+        '고양 일산동구',
+        '고양 일산서구',
+        '안산 단원구',
+        '안산 상록구',
+        '용인 기흥구',
+        '용인 수지구',
+        '용인 처인구',
+        '부천 원미구',
+        '부천 소사구',
+        '부천 오정구',
+        '청주 상당구',
+        '청주 흥덕구',
+        '청주 청원구',
+        '청주 서원구',
+        '천안 동남구',
+        '천안 서북구',
+        '전주 덕진구',
+        '전주 완산구',
+        '포항 남구',
+        '포항 북구',
+        '창원 의창구',
+        '창원 성산구',
+        '창원 마산합포구',
+        '창원 마산회원구',
         '창원 진해구',
       ];
       const page = await browser.newPage();
@@ -694,26 +967,119 @@ export class PuppeteerController {
             }
           }
 
+          const categoryMapping = {
+            일식: '일식',
+            돈가스: '일식',
+            일식당: '일식',
+            일본식라면: '일식',
+            샤브샤브: '일식',
+            오니기리: '일식',
+            오므라이스: '일식',
+            '우동,소바': '일식',
+            '일식튀김,꼬치': '일식',
+            '초밥,롤': '일식',
+            카레: '일식',
+            중식: '중식',
+            마라탕: '중식',
+            양꼬치: '중식',
+            양식: '양식',
+            이탈리아음식: '양식',
+            햄버거: '양식',
+            '멕시코,남미음식': '양식',
+            '스테이크,립': '양식',
+            피자: '양식',
+            샌드위치: '양식',
+            핫도그: '양식',
+            후렌치후라이: '양식',
+            분식: '분식',
+            토스트: '분식',
+            한식: '한식',
+            막국수: '한식',
+            냉면: '한식',
+            '찌개,전골': '한식',
+            추어탕: '한식',
+            감자탕: '한식',
+            해장국: '한식',
+            '곰탕,설렁탕': '한식',
+            갈비탕: '한식',
+            두부요리: '한식',
+            '칼국수,만두': '한식',
+            '전,빈대떡': '한식',
+            '해물,생선요리': '한식',
+            한정식: '한식',
+            '육류,고기요리': '한식',
+            쌈밥: '한식',
+            보리밥: '한식',
+            비빔밥: '한식',
+            죽: '한식',
+            국밥: '한식',
+            국수: '한식',
+            술집: '술집',
+            요리주점: '술집',
+            '맥주,호프': '술집',
+            '바(BAR)': '술집',
+            와인: '술집',
+            이자카야: '술집',
+            '오뎅,꼬치': '술집',
+            '전통,민속주점': '술집',
+            포장마차: '술집',
+            '카페, 디저트': '카페, 디저트',
+            베이커리: '카페,디저트',
+            케이크전문: '카페,디저트',
+            도넛: '카페,디저트',
+            와플: '카페,디저트',
+            슈: '카페,디저트',
+            커피번: '카페,디저트',
+            호두과자: '카페,디저트',
+            카페: '카페,디저트',
+            테이크아웃커피: '카페,디저트',
+            아이스크림: '카페,디저트',
+            빙수: '카페,디저트',
+            차: '카페,디저트',
+            초콜릿전문점: '카페,디저트',
+            '과일,주스전문점': '카페,디저트',
+            테마카페: '카페,디저트',
+            한식뷔페: '한식',
+            '백반,가정식': '한식',
+            떡카페: '카페,디저트',
+            애슐리: '패밀리레스토랑',
+            뷔페: '뷔페',
+            '일식,초밥뷔페': '뷔페',
+            고기뷔페: '뷔페',
+            해산물뷔페: '뷔페',
+            '도시락,컵밥': '도시락,컵밥',
+            '다이어트,샐러드': '도시락,컵밥',
+            반찬가게: '반찬가게',
+            '채식,샐러드뷔페': '뷔페',
+            북카페: '카페,디저트',
+            마카롱: '카페,디저트',
+            브런치카페: '카페,디저트',
+          };
+
           const lists = await page.$$(
             '#_pcmap_list_scroll_container > ul > li',
           );
-
-          await Promise.all(
-            lists.map(async (list) => {
-              const name = await list.$eval(
-                'div.CHC5F > a > div > div > span.TYaxT',
-                (node) => node.textContent.trim(),
-              );
-              const category = await list.$eval(
-                'div.CHC5F > a > div > div > span.KCMnt',
-                (node) => node.textContent.trim(),
-              );
-              const categoryId = (
-                await this.puppeteerService.saveCategoryIfNotExists(category)
-              ).id;
-              restaurants.push({ gu, name, categoryId });
-            }),
-          );
+          for (const list of lists) {
+            const region = await page
+              .$eval('.Pb4bU', (node) => node.textContent.trim())
+              .catch(() => null);
+            const name = await list.$eval(
+              'div.CHC5F > a > div > div > span.TYaxT',
+              (node) => node.textContent.trim(),
+            );
+            const category = await list.$eval(
+              'div.CHC5F > a > div > div > span.KCMnt',
+              (node) => node.textContent.trim(),
+            );
+            const mainCategory = categoryMapping[category];
+            const categoryId = (
+              await this.puppeteerService.saveCategoryIfNotExists(
+                mainCategory,
+                category,
+              )
+            ).id;
+            restaurants.push({ region, name, categoryId });
+          }
           console.log(pageIndex, restaurants[restaurants.length - 1]);
 
           const nextButtons = await page.$$('.eUTV2[aria-disabled="false"]');
