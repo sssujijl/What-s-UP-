@@ -5,10 +5,11 @@ import { FoodCategory } from 'src/places/entities/foodCategorys.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Place } from 'src/places/entities/place.entity';
 import { Menu } from 'src/menus/entities/menu.entity';
+import { SendMailService } from 'src/users/sendMail.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([FoodCategory, Place, Menu])],
   controllers: [PuppeteerController],
-  providers: [PuppeteerService],
+  providers: [PuppeteerService, SendMailService],
 })
 export class PuppeteerModule {}
