@@ -112,6 +112,7 @@ export class UsersService {
   }
 
   async signin(signinDto: signinDto) {
+    console.log(signinDto);
     const user = await this.userRepository.findOne({
       where: { email: signinDto.email },
       select: ['id', 'email', 'password']

@@ -33,7 +33,7 @@ export class FoodMate {
   title: string;
 
   @IsString()
-  @Column({ type: 'varchar', nullable: false })
+  @Column({ type: 'text', nullable: false })
   content: string;
 
   @IsString()

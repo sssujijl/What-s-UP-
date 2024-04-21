@@ -6,9 +6,12 @@ export class PlacesController {
   constructor(private readonly placesService: PlacesService) {}
 
   @Post()
-  async findAllPlace(@Body() { dong }: { dong: string }) {
+  async findAllPlace(
+    @Body() { dong }: { dong: string },
+    @Query('category') category: string
+  ) {
     try {
-      return await this.placesService.findAllPlace(dong);
+      return await this.placesService.findAllPlace(dong, category);
     } catch (err) {
       return { message: `${err}` }
     }
@@ -20,6 +23,15 @@ export class PlacesController {
       return await this.placesService.findPlaceById(placeId);
     } catch (err) {
       return { message: `${err}`}
+    }
+  }
+
+  @Get('/foodCategory')
+  async findAllFoodCategory() {
+    try {
+      return await this.placesService.findAllFoodCategory();
+    } catch (err) {
+      return { message: `${err}` }
     }
   }
 }

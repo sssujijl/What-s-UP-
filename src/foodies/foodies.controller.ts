@@ -43,9 +43,12 @@ export class FoodiesController {
    */
   // 게시물 전체조회
   @Get()
-  async findAllFoodies(@Query('orderBy') orderBy: string) {
-    try { 
-      return await this.foodiesService.findAllFoodies(orderBy);
+  async findAllFoodies(
+    @Query('orderBy') orderBy: string,
+    @Query('category') category: string,
+  ) {
+    try {
+      return await this.foodiesService.findAllFoodies(orderBy, category);
     } catch (err) {
       return { message: `${err}` };
     }

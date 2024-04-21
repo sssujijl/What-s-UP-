@@ -8,8 +8,9 @@ import Redis from 'ioredis';
 @Injectable()
 export class PlacesService {
   constructor(
-    @InjectRepository(Place) private readonly placeRepository: Repository<Place>,
-    @InjectRedis() private readonly redis: Redis
+    @InjectRepository(Place)
+    private readonly placeRepository: Repository<Place>,
+    @InjectRedis() private readonly redis: Redis,
   ) {}
 
   async findPlaceById(placeId: number) {
@@ -22,28 +23,55 @@ export class PlacesService {
     return place;
   }
 
-  async findAllPlace(address: string) {
+  async findAllPlace(address: string, category?: string) {
     const placeIds = await this.placesByDong(address);
+    console.log(placeIds);
+    const categoryIds = category
+      ? await this.redis.smembers(`FoodCateogry: ${category}`)
+      : null;
 
-    const places = await Promise.all(placeIds.map(async (placeId) => {
-        return await this.placeRepository.findOne({
-            where: { id: +placeId },
-            relations: ['foodCategory', 'reviews']
-        });
-    }));
+    const query = this.placeRepository
+      .createQueryBuilder('place')
+      .where('place.id IN (:...ids)', { ids: placeIds })
+      .leftJoinAndSelect('place.foodCategory', 'foodCategory')
+      .leftJoinAndSelect('place.reviews', 'reviews');
 
-    if (!places || places.length === 0) {
-        throw new NotFoundException('장소들을 찾을 수 없습니다.');
+    if (categoryIds) {
+      query.andWhere('place.foodCategory IN (:...categoryIds)', {
+        categoryIds,
+      });
+    }
+
+    const places = await query.getMany();
+
+    if (!places) {
+      throw new NotFoundException('장소들을 찾을 수 없습니다.');
     }
 
     return places;
-}
+  }
 
   private async placesByDong(address: string) {
-    let dong = '두정동';
+    if (address === '부성2동') {
+      address = '두정동'
+    }
 
-    const places = await this.redis.smembers(`PlaceIds: ${dong}`);
+    const places = await this.redis.smembers(`PlaceIds: ${address}`);
 
     return places;
+  }
+
+  async findAllFoodCategory() {
+    const keys = await this.redis.keys('*FoodCategory*');
+
+    const mainCategory: { [key: string]: string[] } = {};
+
+    await Promise.all(keys.map(async (key) => {
+      const category = key.replace('FoodCategory: ', '');
+      const foodCategoryId = await this.redis.smembers(key);
+      mainCategory[category] = foodCategoryId;
+    }));
+
+    return mainCategory;
   }
 }

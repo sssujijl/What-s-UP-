@@ -13,7 +13,7 @@ export class AuthService {
         const accessToken = await this.createAccessToken(id);
         const refreshToken = await this.createRefreshToken(id);
 
-        res.cookie('accessToken', accessToken, { httpOnly: true });
+        res.cookie('accessToken', accessToken);
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,

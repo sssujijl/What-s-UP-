@@ -31,6 +31,7 @@ export class UsersController {
   async signup(
     @Body() signupDto: SignupDto) {
     try {
+      console.log(signupDto);
      const newUser = await this.usersService.signup(signupDto);
  
      return newUser;
@@ -103,8 +104,8 @@ export class UsersController {
 
       const user = await this.usersService.signin(signinDto);
 
-      await this.authService.createTokens(res, user.id);
-
+      const access = await this.authService.createTokens(res, user.id);
+      console.log(access)
       return res.json({ message: "로그인이 완료되었습니다." });
     } catch (err) {
       return res.json({ message: `${err}` });
