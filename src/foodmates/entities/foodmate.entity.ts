@@ -40,9 +40,9 @@ export class FoodMate {
   @Column({ type: 'varchar', nullable: false })
   region: string;
 
-  @IsNumber()
-  @Column({ type: 'int', nullable: false })
-  capacity: number;
+  @IsString()
+  @Column({ type: 'varchar', nullable: false })
+  capacity: string;
 
   @IsNumber()
   @Column({ type: 'int', nullable: false, default: 0 })
@@ -61,9 +61,9 @@ export class FoodMate {
   @Column({ type: 'enum', enum: Gender, nullable: false })
   gender: Gender;
 
-  @IsEnum(Age)
-  @Column({ type: 'enum', enum: Age, nullable: false })
-  age: Age;
+  @IsString()
+  @Column({ type: 'varchar', nullable: false })
+  age: string;
 
   @IsDate()
   @Column({ type: 'datetime', nullable: false })
