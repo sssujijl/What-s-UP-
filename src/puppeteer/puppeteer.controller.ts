@@ -183,10 +183,10 @@ export class PuppeteerController {
             'div.CHC5F > a > div > div > span.KCMnt',
             (node) => node.textContent.trim(),
           );
-          const mainCategory = categoryMapping[category];
+          // const mainCategory = categoryMapping[category];
           const categoryId = (
             await this.puppeteerService.saveCategoryIfNotExists(
-              mainCategory,
+              // mainCategory,
               category,
             )
           ).id;
@@ -530,13 +530,13 @@ export class PuppeteerController {
           'div.CHC5F > a > div > div > span.KCMnt',
           (node) => node.textContent.trim(),
         );
-        const mainCategory = categoryMapping[category];
-        if (!mainCategory) {
-          continue;
-        }
+        // const mainCategory = categoryMapping[category];
+        // if (!mainCategory) {
+        //   continue;
+        // }
         const categoryId = (
           await this.puppeteerService.saveCategoryIfNotExists(
-            mainCategory,
+            // mainCategory,
             category,
           )
         ).id;
@@ -732,10 +732,10 @@ export class PuppeteerController {
           'div.CHC5F > a > div > div > span.KCMnt',
           (node) => node.textContent.trim(),
         );
-        const mainCategory = categoryMapping[category];
+        // const mainCategory = categoryMapping[category];
         const categoryId = (
           await this.puppeteerService.saveCategoryIfNotExists(
-            mainCategory,
+            // mainCategory,
             category,
           )
         ).id;
@@ -1071,10 +1071,10 @@ export class PuppeteerController {
               'div.CHC5F > a > div > div > span.KCMnt',
               (node) => node.textContent.trim(),
             );
-            const mainCategory = categoryMapping[category];
+            // const mainCategory = categoryMapping[category];
             const categoryId = (
               await this.puppeteerService.saveCategoryIfNotExists(
-                mainCategory,
+                // mainCategory,
                 category,
               )
             ).id;

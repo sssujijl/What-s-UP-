@@ -104,9 +104,9 @@ export class UsersController {
 
       const user = await this.usersService.signin(signinDto);
 
-      const access = await this.authService.createTokens(res, user.id);
-      console.log(access)
-      return res.json({ message: "로그인이 완료되었습니다." });
+      await this.authService.createTokens(res, user.id);
+      
+      return res.json(user);
     } catch (err) {
       return res.json({ message: `${err}` });
     }
