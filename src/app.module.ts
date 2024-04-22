@@ -29,8 +29,6 @@ import { Coupon } from './coupons/entities/coupon.entity';
 import { Mission } from './missions/entities/mission.entity';
 import { Reservation } from './reservations/entities/reservation.entity';
 import { Title } from './titles/entities/titles.entity';
-import { User_ChatRoom } from './chat-rooms/entities/user_chatRoom.entity';
-import { ChatRoom } from './chat-rooms/entities/chat-room.entity';
 import { Message } from './messages/entities/message.entity';
 import { Order_Menus } from './reservations/entities/orderMenus.entity';
 import { Place } from './places/entities/place.entity';
@@ -51,6 +49,8 @@ import dotenv from 'dotenv';
 import { ClovaocrModule } from './clovaocr/clovaocr.module';
 import { RecommendModule } from './recommend/recommend.module';
 import { EventGatewayModule } from './event-gateway/event-gateway.module';
+import { User_ChatRoom } from './chat-rooms/entites/user-chatRoom.entity';
+import { ChatRoom } from './chat-rooms/entites/chat-room.entity';
 
 dotenv.config();
 

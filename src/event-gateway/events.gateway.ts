@@ -1,27 +1,49 @@
 import {
-    MessageBody,
-    SubscribeMessage,
-    WebSocketGateway,
-    WebSocketServer,
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  OnGatewayInit,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { onlineMap } from './onlineMap';
 
-@WebSocketGateway(8080)
-export class EventsGateway {
-    @WebSocketServer()
-    server!: Server;
+@WebSocketGateway(8080, {cors: { origin: '*'}})
+export class EventsGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
+  @WebSocketServer() public server: Server;
 
-    async handleConnection(client: Socket): Promise<void> {
-        const socketId = client.id;
-        console.log(socketId)
-        this.server.emit('성진', 'data');
-    } 
-      
-    @SubscribeMessage('민석') 
-    async handleMessage(@MessageBody() data: any): Promise<void> {
-        console.log(data);
-        this.server.emit('성진', data);
+  @SubscribeMessage('message')
+  handleMessage(socket: Socket, data: any) {
+    console.log(socket);
+    console.log(data);
+  }
+
+  afterInit(server: Server) {
+    console.log('websocketServer init');
+  }
+
+  handleConnection(@ConnectedSocket() socket: Socket) {
+    console.log('conntected', socket.handshake.auth)
+
+    if (!onlineMap[socket.nsp.name]) {
+      onlineMap[socket.nsp.name] = {};
     }
+
+    socket.emit('hello', socket.nsp.name);
+  }
+
+  handleDisconnect(@ConnectedSocket() socket: Socket) {
+    console.log('disconnected', socket.nsp.name);
+
+    const newNamespace = socket.nsp;
+    delete onlineMap[socket.nsp.name][socket.id];
+    newNamespace.emit('onlineList', Object.values(onlineMap[socket.nsp.name]));
+  }
 }
 
 // 1. 유저랑 연결
