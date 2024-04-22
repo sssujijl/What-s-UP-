@@ -4,6 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { userInfo } from 'os';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('chat-rooms')
@@ -33,6 +34,24 @@ export class ChatRoomsController {
   ) {
     try {
       return await this.chatRoomService.leaveChatRoom(user.id, data.chatRoomId);
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  @Get()
+  async findAllChatRooms(@UserInfo() user: User) {
+    try {
+      return await this.chatRoomService.findChatRoomsByUserId(user.id);
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  @Get('/:chatRoomId')
+  async findOneChatRoom(@Param('chatRoomdId') chatRoomdId: number) {
+    try {
+      return await this.chatRoomService.findOneChatRoom(chatRoomdId);
     } catch (err) {
       return { message: `${err}` }
     }

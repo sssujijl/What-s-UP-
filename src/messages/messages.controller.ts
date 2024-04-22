@@ -1,20 +1,28 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { MessagesService } from './messages.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
-import { GetMessagesDto } from './dto/get-message.dto';
+import { ChatRoomsService } from 'src/chat-rooms/chat-rooms.service';
+import { AuthGuard } from '@nestjs/passport';
+import { UserInfo } from 'src/utils/userInfo.decorator';
+import { User } from 'src/users/entities/user.entity';
 
-@Controller('messages')
+@UseGuards(AuthGuard('jwt'))
+@Controller('/chatRoom/:chatRoomId/messages')
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly chatRoomService: ChatRoomsService
+  ) {}
 
   @Get()
-  getMessages(@Query() getMessagesDto: GetMessagesDto) {
-    return this.messagesService.getMessages(getMessagesDto);
-  }
-
-  @Post()
-  createMessages(@Body() createMessageDto: CreateMessageDto) {
-    return this.messagesService.createMessage(createMessageDto);
+  async findAllMessage(
+    @UserInfo() user: User,
+    @Param('chatRoomId') chatRoomId: number
+  ) {
+    try {
+      await this.chatRoomService.findOneChatRoom(chatRoomId);
+      return await this.messagesService.findAllMessageFromRedis(user, chatRoomId);
+    } catch (err) {
+      return { message: `${err}` }
+    }
   }
 }

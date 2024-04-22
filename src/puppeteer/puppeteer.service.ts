@@ -102,7 +102,7 @@ export class PuppeteerService {
     for (const textItem of text) {
       for (const [mainCategory, keywords] of Object.entries(categoriesMap)) {
         if (keywords.some((word) => textItem.includes(word))) {
-          return await this.redis.sadd(`FoodCateogry: ${mainCategory}`, foodCategory.id);
+          return await this.redis.sadd(`FoodCategory: ${mainCategory}`, `${foodCategory.id}: ${foodCategory.category}`);
         }
       }
     }

@@ -48,6 +48,14 @@ export class ChatRoomsService {
 
     try {
       const userChatRoom = await this.findOneUserChatRoom(userId, chatRoomdId);
+      const remainingUsers = await this.findUserChatRoomsByChatRoomdId(chatRoomdId);
+
+      if (remainingUsers.length <= 1) {
+        const chatRoom = await this.findOneChatRoom(chatRoomdId);
+
+        chatRoom.deletedAt = new Date();
+        await queryRunner.manager.save(chatRoom);
+      }
 
       await queryRunner.manager.delete(User_ChatRoom, userChatRoom);
 
@@ -64,6 +72,16 @@ export class ChatRoomsService {
     }
   }
 
+  async findUserChatRoomsByChatRoomdId(chatRoomId: number) {
+    const userChatRooms = await this.userChatRoomRepositroy.findBy({ chatRoomId });
+
+    if (!userChatRooms) {
+      throw new NotFoundException('해당 채팅방을 찾을 수 없습니다.');
+    }
+
+    return userChatRooms;
+  }
+
   async findOneUserChatRoom(userId: number, chatRoomId: number) {
     const userChatRoom = await this.userChatRoomRepositroy.findOne({
       where: { userId, chatRoomId },
@@ -71,9 +89,35 @@ export class ChatRoomsService {
     });
 
     if (!userChatRoom) {
-      throw new NotFoundException('해당 유저의 채팅방을 찾을 수 없습니다.');
+      throw new NotFoundException('유저의 해당 채팅방을 찾을 수 없습니다.');
     }
 
     return userChatRoom;
+  }
+
+  async findChatRoomsByUserId(userId: number) {
+    const chatRooms = await this.userChatRoomRepositroy.find({ 
+      where: { userId },
+      relations: ['chatRoom']  
+    });
+
+    if (!chatRooms) {
+      throw new NotFoundException('해당 유저의 채팅방을 찾을 수 없습니다.');
+    }
+
+    return chatRooms;
+  }
+
+  async findOneChatRoom(chatRoomId: number) {
+    const chatRoom = await this.chatRoomRepository.findOne({
+      where: { id: chatRoomId },
+      relations: ['messages']
+    });
+
+    if (!chatRoom) {
+      throw new NotFoundException('해당 채팅방을 찾을 수 없습니다.');
+    }
+
+    return chatRoom;
   }
 }

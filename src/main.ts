@@ -5,7 +5,6 @@ import cookieParser from "cookie-parser";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import dotenv from 'dotenv' 
 import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
-import { createClient } from "redis";
 import { RedisIoAdapter } from "./event-gateway/redisIoAdapter";
 
 async function bootstrap() {
@@ -23,12 +22,11 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe())
 
-  const pubClient = createClient({ url: 'redis://localhost:6379' });
-  const subClient = createClient({ url: 'redis://localhost:6379' });
-  const redisIoAdapter = new RedisIoAdapter(pubClient, subClient);
-
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+  
   app.useWebSocketAdapter(redisIoAdapter);
-
+  
 
   const config = new DocumentBuilder()
     .setTitle('Whats_UP')

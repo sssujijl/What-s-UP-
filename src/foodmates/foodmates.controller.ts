@@ -17,6 +17,9 @@ import { CreateFoodmateDto } from './dto/create-foodmate.dto';
 import { UpdateFoodmateDto } from './dto/update-foodmate.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { UserInfo } from 'src/utils/userInfo.decorator';
+import { User } from 'src/users/entities/user.entity';
+import { validate } from 'class-validator';
 
 @ApiTags('Foodmates')
 @Controller('foodmates')
@@ -25,25 +28,21 @@ export class FoodmatesController {
 
   /**
    * 밥친구 글 등록
-   * @param createFoodmateDto
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  async create(@Body() createFoodmateDto: CreateFoodmateDto, @Req() req: any) {
+  async create(
+    @Body() createFoodmateDto: CreateFoodmateDto, 
+    @UserInfo() user: User
+  ) {
     try {
-      const userId = req.user.id;
-      const data = await this.foodmatesService.create(
-        createFoodmateDto,
-        userId,
-      );
-      return {
-        statusCode: HttpStatus.CREATED,
-        message: '밥친구 게시글 생성에 성공했습니다.',
-        data,
-      };
+      await validate(createFoodmateDto);
+
+      createFoodmateDto.userId = user.id;
+      return await this.foodmatesService.create(createFoodmateDto);
     } catch (error) {
-      throw new BadRequestException('밥친구 게시글 생성에 실패했습니다.');
+      return { message: `${error}` }
     }
   }
 
@@ -59,11 +58,7 @@ export class FoodmatesController {
     try {
       const data = await this.foodmatesService.findAll(orderBy, category);
 
-      return {
-        statusCode: HttpStatus.OK,
-        message: '글 목록 조회에 성공했습니다.',
-        data,
-      };
+      return data;
     } catch (err) {
       return { message: `${err}` }
     }

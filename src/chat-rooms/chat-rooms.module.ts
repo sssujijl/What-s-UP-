@@ -14,6 +14,7 @@ import { UsersModule } from 'src/users/users.module';
     UsersModule
   ],
   controllers: [ChatRoomsController],
-  providers: [ChatRoomsService]
+  providers: [ChatRoomsService],
+  exports: [ChatRoomsService]
 })
 export class ChatRoomsModule {}

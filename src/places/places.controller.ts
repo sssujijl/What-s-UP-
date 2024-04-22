@@ -17,21 +17,21 @@ export class PlacesController {
     }
   }
 
-  @Get('/:placeId')
-  async findPlace(@Param('placeId') placeId: number) {
-    try {
-      return await this.placesService.findPlaceById(placeId);
-    } catch (err) {
-      return { message: `${err}`}
-    }
-  }
-
   @Get('/foodCategory')
   async findAllFoodCategory() {
     try {
       return await this.placesService.findAllFoodCategory();
     } catch (err) {
       return { message: `${err}` }
+    }
+  }
+
+  @Get('/:placeId')
+  async findPlace(@Param('placeId') placeId: number) {
+    try {
+      return await this.placesService.findPlaceById(placeId);
+    } catch (err) {
+      return { message: `${err}`}
     }
   }
 }

@@ -20,12 +20,7 @@ export class FoodmatesService {
     @InjectRedis() private readonly redis: Redis  
   ) {}
 
-  async create(createFoodmateDto: CreateFoodmateDto, userId: number) {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (_.isNil(user)) {
-      throw new NotFoundException('사용자를 찾을 수 없습니다.');
-    }
-
+  async create(createFoodmateDto: CreateFoodmateDto) {
     const foodmate = await this.foodmateRepository.save(createFoodmateDto);
 
     return foodmate;

@@ -62,8 +62,7 @@ export class PlacesService {
   }
 
   async findAllFoodCategory() {
-    const keys = await this.redis.keys('*FoodCategory*');
-
+    const keys = await this.redis.keys('FoodCategory:*');
     const mainCategory: { [key: string]: string[] } = {};
 
     await Promise.all(keys.map(async (key) => {

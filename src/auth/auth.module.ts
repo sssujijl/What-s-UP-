@@ -30,7 +30,7 @@ import { JwtKakaoStrategy } from './kakao.strategy';
     AuthorStrategy,
     JwtGoogleStrategy,
     JwtNaverStrategy,
-    JwtKakaoStrategy
+    JwtKakaoStrategy,
   ],
   exports: [AuthService],
 })
