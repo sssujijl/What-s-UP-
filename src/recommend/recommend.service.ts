@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import axios from 'axios';
 import { FoodCategory } from 'src/places/entities/foodCategorys.entity';
 import { Place } from 'src/places/entities/place.entity';
 import { ResStatus } from 'src/reservations/entities/resStatus.entity';
@@ -23,6 +24,13 @@ export class RecommendService {
     @InjectRepository(ResStatus)
     private readonly resStatusRepository: Repository<ResStatus>,
   ) {}
+
+  async getSatisfiedReview(reservationId: number) {
+    const review = await this.reviewRepository.find({
+      where: { rating: In([Rating.Rating_4, Rating.Rating_5]), reservationId },
+    });
+    return review;
+  }
 
   async getUserPreferredCategories(userId: number) {
     const reviews = await this.reviewRepository.find({
@@ -81,7 +89,25 @@ export class RecommendService {
     return places;
   }
 
-  async filterGoodPlaces(places: Place[]) {
+  async analyzeSentiment(review: string) {
+    const url =
+      'https://naveropenapi.apigw.ntruss.com/sentiment-analysis/v1/analyze';
+    const headers = {
+      'X-NCP-APIGW-API-KEY-ID': process.env.SENTIMENT_CLIENT_ID,
+      'X-NCP-APIGW-API-KEY': process.env.SENTIMENT_CLIENT_SECRET,
+      'Content-Type': 'application/json',
+    };
+    const data = { content: review };
+
+    try {
+      const response = await axios.post(url, data, { headers });
+      return response.data;
+    } catch (error) {
+      throw new Error(`감정 분석 실패: ${error.message}`);
+    }
+  }
+
+  async filterGoodPlaces(places: Place[], userPreference: string) {
     const goodPlaces = await Promise.all(
       places.map(async (place) => {
         const resStatusList = await this.resStatusRepository.find({
@@ -108,29 +134,53 @@ export class RecommendService {
             }),
           ),
         );
-        // console.log(goodReviews);
-        const reviews = await Promise.all(
-          reservations.map((reservation) =>
-            this.reviewRepository.find({
-              where: { reservationId: reservation.id },
-            }),
-          ),
-        );
-        // console.log(reviews);
-        const goodRate = goodReviews.length / reviews.length;
 
-        console.log(
-          '좋은 리뷰:',
-          goodReviews.length,
-          '전체 리뷰:',
-          reviews.length,
-        );
-        console.log('좋은 리뷰 비율:', goodRate);
+        const allReviewsText = goodReviews
+          .flat()
+          .map((review) => review.content)
+          .join(' ');
 
-        return goodRate > 0.6 ? place : null;
+        const placeType = await this.getPreference(allReviewsText);
+
+        return placeType === userPreference ? place : null;
       }),
     );
 
     return goodPlaces.filter((place) => place !== null);
+  }
+
+  async getPreference(allReviewsText: string): Promise<string> {
+    const reviewAnalysis = await this.analyzeSentiment(allReviewsText);
+
+    const positiveSentences = reviewAnalysis.sentences.filter(
+      (sentence) => sentence.sentiment === 'positive',
+    );
+
+    let tasteCount = 0;
+    let priceCount = 0;
+
+    for (const sentence of positiveSentences) {
+      for (const highlight of sentence.highlights) {
+        const highlightedContent = sentence.content.substring(
+          highlight.offset,
+          highlight.offset + highlight.length,
+        );
+        if (highlightedContent.includes('맛')) {
+          tasteCount++;
+        }
+        if (highlightedContent.includes('가격')) {
+          priceCount++;
+        }
+      }
+    }
+
+    const preference =
+      tasteCount > priceCount
+        ? 'taste'
+        : tasteCount < priceCount
+          ? 'price'
+          : 'neutral';
+
+    return preference;
   }
 }
