@@ -9,6 +9,8 @@ import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import { Reservation } from 'src/reservations/entities/reservation.entity';
 import { PlaceList } from 'src/place-lists/entities/place-list.entity';
 import { Saved_Place } from 'src/place-lists/entities/savedPlaces.entity';
+import { PlaceListsService } from 'src/place-lists/place-lists.service';
+import { ReservationsService } from 'src/reservations/reservations.service';
 
 @Module({
   imports: [
@@ -23,6 +25,6 @@ import { Saved_Place } from 'src/place-lists/entities/savedPlaces.entity';
     ]),
   ],
   controllers: [RecommendController],
-  providers: [RecommendService],
+  providers: [RecommendService, ReservationsService, PlaceListsService],
 })
 export class RecommendModule {}
