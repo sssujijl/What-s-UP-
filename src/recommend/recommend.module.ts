@@ -9,9 +9,11 @@ import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import { Reservation } from 'src/reservations/entities/reservation.entity';
 import { PlaceList } from 'src/place-lists/entities/place-list.entity';
 import { Saved_Place } from 'src/place-lists/entities/savedPlaces.entity';
+import { PlaceListsModule } from 'src/place-lists/place-lists.module';
 
 @Module({
   imports: [
+    PlaceListsModule,
     TypeOrmModule.forFeature([
       Review,
       Place,

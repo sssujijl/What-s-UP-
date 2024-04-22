@@ -25,34 +25,43 @@ export class RecommendService {
     private readonly resStatusRepository: Repository<ResStatus>,
   ) {}
 
-  async getSatisfiedReview(reservationId: number) {
-    const review = await this.reviewRepository.find({
-      where: { rating: In([Rating.Rating_4, Rating.Rating_5]), reservationId },
-    });
-    return review;
-  }
-
-  async getUserPreferredCategories(userId: number) {
+  async reviewedPlaces(userId: number) {
     const reviews = await this.reviewRepository.find({
-      where: { rating: In([Rating.Rating_4, Rating.Rating_5]) },
+      where: { userId },
+      select: ['placeId'],
     });
 
-    const userReservations = await Promise.all(
-      reviews.map((review) => this.getReservationByReviewId(review.id, userId)),
-    );
-
-    const placeIds = userReservations.map(
-      (reservation) => reservation.resStatus.placeId,
-    );
-
-    const preferredAllCategories = await Promise.all(
-      placeIds.map((placeId) => this.getFoodCategoryId(placeId)),
-    );
-
-    const preferredCategories = [...new Set(preferredAllCategories)];
-
-    return preferredCategories;
+    return reviews.map((review) => review.placeId);
   }
+
+  async getSatisfiedReview(userId: number) {
+    const reviews = await this.reviewRepository.find({
+      where: { rating: In([Rating.Rating_4, Rating.Rating_5]), userId },
+    });
+    return reviews;
+  }
+
+  // async getUserPreferredCategories(userId: number) {
+  //   const reviews = await this.reviewRepository.find({
+  //     where: { rating: In([Rating.Rating_4, Rating.Rating_5]) },
+  //   });
+
+  //   const userReservations = await Promise.all(
+  //     reviews.map((review) => this.getReservationByReviewId(review.id, userId)),
+  //   );
+
+  //   const placeIds = userReservations.map(
+  //     (reservation) => reservation.resStatus.placeId,
+  //   );
+
+  //   const preferredAllCategories = await Promise.all(
+  //     placeIds.map((placeId) => this.getFoodCategoryId(placeId)),
+  //   );
+
+  //   const preferredCategories = [...new Set(preferredAllCategories)];
+
+  //   return preferredCategories;
+  // }
 
   async getReservationByReviewId(reviewId: number, userId: number) {
     const review = await this.reviewRepository.findOne({
@@ -156,8 +165,17 @@ export class RecommendService {
       (sentence) => sentence.sentiment === 'positive',
     );
 
+    let serviceCount = 0;
+    let atmosphereCount = 0;
     let tasteCount = 0;
     let priceCount = 0;
+
+    const keywords = {
+      맛: ['맛', '신선'],
+      가격: ['가격', '가성비', '저렴'],
+      분위기: ['분위기', '인테리어', '편안'],
+      서비스: ['서비스', '응대', '친절', '매너'],
+    };
 
     for (const sentence of positiveSentences) {
       for (const highlight of sentence.highlights) {
@@ -165,22 +183,69 @@ export class RecommendService {
           highlight.offset,
           highlight.offset + highlight.length,
         );
-        if (highlightedContent.includes('맛')) {
-          tasteCount++;
-        }
-        if (highlightedContent.includes('가격')) {
-          priceCount++;
+        console.log('하이라이트:', highlightedContent);
+        for (const category in keywords) {
+          if (
+            keywords[category].some((keyword) =>
+              highlightedContent.includes(keyword),
+            )
+          ) {
+            switch (category) {
+              case '맛':
+                tasteCount++;
+                break;
+              case '가격':
+                priceCount++;
+                break;
+              case '분위기':
+                atmosphereCount++;
+                break;
+              case '서비스':
+                serviceCount++;
+                break;
+              default:
+                break;
+            }
+          }
         }
       }
     }
 
-    const preference =
-      tasteCount > priceCount
-        ? 'taste'
-        : tasteCount < priceCount
-          ? 'price'
-          : 'neutral';
+    const preferenceThreshold = 0.1; // 오차범위
 
+    const total = tasteCount + priceCount + atmosphereCount + serviceCount;
+
+    const tasteRatio = tasteCount / total;
+    const priceRatio = priceCount / total;
+    const atmosphereRatio = atmosphereCount / total;
+    const serviceRatio = serviceCount / total;
+
+    const maxRatio = Math.max(
+      tasteRatio,
+      priceRatio,
+      atmosphereRatio,
+      serviceRatio,
+    );
+
+    let preference = '';
+    if (
+      Math.abs(tasteRatio - maxRatio) < preferenceThreshold &&
+      Math.abs(priceRatio - maxRatio) < preferenceThreshold &&
+      Math.abs(atmosphereRatio - maxRatio) < preferenceThreshold &&
+      Math.abs(serviceRatio - maxRatio) < preferenceThreshold
+    ) {
+      preference = 'neutral';
+    } else if (maxRatio === tasteRatio) {
+      preference = 'taste';
+    } else if (maxRatio === priceRatio) {
+      preference = 'price';
+    } else if (maxRatio === atmosphereRatio) {
+      preference = 'atmosphere';
+    } else {
+      preference = 'service';
+    }
+
+    console.log('분석된 타입:', preference);
     return preference;
   }
 }
