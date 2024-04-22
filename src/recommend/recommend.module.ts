@@ -9,11 +9,14 @@ import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import { Reservation } from 'src/reservations/entities/reservation.entity';
 import { PlaceList } from 'src/place-lists/entities/place-list.entity';
 import { Saved_Place } from 'src/place-lists/entities/savedPlaces.entity';
-import { PlaceListsService } from 'src/place-lists/place-lists.service';
-import { ReservationsService } from 'src/reservations/reservations.service';
+import { PlaceListsModule } from 'src/place-lists/place-lists.module';
+import { ReservationsModule } from 'src/reservations/reservations.module';
+
 
 @Module({
   imports: [
+    ReservationsModule,
+    PlaceListsModule,
     TypeOrmModule.forFeature([
       Review,
       Place,
@@ -25,6 +28,6 @@ import { ReservationsService } from 'src/reservations/reservations.service';
     ]),
   ],
   controllers: [RecommendController],
-  providers: [RecommendService, ReservationsService, PlaceListsService],
+  providers: [RecommendService],
 })
 export class RecommendModule {}
