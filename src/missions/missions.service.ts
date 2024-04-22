@@ -10,13 +10,10 @@ import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import { MessageProducer } from 'src/producer/producer.service';
 import { Redis } from 'ioredis';
 import { InjectRedis } from '@nestjs-modules/ioredis';
-<<<<<<< HEAD
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
-=======
 import { Reservation } from 'src/reservations/entities/reservation.entity';
 import { Review } from 'src/reviews/entities/review.entity';
 import { Status } from './types/status.types';
->>>>>>> 00c610041330b17a7ad6a447eee1a6fb01122665
 
 @Injectable()
 export class MissionsService {
@@ -34,10 +31,7 @@ export class MissionsService {
     private dataSource: DataSource,
     private readonly messageProducer: MessageProducer,
     @InjectRedis() private readonly redis: Redis,
-<<<<<<< HEAD
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
-=======
->>>>>>> 00c610041330b17a7ad6a447eee1a6fb01122665
   ) {}
 
   async findMission(id: number) {
@@ -47,7 +41,6 @@ export class MissionsService {
       throw new NotFoundException('해당 미션을 찾을 수 없습니다.');
     }
 
-<<<<<<< HEAD
     return mission;
   }
 
@@ -55,16 +48,13 @@ export class MissionsService {
     const today = new Date().toISOString().slice(0, 10);
     const mission = await this.missionRepository.findOneBy({ date: today });
 
-=======
     await this.messageProducer.sendMessage(
       `[${mission.date}] 미션이 생성되었습니다!!`,
     );
->>>>>>> 00c610041330b17a7ad6a447eee1a6fb01122665
     return mission;
   }
 
   async test() {
-<<<<<<< HEAD
     const places = await this.placeRepository.find();
     places.map(async (place) => {
       const resStatus = {
@@ -82,29 +72,16 @@ export class MissionsService {
     timeZone: 'Asia/Seoul'
   })
   async createRandomMissions(createMissionDto: CreateMissionDto) {
-=======
-    return await this.resStatusRepository.find({ where: { missionId: 14 } });
-  }
-
-  // 10시 또는 15시에 랜덤으로 스케줄링 시작
-  @Cron(`0 ${getRandom('01', '06')} * * *`)
-  async createRandomMissions() {
-    const createMissionDto: CreateMissionDto = {
-      capacity: 0,
-      date: '2024-04-09',
-      time: Time.TEN_AM,
-    };
->>>>>>> 00c610041330b17a7ad6a447eee1a6fb01122665
     createMissionDto.capacity = getRandomAttendees();
 
     createMissionDto.date = new Date().toISOString().slice(0, 10);
     const currentHour = new Date().getHours();
 
-    // if (currentHour === 10) {
-    //   createMissionDto.time = Time.TEN_AM; // 12 ~ 15시
-    // } else {
-    //   createMissionDto.time = Time.THREE_PM; // 17 ~ 20시
-    // }
+    if (currentHour === 10) {
+      createMissionDto.time = Time.TEN_AM; // 12 ~ 15시
+    } else {
+      createMissionDto.time = Time.THREE_PM; // 17 ~ 20시
+    }
     return await this.createMission(createMissionDto);
   }
 
@@ -203,11 +180,7 @@ export class MissionsService {
           count + 1,
         );
       } else {
-<<<<<<< HEAD
         return availableResStatusIds;
-=======
-        return resStatusId;
->>>>>>> 00c610041330b17a7ad6a447eee1a6fb01122665
       }
     }
 
@@ -264,129 +237,6 @@ export class MissionsService {
 
     return { reSearch, availableResStatusIds };
   }
-<<<<<<< HEAD
-  
-=======
-
-  // 만약 reStatus가 없는경우 다시 장소 랜덤찾기
-  async reSearch(reSearch: { [dong: string]: number[] }) {
-    let reSearchPlaces = [];
-
-    for (const dong in reSearch) {
-      const placeIds = reSearch[dong];
-      const reSearchPlace = await this.placeRepository
-        .createQueryBuilder('place')
-        .where('place.address LIKE :dong', { dong: `%${dong}%` })
-        .andWhere('place.id NOT IN (:...placeIds)', { placeIds })
-        .select([
-          "SUBSTRING_INDEX(SUBSTRING_INDEX(place.address, ' ', 3), ' ', -1) AS dong",
-          'GROUP_CONCAT(place.id) AS placeId',
-        ])
-        .groupBy('dong')
-        .getRawMany();
-
-      reSearchPlaces = reSearchPlaces.concat(reSearchPlace);
-    }
-
-    const selectedPlaces = {};
-
-    reSearchPlaces.forEach((place) => {
-      const placesInDong = place.placeId.split(',');
-      const dong = place.dong;
-      const randomIndex = Math.floor(Math.random() * placesInDong.length);
-      const selectedPlace = placesInDong[randomIndex];
-      selectedPlaces[dong] = [];
-      selectedPlaces[dong].push(selectedPlace);
-    });
-
-    return selectedPlaces;
-  }
-
-  // 랜덤 장소 찾기 (데이터베이스에서 동별로 분류하여 return, 랜덤으로 1 ~ 2곳 선택)
-  async findByAddress() {
-    const placesByDong = await this.placeRepository
-      .createQueryBuilder('place')
-      .select([
-        "SUBSTRING_INDEX(SUBSTRING_INDEX(place.address, ' ', 3), ' ', -1) AS dong",
-        'GROUP_CONCAT(place.id) AS placeId',
-      ])
-      .groupBy('dong')
-      .getRawMany();
-
-    const selectedPlaces = {};
-
-    placesByDong.forEach((place) => {
-      const placesInDong = place.placeId.split(',');
-      const dong = place.dong;
-      const randomIndex = Math.floor(Math.random() * placesInDong.length);
-      const selectedPlace = placesInDong[randomIndex];
-      selectedPlaces[dong] = [];
-      selectedPlaces[dong].push(selectedPlace);
-    });
-
-    return selectedPlaces;
-  }
-
-  // 랜덤 장소 찾기 (전체 place를 조회하고, 동별로 분류하고, 랜덤하게 1 ~ 2곳 선택)
-  async findAll() {
-    const places = await this.placeRepository.find({
-      select: ['id', 'address'],
-    });
-
-    const classifications = {};
-
-    places.forEach((place) => {
-      const match = place.address.match(/(\S+)동/);
-      if (match) {
-        const dong = match[0];
-        if (!classifications[dong]) {
-          classifications[dong] = [];
-        }
-        classifications[dong].push(place);
-      }
-    });
-
-    const selectedPlaces = {};
-
-    for (const dong in classifications) {
-      if (classifications.hasOwnProperty(dong)) {
-        const placesInDong = classifications[dong];
-        const randomIndex = Math.floor(Math.random() * placesInDong.length);
-        const selectedPlace = placesInDong[randomIndex];
-        selectedPlaces[dong] = [];
-        selectedPlaces[dong].push(selectedPlace.id);
-      }
-    }
-    return selectedPlaces;
-  }
-
-  // 랜덤 장소 찾기 (데이터베이스에서 동별로 분류하고, 랜덤으로 2곳 선택)
-  async randomPlace() {
-    const placesByDong = await this.placeRepository
-      .createQueryBuilder('place')
-      .select([
-        "SUBSTRING_INDEX(SUBSTRING_INDEX(place.address, ' ', 3), ' ', -1) AS dong",
-        `(SELECT GROUP_CONCAT(placeId ORDER BY RAND()) 
-          FROM (SELECT place.id AS placeId 
-          FROM places place 
-          WHERE place.deletedAt IS NULL 
-          AND SUBSTRING_INDEX(SUBSTRING_INDEX(place.address, ' ', 3), ' ', -1) = dong 
-          ORDER BY RAND() 
-          LIMIT ${getRandom(1, 2)}) AS randomPlaces) 
-          AS placeId`,
-      ])
-      .groupBy('dong')
-      .getRawMany();
-
-    return placesByDong;
-  }
-
-  random(number: number[]) {
-    const index1 = Math.floor(Math.random() * number.length);
-    const index2 =
-      Math.random() > 0.5 ? Math.floor(Math.random() * number.length) : null;
-    return index2 !== null ? [index1, index2] : [index1];
-  }
 
   async updateMissionStatus(missionId: number) {
     const mission = await this.missionRepository.findOne({
@@ -422,7 +272,6 @@ export class MissionsService {
     }
     return reviews.length;
   }
->>>>>>> 00c610041330b17a7ad6a447eee1a6fb01122665
 }
 
 function getRandom(a: string | number, b: string | number): string | number {
