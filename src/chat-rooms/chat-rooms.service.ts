@@ -1,75 +1,79 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ChatRoom } from './entites/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { User_ChatRoom } from './entites/user-chatRoom.entity';
+import { EventsGateway } from 'src/event-gateway/events.gateway';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class ChatRoomsService {
   constructor(
-    @InjectRepository(ChatRoom)
-    private readonly roomRepository: Repository<ChatRoom>,
+    @InjectRepository(ChatRoom) private readonly chatRoomRepository: Repository<ChatRoom>,
+    @InjectRepository(User_ChatRoom) private readonly userChatRoomRepositroy: Repository<User_ChatRoom>,
+    private dataSource: DataSource,
+    private eventGateway: EventsGateway
   ) {}
 
-//   getRooms(getRoomsDto: GetRoomsDto) {
-//     return this.roomRepository.find({
-//       skip: getRoomsDto.skip,
-//       take: getRoomsDto.take,
-//       order: { createdAt: 'DESC' },
-//     });
-//   }
+  async createChatRoom(pub: User, sub: User, chatRoomName: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-//   getRoom(id: number) {
-//     return this.roomRepository.findOneBy({ id });
-//   }
+    try {
+      const chatRoom = await queryRunner.manager.save(ChatRoom, { name: chatRoomName });
 
-//   async searchRooms(searchRoomsDto: SearchRoomsDto) {
-//     const qb = this.roomRepository.createQueryBuilder('rooms');
-//     if (searchRoomsDto.skip) {
-//       qb.skip(searchRoomsDto.skip);
-//     }
-//     if (searchRoomsDto.take) {
-//       qb.take(searchRoomsDto.take);
-//     }
-//     if (searchRoomsDto.title) {
-//       qb.andWhere('rooms.title ILIKE :title', {
-//         title: `%${searchRoomsDto.title}%`,
-//       });
-//     }
-//     if (searchRoomsDto.ownerId) {
-//       qb.andWhere('rooms.ownerId = :ownerId', {
-//         ownerId: searchRoomsDto.ownerId,
-//       });
-//     }
-//     const [items, count] = await qb.getManyAndCount();
-//     return { items, count };
-//   }
+      await queryRunner.manager.save(User_ChatRoom, [
+        { chatRoomId: chatRoom.id, userId: pub.id },
+        { chatRoomId: chatRoom.id, userId: sub.id },
+      ]);
 
-//   async createRoom(createRoomDto: CreateRoomDto, userId: number) {
-//     const room = this.roomRepository.create({
-//       title: createRoomDto.title,
-//       description: createRoomDto.description,
-//       owner: { id: userId },
-//     });
-//     await this.roomRepository.save(room);
-//   }
+      await this.eventGateway.createRoomJoin(chatRoom, pub, sub);
 
-//   async updateRoom(id: number, updateRoomDto: UpdateRoomDto, userId: number) {
-//     const result = await this.roomRepository.update(
-//       { id, owner: { id: userId } },
-//       updateRoomDto,
-//     );
-//     if (result.affected === 0) {
-//       throw new NotFoundException(`Room with id ${id} not found`);
-//     }
-//   }
+      await queryRunner.commitTransaction();
 
-//   async deleteRoom(id: number, userId: number) {
-//     const result = await this.roomRepository.delete({
-//       id,
-//       owner: { id: userId },
-//     });
-//     if (result.affected === 0) {
-//       throw new NotFoundException(`Room with id ${id} not found`);
-//     }
-//   }
+      return chatRoom;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      return { message: `${err}` }
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async leaveChatRoom(userId: number, chatRoomdId: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const userChatRoom = await this.findOneUserChatRoom(userId, chatRoomdId);
+
+      await queryRunner.manager.delete(User_ChatRoom, userChatRoom);
+
+      await this.eventGateway.leaveChatRoom(userChatRoom);
+
+      await queryRunner.commitTransaction();
+
+      return userChatRoom;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      return { message: `${err}` }
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async findOneUserChatRoom(userId: number, chatRoomId: number) {
+    const userChatRoom = await this.userChatRoomRepositroy.findOne({
+      where: { userId, chatRoomId },
+      relations: ['user']
+    });
+
+    if (!userChatRoom) {
+      throw new NotFoundException('해당 유저의 채팅방을 찾을 수 없습니다.');
+    }
+
+    return userChatRoom;
+  }
 }
