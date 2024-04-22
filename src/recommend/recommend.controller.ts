@@ -95,11 +95,41 @@ export class RecommendController {
       const places =
         await this.recommendService.getPlacesByFoodCategories(categories);
 
-      const recommendedPlaces = this.recommendService.filterGoodPlaces(
+      const recommendedPlaces = await this.recommendService.filterGoodPlaces(
         places.filter((place) => !visitedOrSavedPlaces.includes(place.id)),
         userPreference,
       );
-      return recommendedPlaces;
+
+      if (recommendedPlaces.length === 0) {
+        throw new HttpException(
+          `${user.nickName}님을 위한 추천 맛집을 찾지 못했습니다.`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      let message;
+      switch (userPreference) {
+        case 'taste':
+          message = '맛있는';
+          break;
+        case 'price':
+          message = '가성비 좋은';
+          break;
+        case 'atmosphere':
+          message = '분위기 좋은';
+          break;
+        case 'service':
+          message = '친절한';
+          break;
+        default:
+          message = '';
+      }
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: `${user.nickName}님을 위한 ${message} 맛집:`,
+        recommendedPlaces,
+      };
     } catch (error) {
       console.error('음식점 추천 중 오류가 발생했습니다:', error);
       throw new HttpException(
