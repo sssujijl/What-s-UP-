@@ -20,6 +20,7 @@ import { validate } from 'class-validator';
 import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { ReservationsService } from 'src/reservations/reservations.service';
+import { MissionsService } from 'src/missions/missions.service';
 
 @ApiTags('Reviews')
 @Controller('/place/:placeId/reviews')
@@ -27,8 +28,9 @@ export class ReviewsController {
   constructor(
     private readonly reviewsService: ReviewsService,
     private readonly placesService: PlacesService,
-    private readonly reservationService: ReservationsService
-    ) {}
+    private readonly reservationService: ReservationsService,
+    private readonly missionService: MissionsService,
+  ) {}
 
   /**
    * 리뷰 등록
@@ -42,33 +44,50 @@ export class ReviewsController {
     @Param('placeId') placeId: number,
     @Body() createReviewDto: CreateReviewDto,
     @UserInfo() user: User,
-    @Param('reservationId') reservationId? : number
+    @Param('reservationId') reservationId?: number,
   ) {
     try {
-      await validate(createReviewDto);
-
       const place = await this.placesService.findPlaceById(placeId);
-      createReviewDto.placeId = placeId;
-      createReviewDto.userId = user.id;
 
       if (reservationId) {
-        const reservation = await this.reservationService.findOneById(reservationId);
-        createReviewDto.reservationId = reservationId;
-
+        const reservation =
+          await this.reservationService.findOneById(reservationId);
         if (reservation.resStatus.missionId) {
-          createReviewDto.isMission = true;
+          const mission = await this.missionService.findMission(
+            reservation.resStatus.missionId,
+          );
+          await this.missionService.updateMissionStatus(mission.id);
+          const data = await this.reviewsService.addMissionReviewQueue(
+            createReviewDto,
+            user.id,
+            reservationId,
+            place,
+            mission,
+          );
+          if (data) {
+            return {
+              statusCode: HttpStatus.CREATED,
+              message: '미션 리뷰 생성에 성공했습니다!',
+              data,
+            };
+          }
         }
       }
 
-      const data = await this.reviewsService.create(createReviewDto, place);
+      const data = await this.reviewsService.create(
+        createReviewDto,
+        user.id,
+        reservationId,
+        place,
+      );
 
       return {
         statusCode: HttpStatus.CREATED,
-        message: '리뷰 생성에 성공했습니다.',
+        message: '일반 리뷰 생성에 성공했습니다.',
         data,
       };
     } catch (error) {
-      throw new BadRequestException('리뷰 생성에 실패했습니다.');
+      throw new BadRequestException(error);
     }
   }
 
@@ -83,7 +102,6 @@ export class ReviewsController {
     @Param('placeId') placeId: number,
   ) {
     await this.placesService.findPlaceById(placeId);
-    
     const data = await this.reviewsService.findOne(reviewId);
     if (!data) {
       return {
@@ -111,14 +129,34 @@ export class ReviewsController {
     @Param('reviewId') reviewId: number,
     @Param('placeId') placeId: number,
     @Body() updateReviewDto: UpdateReviewDto,
-    @UserInfo() user: User
+    @UserInfo() user: User,
   ) {
     try {
       await validate(updateReviewDto);
 
-      await this.placesService.findPlaceById(placeId);
+      const review = await this.reviewsService.findOne(reviewId);
+      if (!review) {
+        return {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: '해당 리뷰가 존재하지 않습니다.',
+        };
+      }
+      if (review.userId !== user.id) {
+        return {
+          statusCode: HttpStatus.FORBIDDEN,
+          message: '수정 권한이 없습니다.',
+        };
+      }
 
-      updateReviewDto.userId = user.id
+      const place = await this.placesService.findPlaceById(placeId);
+
+      if (!place) {
+        return {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: '해당 가게가 존재하지 않습니다.',
+        };
+      }
+
       await this.reviewsService.update(reviewId, updateReviewDto);
       return {
         statusCode: HttpStatus.OK,
@@ -143,7 +181,7 @@ export class ReviewsController {
     if (!data.length) {
       return {
         statusCode: HttpStatus.NOT_FOUND,
-        message: '보드 목록이 존재하지 않습니다.',
+        message: '리뷰 목록이 존재하지 않습니다.',
         data,
       };
     }
@@ -166,10 +204,16 @@ export class ReviewsController {
   async remove(
     @Param('reviewId') reviewId: number,
     @Param('placeId') placeId: number,
-    @UserInfo() user: User
+    @UserInfo() user: User,
   ) {
     try {
-      await this.placesService.findPlaceById(placeId);
+      const place = await this.placesService.findPlaceById(placeId);
+      if (!place) {
+        return {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: '해당 가게가 존재하지 않습니다.',
+        };
+      }
 
       await this.reviewsService.remove(reviewId, user.id);
       return {
