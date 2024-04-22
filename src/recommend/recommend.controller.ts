@@ -1,12 +1,23 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { RecommendService } from './recommend.service';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { PlaceListsService } from 'src/place-lists/place-lists.service';
 
 @ApiTags('Recommend')
 @Controller('recommend')
 export class RecommendController {
-  constructor(private readonly recommendService: RecommendService) {}
+  constructor(
+    private readonly recommendService: RecommendService,
+    private readonly placeListService: PlaceListsService,
+  ) {}
 
   /**
    * 음식점 추천
@@ -15,17 +26,116 @@ export class RecommendController {
   @UseGuards(AuthGuard('jwt'))
   @Get()
   async recommendRestaurant(@Req() req: any): Promise<any> {
-    const userId = req.user.id;
+    const user = req.user;
 
-    const prefferedCategories =
-      await this.recommendService.getUserPreferredCategories(userId);
-
-    const places =
-      await this.recommendService.getPlacesByFoodCategories(
-        prefferedCategories,
+    try {
+      //SECTION - 유저가 방문했거나 저장한 음식점은 제외(우선 리뷰한 음식점 추가)
+      const visitedOrSavedPlaces = await this.recommendService.reviewedPlaces(
+        user.id,
       );
 
-    const recommendedPlaces = this.recommendService.filterGoodPlaces(places);
-    return recommendedPlaces;
+      //SECTION - 선호 카테고리 찾기
+      const placeLists = await this.placeListService.findPlaceListsByUserId(
+        user.id,
+        user.nickName,
+      );
+
+      if (placeLists.length === 0) {
+        throw new HttpException(
+          '저장된 리스트가 없어 추천 기능을 이용할 수 없습니다. 마음에 드는 장소를 리스트에 저장해보세요!',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const placesId = [];
+      for (const placeList of placeLists) {
+        const savedPlacesId = await this.placeListService.savedPlaces(
+          placeList.id,
+        );
+        savedPlacesId.forEach((savedPlace) => {
+          placesId.push(savedPlace);
+          visitedOrSavedPlaces.push(savedPlace);
+        });
+      }
+
+      const categories = [];
+      for (const placeId of placesId) {
+        const categoryId =
+          await this.recommendService.getFoodCategoryId(placeId);
+        categories.push(categoryId);
+      }
+
+      // const preferredCategories =
+      //   await this.recommendService.getUserPreferredCategories(user.id);
+
+      // const overlappingCategories = categories.filter((category) =>
+      //   preferredCategories.includes(category),
+      // );
+
+      //SECTION - 유저 긍정 평가 리뷰 찾기
+      const goodReviews = await this.recommendService.getSatisfiedReview(
+        user.id,
+      );
+
+      if (placeLists.length === 0) {
+        throw new HttpException(
+          '추천을 위한 리뷰 데이터가 충분하지 않습니다.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      //SECTION - 유저 취향과 가게 성향이 일치하는 곳 찾기
+      const allReviewsText = goodReviews
+        .map((review) => review.content)
+        .join(' ');
+
+      const userPreference =
+        await this.recommendService.getPreference(allReviewsText);
+
+      const places =
+        await this.recommendService.getPlacesByFoodCategories(categories);
+
+      const recommendedPlaces = await this.recommendService.filterGoodPlaces(
+        places.filter((place) => !visitedOrSavedPlaces.includes(place.id)),
+        userPreference,
+      );
+
+      if (recommendedPlaces.length === 0) {
+        throw new HttpException(
+          `${user.nickName}님을 위한 추천 맛집을 찾지 못했습니다.`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      let message;
+      switch (userPreference) {
+        case 'taste':
+          message = '맛있는';
+          break;
+        case 'price':
+          message = '가성비 좋은';
+          break;
+        case 'atmosphere':
+          message = '분위기 좋은';
+          break;
+        case 'service':
+          message = '친절한';
+          break;
+        default:
+          message = '';
+      }
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: `${user.nickName}님을 위한 ${message} 맛집:`,
+        recommendedPlaces,
+      };
+    } catch (error) {
+      console.error('음식점 추천 중 오류가 발생했습니다:', error);
+      throw new HttpException(
+        '음식점 추천 중 오류가 발생했습니다.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
