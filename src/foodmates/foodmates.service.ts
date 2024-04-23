@@ -26,27 +26,30 @@ export class FoodmatesService {
     return foodmate;
   }
 
-  async findAll(orderBy: string, category?: string) {
+  async findAll(orderBy: string, category?: string, region?: string) {
     let query = this.foodmateRepository.createQueryBuilder('foodmate')
       .leftJoinAndSelect('foodmate.userFoodMates', 'userFoodMates')
       .leftJoinAndSelect('foodmate.foodCategory', 'foodCategory');
-
+  
     if (category) {
-      const categoryIds = await this.redis.smembers(`FoodCateogry: ${category}`);
+      const categoryIds = await this.redis.smembers(`FoodCategory: ${category}`);
       query = query.andWhere('foodCategory.id IN (:...categoryIds)', { categoryIds });
     }
 
+    if (region) {
+      query = query.andWhere('foodmate.region = :region', { region });
+    }
+  
     const foodmates = await query
       .orderBy(orderBy === 'views' ? 'foodmate.views' : 'foodmate.createdAt', 'DESC')
       .getMany();
-
+  
     if (!foodmates || foodmates.length === 0) {
       throw new NotFoundException('음식친구 게시물을 찾을 수 없습니다.');
     }
 
     return foodmates;
-  }
-
+  }  
 
   async findOne(id: number) {
     return await this.foodmateRepository.findOne({ where: { id } });

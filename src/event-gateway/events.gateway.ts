@@ -33,6 +33,13 @@ export class EventsGateway
     this.server.emit('userJoined', { chatRoomId: chatRoom.id, user: sub.nickName });
   }
 
+  @SubscribeMessage('login')
+  handleLogin(socket: Socket) {
+    socket.on('login', async (data) => {
+      console.log(data);
+    })
+  }
+
   @SubscribeMessage('newRoom')
   handleNewRoom(socket: Socket) {
     socket.on('newRoom', (data) => {
@@ -69,15 +76,16 @@ export class EventsGateway
     try {
       const auth = socket.handshake.auth.token
       const user = await this.authService.validateToken(auth);
-      this.server.emit('send', data);
-      
+
       const publish = {
         userId: user.id,
         nickName: user.nickName,
         message: data.message,
         currentTime: new Date().toISOString()
       }
-      this.server.to(data.chatRoomId).emit('message', publish);
+
+      this.server.emit(`message: ${data.chatRoomId}`, publish);
+
       await this.publishMessage(data.chatRoomId, publish);
     } catch (error) {
       console.error('메시지 처리 중 오류 발생:', error);

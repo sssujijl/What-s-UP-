@@ -72,7 +72,7 @@ export class User {
     point: Point;
 
     @OneToMany(() => Review, (review) => review.user)
-    reviews: Review;
+    reviews: Review[];
 
     @OneToMany(() => PlaceList, (placeList) => placeList.user, { cascade: true })
     placeLists: PlaceList[];

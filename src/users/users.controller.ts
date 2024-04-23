@@ -8,7 +8,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from './entities/user.entity';
 import { EditUserDto } from './dto/editUser.dto';
-import { DeleteUserDto } from './dto/deleteUser.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SendMailService } from 'src/users/sendMail.service';
 import { CheckVerification } from './dto/checkVerification.dto';
@@ -117,14 +116,32 @@ export class UsersController {
    * @returns
    */
   @UseGuards(AuthGuard("jwt"))
-  @Get()
-  async getUser(@UserInfo() user: User) {
+  @Post('info')
+  async getUser(
+    @UserInfo() user: User,
+    @Body('password') password: string
+  ) {
     try {
-      return { user };
+      console.log(password)
+      return await this.usersService.getUser(user, password);
     } catch (err) {
       return { message: `${err}` }
     }
   }
+
+  /**
+   * 유저 전체 정보 조회
+   * @returns
+   */
+    @UseGuards(AuthGuard("jwt"))
+    @Get('info')
+    async getUserInfo(@UserInfo() user: User) {
+      try {
+        return await this.usersService.getUserInfo(user.id);
+      } catch (err) {
+        return { message: `${err}` }
+      }
+    }
 
   /**
    * 유저 정보 수정
@@ -153,11 +170,11 @@ export class UsersController {
   @Delete()
   async secession(
     @UserInfo() user: User,
-    @Body() deleteUserDto: DeleteUserDto,
+    @Body('password') password: string,
     @Res() res: any
   ) {
     try {
-      await this.usersService.secession(user, deleteUserDto);
+      await this.usersService.secession(user, password);
 
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');

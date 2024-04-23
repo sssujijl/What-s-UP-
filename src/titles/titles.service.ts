@@ -58,7 +58,10 @@ export class TitlesService {
   }
 
   async findAllTitles(userId: number) {
-    const titles = await this.titleRepository.findBy({ userId });
+    const titles = await this.titleRepository.find({
+      where: { userId },
+      relations: ['foodCategory']
+    });
 
     return titles;
   }

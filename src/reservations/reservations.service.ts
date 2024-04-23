@@ -26,7 +26,10 @@ export class ReservationsService {
   ) {}
 
   async findReservationsByUserId(userId: number) {
-    const reservations = await this.reservationRepository.findBy({ userId });
+    const reservations = await this.reservationRepository.find({
+      where: { userId },
+      relations: ['resStatus', 'resStatus.place']
+    });
 
     if (!reservations) {
       throw new NotFoundException('해당 유저의 예약목록을 찾을 수 없습니다.');
@@ -192,6 +195,7 @@ export class ReservationsService {
   async handleCron() {
     const reservations = await this.reservationRepository.find({
       where: { status: Status.BEFORE_VISIT},
+      relations: ['resStatus']
     });
 
     const currentTime = new Date();

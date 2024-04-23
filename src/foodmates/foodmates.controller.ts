@@ -54,9 +54,10 @@ export class FoodmatesController {
   async findAll(
     @Query('orderBy') orderBy: string,
     @Query('category') category: string,
+    @Query('region') region: string,
   ) {
     try {
-      const data = await this.foodmatesService.findAll(orderBy, category);
+      const data = await this.foodmatesService.findAll(orderBy, category, region);
 
       return data;
     } catch (err) {

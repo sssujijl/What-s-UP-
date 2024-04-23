@@ -6,7 +6,6 @@ import * as bcrypt from "bcryptjs";
 import { SignupDto } from './dto/signup.dto';
 import { signinDto } from './dto/signin.dto';
 import { EditUserDto } from './dto/editUser.dto';
-import { DeleteUserDto } from './dto/deleteUser.dto';
 import { Point } from 'src/points/entities/point.entity';
 import { SendMailService } from 'src/users/sendMail.service';
 import { number } from 'joi';
@@ -142,13 +141,38 @@ export class UsersService {
     return user;
   }
 
+  async getUser(user: User, password: string) {
+    const checkUser = await this.findUserWithPassword(user.id);
+
+    if (!(await bcrypt.compare(password, checkUser.password))) {
+      throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
+    }
+
+    return user;
+  }
+
+  async getUserInfo(userId: number) {
+    const userInfo = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: [
+        'point',
+        'follower',
+        'followee'
+      ]
+    });
+
+    if (!userInfo) {
+      throw new NotFoundException('해당 유저의 정보들을 찾을 수 없습니다.');
+    }
+
+    return userInfo;
+  }
+
   async editUser(id:number, editUserDto: EditUserDto) {
     const user = await this.findUserWithPassword(id);
 
     if (!(await bcrypt.compare(editUserDto.password, user.password))) {
       throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
-    } else {
-      editUserDto.password = user.password;
     }
     
     if (editUserDto.newPassword) {
@@ -160,14 +184,13 @@ export class UsersService {
     }
 
     const editUser = await this.userRepository.update(user.id, editUserDto);
-    console.log(editUser);
     return editUser;
   }
 
-  async secession(user: User, deleteUserDto: DeleteUserDto) {
+  async secession(user: User, password: string) {
     const findUser = await this.findUserWithPassword(user.id);
 
-    if (!(await bcrypt.compare(deleteUserDto.password, findUser.password))) {
+    if (!(await bcrypt.compare(password, findUser.password))) {
       throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
     }
 

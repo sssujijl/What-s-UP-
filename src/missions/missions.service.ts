@@ -59,7 +59,7 @@ export class MissionsService {
     places.map(async (place) => {
       const resStatus = {
         placeId: place.id,
-        dateTime: '2024-04-18T15:00:00',
+        dateTime: '2024-04-24T21:00:00',
         status: true
       }
       await this.resStatusRepository.save(resStatus);

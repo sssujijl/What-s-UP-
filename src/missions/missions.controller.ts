@@ -54,13 +54,13 @@ export class MissionsController {
   @Get()
   async findTodayMission() {
     try {
-      return await this.missionsService.findTodayMission();
+      // return await this.missionsService.findTodayMission();
       // const createMissionDto: CreateMissionDto = {
       //   capacity: 0,
       //   date: '',
       //   time: Time.TEN_AM
       // };
-      // return await this.missionsService.test();
+      return await this.missionsService.test();
       // return await this.missionsService.createRandomMissions(createMissionDto);
     } catch (err) {
       return { message: `${err}` }

@@ -68,8 +68,9 @@ export class FoodiesService {
       .leftJoinAndSelect('foodie.foodieAnswers', 'foodieAnswers')
       .leftJoinAndSelect('foodie.foodCategory', 'foodCategory');
 
-    if (category) {
-      const categoryIds = await this.redis.smembers(`FoodCateogry: ${category}`);
+      if (category) {
+      const categoryIds = await this.redis.smembers(`FoodCategory: ${category}`);
+      console.log(categoryIds);
       query = query.andWhere('foodCategory.id IN (:...categoryIds)', { categoryIds });
     }
 
@@ -77,10 +78,10 @@ export class FoodiesService {
       .orderBy(orderBy === 'views' ? 'foodie.views' : 'foodie.createdAt', 'DESC')
       .getMany();
 
-    if (!foodie || foodie.length === 0) {
+      if (!foodie || foodie.length === 0) {
       throw new NotFoundException('맛집인 게시물을 찾을 수 없습니다.');
     }
-
+    
     return foodie;
   }
 

@@ -22,8 +22,9 @@ export class Message {
     @Column({ type: 'varchar', nullable: true })
     images: string;
 
-    @CreateDateColumn()
-    createdAt: Date;
+    @IsString()
+    @Column({ type: 'varchar', nullable: true })
+    createdAt: string;
 
     @UpdateDateColumn()
     updatedAt: Date;

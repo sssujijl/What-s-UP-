@@ -105,7 +105,7 @@ export class ChatRoomsService {
       throw new NotFoundException('해당 유저의 채팅방을 찾을 수 없습니다.');
     }
 
-    return chatRooms;
+    return chatRooms
   }
 
   async findOneChatRoom(chatRoomId: number) {

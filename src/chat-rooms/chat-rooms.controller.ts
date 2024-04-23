@@ -7,7 +7,7 @@ import { UsersService } from 'src/users/users.service';
 import { userInfo } from 'os';
 
 @UseGuards(AuthGuard('jwt'))
-@Controller('chat-rooms')
+@Controller('chatrooms')
 export class ChatRoomsController {
   constructor(
     private readonly chatRoomService: ChatRoomsService,
