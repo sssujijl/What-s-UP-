@@ -61,13 +61,13 @@ export class PointsService {
 
   async requestPaymentToss(tossPaymentDto: TossPaymentDto, userId: number) {
     const secretKey = process.env.TOSS_SECRET_KEY;
-    const IDEMPOTENCY_KEY = v4();
+    // const IDEMPOTENCY_KEY = v4();
 
     const api_url = `https://api.tosspayments.com/v1/payments/confirm`;
     const headers = {
       Authorization: `Basic ${secretKey}`,
       'Content-Type': 'application/json',
-      'Idempotency-Key': IDEMPOTENCY_KEY,
+      // 'Idempotency-Key': IDEMPOTENCY_KEY,
     };
     try {
       const response = await axios.post(api_url, tossPaymentDto, { headers });
@@ -133,5 +133,29 @@ export class PointsService {
     } catch (error) {
       throw new Error(error.response.data.message);
     }
+  }
+
+  async readyPayment(data: any) {
+    const apiKey = process.env.KAKAOPAY_SECRET;
+    const apiUrl = 'https://open-api.kakao.com/online/v1/payment/ready';
+
+    return await axios.post(apiUrl, data, {
+      headers: {
+        Authorization: `SECRET_KEY ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  async approvePayment(data: any) {
+    const apiKey = process.env.KAKAOPAY_SECRET;
+    const apiUrl = 'https://open-api.kakao.com/online/v1/payment/approve';
+
+    return await axios.post(apiUrl, data, {
+      headers: {
+        Authorization: `SECRET_KEY ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }

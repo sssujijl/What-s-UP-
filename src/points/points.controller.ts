@@ -3,9 +3,7 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -13,8 +11,9 @@ import { PointsService } from './points.service';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/users/entities/user.entity';
 import { UserInfo } from 'src/utils/userInfo.decorator';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
 import { TossPaymentDto } from './dto/toss.require.dto';
+import { TossCancelDto } from './dto/toss.cancel.dto';
 
 @ApiTags('Points')
 @Controller('points')
@@ -55,6 +54,10 @@ export class PointsController {
    * @param paymentKey
    * @returns
    */
+  @ApiParam({
+    name: 'paymentKey',
+    example: 'tviva20240423093434Bwlk0',
+  })
   @UseGuards(AuthGuard('jwt'))
   @Get('/toss/:paymentKey')
   async findPaymentToss(@Param('paymentKey') paymentKey: string) {
@@ -64,24 +67,57 @@ export class PointsController {
   /**
    * 토스 결제 취소
    * @param paymentKey
-   * @param cancelReason
-   * @param cancelAmount
+   * @param tossCancelDto
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
+  @ApiParam({
+    name: 'paymentKey',
+    example: 'tviva20240423093434Bwlk0',
+  })
   @Post('/toss/:paymentKey/cancel')
   async cancelPaymentToss(
     @Req() req: any,
     @Param('paymentKey') paymentKey: string,
-    @Body('cancelReason') cancelReason: string,
-    @Body('cancelAmount') cancelAmount?: number,
+    @Body() tossCancelDto: TossCancelDto,
   ) {
     const userId = req.user.id;
+    const { cancelReason, cancelAmount } = tossCancelDto;
     return this.pointsService.cancelPayment(
       userId,
       paymentKey,
       cancelReason,
       cancelAmount,
     );
+  }
+
+  /**
+   * 카카오페이 결제 준비
+   * @param
+   * @returns
+   */
+  @Post('/kakaopay/ready')
+  async readyPayment(@Body() data: any) {
+    try {
+      const response = await this.pointsService.readyPayment(data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * 카카오페이 결제 진행
+   * @param
+   * @returns
+   */
+  @Post('/kakaopay/approve')
+  async approvePayment(@Body() data: any) {
+    try {
+      const response = await this.pointsService.approvePayment(data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 }
