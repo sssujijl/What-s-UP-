@@ -68,22 +68,11 @@ export class ClovaocrService {
     }
 
     async test2(text: string, place: Place) {
-        // const pattern = /(\S+?)(도|시|구|동|로|길)(?:\s+(\S+?)(\d+(?:-\d+)?|\d+-?\d+))?/g;
-        // const pattern = /(\S+?)(도|시|구|동|로|길)|(\d+(?:-\d+)?|\d+-?\d+)/g;
         const pattern = /(\S+?)(도|시|구|동|로|길)|(\d+(?:-\d+)?)(?=\s|$)/g;
-
-        // const pattern = /(\S+?)(도|시|구|동|로|길)/g;
-        // const pattern = /(\d+(?:-\d+)?|\d+-?\d+)/;
-        console.log(place.address, place.roadAddress);
 
         const address = place.address.match(pattern);
         const roadAddress = place.roadAddress.match(pattern);
         const title = place.title.split(' ');
-
-        console.log(address, roadAddress);
-        // const a = '충청남도 천안시 서북구 성환읍 272-8';
-        // const b = a.match(pattern);
-        // console.log(b);
 
         const titleLength = title.filter((a) => { return text.includes(a) }).length;
         const addressLength = address.filter((a) => { return text.includes(a) }).length;
@@ -101,30 +90,9 @@ export class ClovaocrService {
             matchedCount += roadAddressLength + titleLength;
             compare += roadAddress.length + title.length;
         }
-        console.log(compare, matchedCount);
         const percentage = (matchedCount / compare) * 100;
-        console.log('--------', percentage);
         return percentage >= 60;
 
-        // ----------1-----------
-        // if (title.length !== test) {
-        //     throw new Error('음식점 이름 다름');
-        // }
-
-        // if (test1 < 3 && test2 < 3) {
-        //     throw new Error('지번, 도로명 모두 다름');
-        // }
-
-        // ----------2-----------
-        // if (test1 < 3 && test2 < 3) {
-        //     if (title.length !== test) {
-        //         throw new Error('음식점 이름 다름');
-        //     } else {
-        //         throw new Error('지번, 도로명 모두 다름')
-        //     }
-        // }
-
-        return true;
     }
 
 }

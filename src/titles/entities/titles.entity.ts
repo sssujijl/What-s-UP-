@@ -34,6 +34,6 @@ export class Title {
     user: User;
 
     @ManyToOne(() => FoodCategory, (foodCategory) => foodCategory.titles)
-    @JoinColumn({ name: 'titleId', referencedColumnName: 'id' })
+    @JoinColumn({ name: 'foodCategoryId', referencedColumnName: 'id' })
     foodCategory: FoodCategory;
 }

@@ -8,10 +8,10 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from './entities/user.entity';
 import { EditUserDto } from './dto/editUser.dto';
-import { DeleteUserDto } from './dto/deleteUser.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SendMailService } from 'src/users/sendMail.service';
 import { CheckVerification } from './dto/checkVerification.dto';
+import { CheckDuplicateDto } from './dto/checkDuplicate.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -30,6 +30,7 @@ export class UsersController {
   async signup(
     @Body() signupDto: SignupDto) {
     try {
+      console.log(signupDto);
      const newUser = await this.usersService.signup(signupDto);
  
      return newUser;
@@ -46,7 +47,7 @@ export class UsersController {
   @Post('/sendMail')
   async sendMailVerificationCode(@Body('email') email: string) {
     try {
-      await this.sendMailService.sendVerificationCode(email);
+      await this.sendMailService.addMailerQueue(email);
 
       return { message: `${email} 로 인증메일을 발송하였습니다.` }
     } catch (err) {
@@ -70,6 +71,25 @@ export class UsersController {
   }
 
   /**
+   * 이메일, 비밀번호, 휴대전화번호 중복확인
+   * @returns
+   */
+  @Post('/checkDuplicate')
+  async checkDuplicate(
+    @Body() data: CheckDuplicateDto,
+    @Res() res: any
+  ) {
+    try {
+      console.log(data);
+      const result = await this.usersService.checkDuplicate(data);
+      console.log(result);
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ message: `${err}` });
+    }
+  }
+
+  /**
    * 로그인
    * @returns
    */
@@ -84,8 +104,8 @@ export class UsersController {
       const user = await this.usersService.signin(signinDto);
 
       await this.authService.createTokens(res, user.id);
-
-      return res.json({ message: "로그인이 완료되었습니다." });
+      
+      return res.json(user);
     } catch (err) {
       return res.json({ message: `${err}` });
     }
@@ -96,14 +116,32 @@ export class UsersController {
    * @returns
    */
   @UseGuards(AuthGuard("jwt"))
-  @Get()
-  async getUser(@UserInfo() user: User) {
+  @Post('info')
+  async getUser(
+    @UserInfo() user: User,
+    @Body('password') password: string
+  ) {
     try {
-      return { user };
+      console.log(password)
+      return await this.usersService.getUser(user, password);
     } catch (err) {
       return { message: `${err}` }
     }
   }
+
+  /**
+   * 유저 전체 정보 조회
+   * @returns
+   */
+    @UseGuards(AuthGuard("jwt"))
+    @Get('info')
+    async getUserInfo(@UserInfo() user: User) {
+      try {
+        return await this.usersService.getUserInfo(user.id);
+      } catch (err) {
+        return { message: `${err}` }
+      }
+    }
 
   /**
    * 유저 정보 수정
@@ -130,13 +168,13 @@ export class UsersController {
    */
   @UseGuards(AuthGuard("jwt"))
   @Delete()
-  async deleteUser(
+  async secession(
     @UserInfo() user: User,
-    @Body() deleteUserDto: DeleteUserDto,
+    @Body('password') password: string,
     @Res() res: any
   ) {
     try {
-      await this.usersService.deleteUser(user, deleteUserDto);
+      await this.usersService.secession(user, password);
 
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
@@ -167,7 +205,12 @@ export class UsersController {
   @UseGuards(AuthGuard("google"))
   @Get('/callback/google')
   async googleCallback(@Req() req: any, @Res() res: any) {
-    res.redirect('/users')
+    console.log('-------------', req.user);
+    const user = await this.usersService.socialLogin(req, res);
+
+    await this.authService.createTokens(res, user.id);
+
+    return res.json({ message: "로그인이 완료되었습니다." });
   }
 
   /**

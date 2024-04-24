@@ -25,7 +25,7 @@ export class Foodie {
     title: string;
 
     @IsString()
-    @Column({ type: 'varchar', nullable: false })
+    @Column({ type: 'text', nullable: false })
     content: string;
 
     @Column({ type: 'varchar', nullable: true })

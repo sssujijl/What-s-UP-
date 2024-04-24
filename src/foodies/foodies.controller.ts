@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
 import { FoodiesService } from './foodies.service';
 import { CreateFoodieDto } from './dto/create-foodie.dto';
 import { UpdateFoodieDto } from './dto/update-foodie.dto';
@@ -7,6 +7,7 @@ import { User } from 'src/users/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { validate } from 'class-validator';
 import { ApiTags } from '@nestjs/swagger';
+import { orderBy } from 'lodash';
 
 @ApiTags('Foodies')
 @Controller('foodies')
@@ -37,21 +38,24 @@ export class FoodiesController {
   }
 
   /**
-   * 밥친구 목록 조회
+   * 맛집인 목록 조회
    * @returns
    */
   // 게시물 전체조회
   @Get()
-  async findAllFoodies() {
-    try { 
-      return await this.foodiesService.findAllFoodies();
+  async findAllFoodies(
+    @Query('orderBy') orderBy: string,
+    @Query('category') category: string,
+  ) {
+    try {
+      return await this.foodiesService.findAllFoodies(orderBy, category);
     } catch (err) {
       return { message: `${err}` };
     }
   }
 
   /**
-   * 밥친구 상세 조회
+   * 맛집인 상세 조회
    * @param foodieId
    * @returns
    */
@@ -70,7 +74,7 @@ export class FoodiesController {
   }
 
   /**
-   * 밥친구 수정
+   * 맛집인 수정
    * @param foodieId
    * @returns
    */
@@ -90,7 +94,7 @@ export class FoodiesController {
   }
 
   /**
-   * 보드 삭제
+   * 맛집인 삭제
    * @param foodieId
    * @returns
    */
