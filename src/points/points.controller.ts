@@ -42,10 +42,10 @@ export class PointsController {
   @UseGuards(AuthGuard('jwt'))
   @Post('/toss')
   async requestPaymentToss(
-    @Req() req: any,
     @Body() tossPaymentDto: TossPaymentDto,
+    @UserInfo() user: User,
   ) {
-    const userId = req.user.id;
+    const userId = user.id;
     return this.pointsService.requestPaymentToss(tossPaymentDto, userId);
   }
 

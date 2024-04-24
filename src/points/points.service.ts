@@ -61,16 +61,17 @@ export class PointsService {
 
   async requestPaymentToss(tossPaymentDto: TossPaymentDto, userId: number) {
     const secretKey = process.env.TOSS_SECRET_KEY;
-    // const IDEMPOTENCY_KEY = v4();
+    const IDEMPOTENCY_KEY = v4();
 
     const api_url = `https://api.tosspayments.com/v1/payments/confirm`;
     const headers = {
       Authorization: `Basic ${secretKey}`,
       'Content-Type': 'application/json',
-      // 'Idempotency-Key': IDEMPOTENCY_KEY,
+      'Idempotency-Key': IDEMPOTENCY_KEY,
     };
     try {
       const response = await axios.post(api_url, tossPaymentDto, { headers });
+      const responseData = JSON.stringify(response.data);
       if (response.data.status === 'DONE') {
         const amount = response.data.totalAmount;
         await this.updatePoint(userId, -amount);
@@ -78,7 +79,7 @@ export class PointsService {
       } else {
         console.log('결제가 완료되지 않았습니다.');
       }
-      return response;
+      return responseData;
     } catch (error) {
       throw new Error(error.response.data.message);
     }
