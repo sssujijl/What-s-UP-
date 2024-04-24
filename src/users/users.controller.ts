@@ -47,7 +47,7 @@ export class UsersController {
   @Post('/sendMail')
   async sendMailVerificationCode(@Body('email') email: string) {
     try {
-      await this.sendMailService.sendVerificationCode(email);
+      await this.sendMailService.addMailerQueue(email);
 
       return { message: `${email} 로 인증메일을 발송하였습니다.` }
     } catch (err) {

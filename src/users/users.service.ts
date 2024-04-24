@@ -21,7 +21,7 @@ export class UsersService {
     private dataSource: DataSource,
     private readonly sendMailService: SendMailService,
     // private readonly snsService: SnsService
-    @InjectRedis() private readonly redis: Redis
+    @InjectRedis() private readonly redis: Redis,
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -95,7 +95,7 @@ export class UsersService {
     }
 
     if (email) {
-      await this.sendMailService.sendVerificationCode(email);
+      await this.sendMailService.addMailerQueue(email);
     }
     return true;
   }

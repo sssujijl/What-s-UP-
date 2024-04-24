@@ -3,6 +3,8 @@ import nodemailer, { Transporter } from 'nodemailer'
 import dotenv from 'dotenv'
 import Redis from 'ioredis';
 import { InjectRedis } from '@nestjs-modules/ioredis';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 dotenv.config();
 
@@ -11,7 +13,8 @@ export class SendMailService {
   private transporter: Transporter
 
   constructor(
-    @InjectRedis() private readonly redis: Redis
+    @InjectRedis() private readonly redis: Redis,
+    @InjectQueue('mailerQueue') private mailerQueue: Queue,
   ) {
     // Nodemailer transporter 생성
     this.transporter = nodemailer.createTransport({
@@ -26,10 +29,17 @@ export class SendMailService {
     });
   }
 
+  async addMailerQueue(email: string) {
+    const job = await this.mailerQueue.add('mailer', { email },
+    { removeOnComplete: true, removeOnFail: true }
+    );
+
+    return { message: '이메일 발송중입니다.' };
+  }
+
   // 이메일 보내는 메서드
   async sendEmail(email: string, verificationCode: string) {
     try {
-      console.log('------', email);
       const mailOptions = {
         from: process.env.MAILER_EMAIL,
         to: email,
