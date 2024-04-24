@@ -11,7 +11,7 @@ import { PointsService } from './points.service';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/users/entities/user.entity';
 import { UserInfo } from 'src/utils/userInfo.decorator';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { TossPaymentDto } from './dto/toss.require.dto';
 import { TossCancelDto } from './dto/toss.cancel.dto';
 
@@ -54,10 +54,6 @@ export class PointsController {
    * @param paymentKey
    * @returns
    */
-  @ApiParam({
-    name: 'paymentKey',
-    example: 'tviva20240423093434Bwlk0',
-  })
   @UseGuards(AuthGuard('jwt'))
   @Get('/toss/:paymentKey')
   async findPaymentToss(@Param('paymentKey') paymentKey: string) {
@@ -71,10 +67,6 @@ export class PointsController {
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
-  @ApiParam({
-    name: 'paymentKey',
-    example: 'tviva20240423093434Bwlk0',
-  })
   @Post('/toss/:paymentKey/cancel')
   async cancelPaymentToss(
     @Req() req: any,
