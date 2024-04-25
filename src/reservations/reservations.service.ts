@@ -212,4 +212,14 @@ export class ReservationsService {
 
     return await this.reservationRepository.save(reservation);
   }
+
+  async findAllResStatue(placeId: number) {
+    const resStatus = await this.resStatusRepository.findBy({ placeId });
+
+    if (!resStatus) {
+      throw new NotFoundException('해당 가게의 예약 목록을 찾을 수 없습니다.');
+    }
+
+    return resStatus;
+  }
 }

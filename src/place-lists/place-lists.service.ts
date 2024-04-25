@@ -34,10 +34,14 @@ export class PlaceListsService {
     let placeLists = [];
 
     if (userId === author.id) {
-      placeLists = await this.placeListRepository.findBy({ userId: author.id });
+      placeLists = await this.placeListRepository.find({
+        where: { userId: author.id },
+        relations: ['savedPlaces', 'savedPlaces.place']
+      });
     } else {
       placeLists = await this.placeListRepository.find({
         where: { userId: author.id, visible: Visible.public },
+        relations: ['savedPlaces', 'savedPlaces.place']
       });
     }
 

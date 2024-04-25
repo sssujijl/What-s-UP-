@@ -85,4 +85,13 @@ export class ReservationsController {
       return { message: `${err}` }
     }
   }
+
+  @Get('/place/:placeId')
+  async findAllResStatue(@Param('placeId') placeId: number) {
+    try {
+      return await this.reservationsService.findAllResStatue(placeId);
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
 }
