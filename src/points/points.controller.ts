@@ -6,12 +6,13 @@ import {
   Param,
   UseGuards,
   Req,
+  HttpStatus,
 } from '@nestjs/common';
 import { PointsService } from './points.service';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/users/entities/user.entity';
 import { UserInfo } from 'src/utils/userInfo.decorator';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { TossPaymentDto } from './dto/toss.require.dto';
 import { TossCancelDto } from './dto/toss.cancel.dto';
 
@@ -29,6 +30,36 @@ export class PointsController {
   async findPoint(@UserInfo() user: User) {
     try {
       await this.pointsService.findPoint(user.id);
+    } catch (err) {
+      return { message: `${err}` };
+    }
+  }
+
+  /**
+   * 포인트 충전
+   * @returns
+   */
+  @ApiBody({
+    schema: {
+      example: { amount: 1000 },
+    },
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @Post()
+  async updatePoint(
+    @UserInfo() user: User,
+    @Body() { amount }: { amount: number },
+  ) {
+    try {
+      await this.pointsService.updatePoint(user.id, -amount);
+      const pointNow = (await this.pointsService.findPoint(user.id)).point;
+      if (pointNow) {
+        return {
+          statusCode: HttpStatus.OK,
+          message: '성공적으로 충전되었습니다.',
+          pointNow,
+        };
+      }
     } catch (err) {
       return { message: `${err}` };
     }
@@ -84,32 +115,12 @@ export class PointsController {
   }
 
   /**
-   * 카카오페이 결제 준비
-   * @param
+   * 포트원 결제 취소
    * @returns
    */
-  @Post('/kakaopay/ready')
-  async readyPayment(@Body() data: any) {
-    try {
-      const response = await this.pointsService.readyPayment(data);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * 카카오페이 결제 진행
-   * @param
-   * @returns
-   */
-  @Post('/kakaopay/approve')
-  async approvePayment(@Body() data: any) {
-    try {
-      const response = await this.pointsService.approvePayment(data);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  @UseGuards(AuthGuard('jwt'))
+  @Post('/kakao/cancel')
+  async cancelPaymentPortOne(@Body() merchant_uid: string) {
+    return this.pointsService.cancelPortOnePayment(merchant_uid);
   }
 }

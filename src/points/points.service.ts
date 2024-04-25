@@ -136,27 +136,32 @@ export class PointsService {
     }
   }
 
-  async readyPayment(data: any) {
-    const apiKey = process.env.KAKAOPAY_SECRET;
-    const apiUrl = 'https://open-api.kakao.com/online/v1/payment/ready';
+  async cancelPortOnePayment(merchant_uid: string) {
+    try {
+      const result = await axios.post('https://api.iamport.kr/users/getToken', {
+        imp_key: process.env.IMP_KEY,
+        imp_secret: process.env.IMP_SECRET,
+      });
+      const token = result.data.response.access_token;
 
-    return await axios.post(apiUrl, data, {
-      headers: {
-        Authorization: `SECRET_KEY ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
-  }
-
-  async approvePayment(data: any) {
-    const apiKey = process.env.KAKAOPAY_SECRET;
-    const apiUrl = 'https://open-api.kakao.com/online/v1/payment/approve';
-
-    return await axios.post(apiUrl, data, {
-      headers: {
-        Authorization: `SECRET_KEY ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+      const data = {
+        merchant_uid: merchant_uid,
+        reason: '테스트 결제 환불',
+      };
+      const response = await axios.post(
+        'https://api.iamport.kr/payments/cancel',
+        data,
+        {
+          headers: {
+            Authorization: token,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 }
