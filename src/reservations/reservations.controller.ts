@@ -26,7 +26,7 @@ export class ReservationsController {
   ) {
     try {
       await validate(createReservationDto);
-
+      console.log(createReservationDto);
       createReservationDto.userId = user.id;
 
       return await this.reservationsService.addReservationQueue(resStatusId, createReservationDto);
@@ -81,6 +81,24 @@ export class ReservationsController {
   ) {
     try {
       return await this.reservationsService.cancelReservation(user.id, resStatusId, reservationId);
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  /**
+   * 가게별 예약상태 찾기
+   * @param placeId 
+   * @param date 
+   * @returns 
+   */
+  @Get('/places/:placeId')
+  async findAllResStatue(
+    @Param('placeId') placeId: number,
+    @Query('date') date: string
+  ) {
+    try {
+      return await this.reservationsService.findAllResStatue(placeId, date);
     } catch (err) {
       return { message: `${err}` }
     }

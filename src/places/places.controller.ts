@@ -11,7 +11,17 @@ export class PlacesController {
     @Query('category') category: string
   ) {
     try {
+      console.log(category)
       return await this.placesService.findAllPlace(dong, category);
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  @Get('/foodCategory')
+  async findAllFoodCategory() {
+    try {
+      return await this.placesService.findAllFoodCategory();
     } catch (err) {
       return { message: `${err}` }
     }
@@ -22,14 +32,15 @@ export class PlacesController {
     try {
       return await this.placesService.findPlaceById(placeId);
     } catch (err) {
-      return { message: `${err}`}
+      return { message: `${err}` }
     }
   }
 
-  @Get('/foodCategory')
-  async findAllFoodCategory() {
+  @Post('/search')
+  async searchPlaces(@Body('data') data: string) {
     try {
-      return await this.placesService.findAllFoodCategory();
+      console.log(data);
+      return await this.placesService.searchPlaces(data);
     } catch (err) {
       return { message: `${err}` }
     }

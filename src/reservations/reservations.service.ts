@@ -12,6 +12,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { format, formatDate } from 'date-fns';
 
 @Injectable()
 export class ReservationsService {
@@ -26,7 +27,10 @@ export class ReservationsService {
   ) {}
 
   async findReservationsByUserId(userId: number) {
-    const reservations = await this.reservationRepository.findBy({ userId });
+    const reservations = await this.reservationRepository.find({
+      where: { userId },
+      relations: ['resStatus', 'resStatus.place']
+    });
 
     if (!reservations) {
       throw new NotFoundException('해당 유저의 예약목록을 찾을 수 없습니다.');
@@ -104,7 +108,7 @@ export class ReservationsService {
 
   async findResStatusById(resStatusId: number) {
     const resStatus = await this.resStatusRepository.findOneBy({ id: resStatusId });
-
+    console.log('0000000', resStatus);
     if (!resStatus) {
       throw new NotFoundException('해당 예약상태정보를 찾을 수 없습니다.');
     }
@@ -120,9 +124,8 @@ export class ReservationsService {
     let totalAmount = 0;
     const orders = menus.map((menu) => {
       const quantity = orderMenus[menu.id];
-      const price = menu.price;
-      // 엔티티 변경으로 실행을 위해 임시로 price에 parseInt를 끼웠습니다ㅠㅠ
-      const totalPrice = quantity * parseInt(price);
+      const price = +menu.price.replace(/[^\d]/g, '');
+      const totalPrice = quantity * price;
       const reservationId = 0;
       totalAmount += totalPrice;
       return {
@@ -192,6 +195,7 @@ export class ReservationsService {
   async handleCron() {
     const reservations = await this.reservationRepository.find({
       where: { status: Status.BEFORE_VISIT},
+      relations: ['resStatus']
     });
 
     const currentTime = new Date();
@@ -207,5 +211,22 @@ export class ReservationsService {
     reservation.status = Status.VISIT_COMPLETED;
 
     return await this.reservationRepository.save(reservation);
+  }
+
+  
+  async findAllResStatue(placeId: number, date: string) {
+    const formattedDate = format(date, 'yyyy-MM-dd');
+
+    const resStatus = await this.resStatusRepository.createQueryBuilder('resStatus')
+        .where('resStatus.placeId = :placeId', { placeId })
+        .andWhere('DATE_FORMAT(resStatus.dateTime, "%Y-%m-%d") = :formattedDate', { formattedDate })
+        .orderBy('resStatus.dateTime', 'ASC')
+        .getMany();
+
+    if (!resStatus) {
+      throw new NotFoundException('해당 가게의 예약 목록을 찾을 수 없습니다.');
+    }
+
+    return resStatus;
   }
 }

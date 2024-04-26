@@ -7,7 +7,7 @@ import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { validate } from 'class-validator';
 
-@Controller('place-lists')
+@Controller('placeLists')
 export class PlaceListsController {
   constructor(private readonly placeListsService: PlaceListsService) {}
 
@@ -28,9 +28,9 @@ export class PlaceListsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Get('/:nickName')
+  @Get()
   async findPlaceLists(
-    @Param('nickName') nickName: string,
+    @Query('nickName') nickName: string,
     @UserInfo() user: User
   ) {
     try {

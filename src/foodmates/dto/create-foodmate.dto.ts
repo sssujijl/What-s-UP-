@@ -2,8 +2,6 @@ import { IsString, IsNotEmpty, IsInt } from 'class-validator';
 import { PickType } from '@nestjs/swagger';
 import { FoodMate } from '../entities/foodmate.entity';
 import { Gender } from '../types/gender.type';
-import { Age } from '../types/age.type';
-import { Type } from 'class-transformer';
 
 export class CreateFoodmateDto extends PickType(FoodMate, [
   'title',
@@ -13,7 +11,15 @@ export class CreateFoodmateDto extends PickType(FoodMate, [
   'region',
   'dateTime',
   'capacity',
+  'userId',
+  'foodCategoryId'
 ]) {
+  /**
+   * 유저ID
+   * @example '1'
+   */
+  userId: number;
+
   /**
    * 제목
    * @example "오늘 삼겹살 먹을 사람"
@@ -57,7 +63,7 @@ export class CreateFoodmateDto extends PickType(FoodMate, [
    * @example "2024-04-05T10:00:00Z"
    */
   @IsNotEmpty()
-  @Type(() => Date)
+  // @Type(() => Date)
   readonly dateTime: Date;
 
   /**

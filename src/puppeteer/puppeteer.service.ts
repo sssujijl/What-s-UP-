@@ -24,7 +24,7 @@ export class PuppeteerService {
     @InjectRedis() private readonly redis: Redis,
   ) {}
 
-  async saveCategoryIfNotExists(mainCategory: string, category: string): Promise<FoodCategory> {
+  async saveCategoryIfNotExists(category: string): Promise<FoodCategory> {
     const existingCategory = await this.foodCategoryRepository.findOne({
       where: { category: category },
     });
@@ -34,16 +34,16 @@ export class PuppeteerService {
         category,
       });
       const foodCategory = await this.foodCategoryRepository.save(newCategory);
-      await this.redis.sadd(`Categories: ${mainCategory}`, foodCategory.id);
-
+      // await this.redis.sadd(`Categories: ${mainCategory}`, foodCategory.id);
+      await this.groupByMainCategory(foodCategory);
       return foodCategory;
     }
 
     return existingCategory;
   }
 
-  async groupByMainCategory(category: string) {
-    const text = category.split(',');
+  async groupByMainCategory(foodCategory: FoodCategory) {
+    const text = foodCategory.category.split(',');
 
     const categoriesMap = {
       Korean: [
@@ -102,8 +102,7 @@ export class PuppeteerService {
     for (const textItem of text) {
       for (const [mainCategory, keywords] of Object.entries(categoriesMap)) {
         if (keywords.some((word) => textItem.includes(word))) {
-          // await this.redis.sadd(`FoodCateogry: ${mainCategory}`, `${foodCategory.category}: ${foodCategory.id}`);
-          return mainCategory;
+          return await this.redis.sadd(`FoodCategory: ${mainCategory}`, `${foodCategory.id}: ${foodCategory.category}`);
         }
       }
     }

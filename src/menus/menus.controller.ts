@@ -5,8 +5,16 @@ import { UpdateMenuDto } from './dto/update-menu.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Menus')
-@Controller('menus')
+@Controller('places/:placeId/menus')
 export class MenusController {
   constructor(private readonly menusService: MenusService) {}
 
+  @Get()
+  async findAllMenuByPlaceId(@Param('placeId') placeId: number) {
+    try {
+      return await this.menusService.findAllMenuByPlaceId(placeId);
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
 }

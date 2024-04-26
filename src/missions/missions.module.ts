@@ -10,6 +10,8 @@ import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import * as AWS from 'aws-sdk';
 import dotenv from 'dotenv';
 import { ProducerModule } from 'src/producer/producer.module';
+import { Reservation } from 'src/reservations/entities/reservation.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 
 dotenv.config();
 
@@ -21,10 +23,10 @@ AWS.config.update({
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Mission, Place, ResStatus]),
+    TypeOrmModule.forFeature([Mission, Place, ResStatus, Reservation, Review]),
     ScheduleModule.forRoot(),
     PlacesModule,
-    ProducerModule
+    ProducerModule,
   ],
   controllers: [MissionsController],
   providers: [MissionsService],

@@ -17,6 +17,9 @@ import { CreateFoodmateDto } from './dto/create-foodmate.dto';
 import { UpdateFoodmateDto } from './dto/update-foodmate.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { UserInfo } from 'src/utils/userInfo.decorator';
+import { User } from 'src/users/entities/user.entity';
+import { validate } from 'class-validator';
 
 @ApiTags('Foodmates')
 @Controller('foodmates')
@@ -25,25 +28,21 @@ export class FoodmatesController {
 
   /**
    * 밥친구 글 등록
-   * @param createFoodmateDto
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  async create(@Body() createFoodmateDto: CreateFoodmateDto, @Req() req: any) {
+  async create(
+    @Body() createFoodmateDto: CreateFoodmateDto, 
+    @UserInfo() user: User
+  ) {
     try {
-      const userId = req.user.id;
-      const data = await this.foodmatesService.create(
-        createFoodmateDto,
-        userId,
-      );
-      return {
-        statusCode: HttpStatus.CREATED,
-        message: '밥친구 게시글 생성에 성공했습니다.',
-        data,
-      };
+      await validate(createFoodmateDto);
+
+      createFoodmateDto.userId = user.id;
+      return await this.foodmatesService.create(createFoodmateDto);
     } catch (error) {
-      throw new BadRequestException('밥친구 게시글 생성에 실패했습니다.');
+      return { message: `${error}` }
     }
   }
 
@@ -55,15 +54,12 @@ export class FoodmatesController {
   async findAll(
     @Query('orderBy') orderBy: string,
     @Query('category') category: string,
+    @Query('region') region: string,
   ) {
     try {
-      const data = await this.foodmatesService.findAll(orderBy, category);
+      const data = await this.foodmatesService.findAll(orderBy, category, region);
 
-      return {
-        statusCode: HttpStatus.OK,
-        message: '글 목록 조회에 성공했습니다.',
-        data,
-      };
+      return data;
     } catch (err) {
       return { message: `${err}` }
     }
@@ -75,22 +71,9 @@ export class FoodmatesController {
    * @returns
    */
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const data = await this.foodmatesService.findOne(+id);
-
-    if (!data) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: '글이 존재하지 않습니다.',
-        data,
-      };
-    }
-
-    return {
-      statusCode: HttpStatus.OK,
-      message: '글 상세 조회에 성공했습니다.',
-      data,
-    };
+  async findOne(@Param('id') id: string, @Req() req: any) {
+    const userIP = req.ip;
+    return await this.foodmatesService.findOne(+id, userIP);
   }
 
   /**
@@ -105,11 +88,16 @@ export class FoodmatesController {
     @Param('id') id: string,
     @Body() updateFoodmateDto: UpdateFoodmateDto,
   ) {
-    this.foodmatesService.update(+id, updateFoodmateDto);
-    return {
-      statusCode: HttpStatus.OK,
-      message: '성공적으로 수정되었습니다.',
-    };
+    try {
+      const data = this.foodmatesService.update(+id, updateFoodmateDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '성공적으로 수정되었습니다.',
+        data
+      };
+    } catch (err) {
+      return { message: `${err}` }
+    }
   }
 
   /**

@@ -29,7 +29,6 @@ export class Menu {
   @Column({ type: 'varchar', nullable: true })
   description: string;
 
-
   @IsString()
   @Column({ type: 'varchar', length: 500, nullable: true })
   images: string;
