@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, HttpStatus } from '@nestjs/common';
 import { PointsService } from './points.service';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/users/entities/user.entity';
@@ -18,7 +18,12 @@ export class PointsController {
   @Get()
   async findPoint(@UserInfo() user: User) {
     try {
-      await this.pointsService.findPoint(user.id);
+      const data = this.pointsService.findPoint(user.id);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '포인트를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return {message: `${err}` }
     }

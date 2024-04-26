@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Delete, Res, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete, Res, UseGuards, Req, HttpStatus } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { validate } from 'class-validator';
 import { SignupDto } from './dto/signup.dto';
@@ -30,10 +30,13 @@ export class UsersController {
   async signup(
     @Body() signupDto: SignupDto) {
     try {
-      console.log(signupDto);
-     const newUser = await this.usersService.signup(signupDto);
+     const data = await this.usersService.signup(signupDto);
  
-     return newUser;
+     return {
+      statusCode: HttpStatus.OK,
+      message: '장소리스트를 성공적으로 옮겼습니다.',
+      data
+    };
    } catch (err) {
      return { message: `${err}` };
    }
@@ -47,9 +50,13 @@ export class UsersController {
   @Post('/sendMail')
   async sendMailVerificationCode(@Body('email') email: string) {
     try {
-      await this.sendMailService.addMailerQueue(email);
+      const data = await this.sendMailService.addMailerQueue(email);
 
-      return { message: `${email} 로 인증메일을 발송하였습니다.` }
+      return {
+        statusCode: HttpStatus.OK,
+        message: `${email} 로 인증메일을 발송하였습니다.`,
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -62,9 +69,13 @@ export class UsersController {
   @Post('/checkVerification')
   async checkVerificationCode(@Body() checkVerification: CheckVerification) {
     try {
-      await this.usersService.checkVerificationCode(checkVerification);
+      const data = await this.usersService.checkVerificationCode(checkVerification);
 
-      return { message: '인증이 완료되었습니다.' };
+      return {
+        statusCode: HttpStatus.OK,
+        message: '인증이 완료되었습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -76,16 +87,18 @@ export class UsersController {
    */
   @Post('/checkDuplicate')
   async checkDuplicate(
-    @Body() data: CheckDuplicateDto,
-    @Res() res: any
+    @Body() check: CheckDuplicateDto
   ) {
     try {
-      console.log(data);
-      const result = await this.usersService.checkDuplicate(data);
-      console.log(result);
-      return res.json(result);
+      const data = await this.usersService.checkDuplicate(check);
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소리스트를 성공적으로 옮겼습니다.',
+        data
+      };
     } catch (err) {
-      return res.status(400).json({ message: `${err}` });
+      return { message: `${err}` };
     }
   }
 
@@ -101,11 +114,15 @@ export class UsersController {
     try {
       await validate(signinDto);
 
-      const user = await this.usersService.signin(signinDto);
+      const data = await this.usersService.signin(signinDto);
 
-      await this.authService.createTokens(res, user.id);
+      await this.authService.createTokens(res, data.id);
       
-      return res.json(user);
+      return res.status(HttpStatus.OK).json({
+        statusCode: HttpStatus.OK,
+        message: '장소리스트를 성공적으로 옮겼습니다.',
+        data
+      });
     } catch (err) {
       return res.json({ message: `${err}` });
     }
@@ -138,8 +155,12 @@ export class UsersController {
     @Body('password') password: string
   ) {
     try {
-      console.log(password)
-      return await this.usersService.getUser(user, password);
+      const data = await this.usersService.getUser(user, password);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '유저정보를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -153,7 +174,12 @@ export class UsersController {
     @Get('info')
     async getUserInfo(@UserInfo() user: User) {
       try {
-        return await this.usersService.getUserInfo(user.id);
+        const data = await this.usersService.getUserInfo(user.id);
+        return {
+          statusCode: HttpStatus.OK,
+          message: '전체유저정보를 성공적으로 조회하였습니다.',
+          data
+        };
       } catch (err) {
         return { message: `${err}` }
       }
@@ -170,9 +196,13 @@ export class UsersController {
     @Body() editUserDto: EditUserDto
   ) {
     try {
-      const editUser = await this.usersService.editUser(user.id, editUserDto);
+      const data = await this.usersService.editUser(user.id, editUserDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '프로필을 성공적으로 수정하였습니다.',
+        data
+      };
 
-      return editUser;
     } catch (err) {
       return { message: `${err}` }
     }
@@ -190,12 +220,16 @@ export class UsersController {
     @Res() res: any
   ) {
     try {
-      await this.usersService.secession(user, password);
+      const data = await this.usersService.secession(user, password);
 
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
 
-      return { message: `${user.name} 님이 정상적으로 탈퇴되었습니다.`};
+      return {
+        statusCode: HttpStatus.OK,
+        message: `${user.name} 님이 정상적으로 탈퇴되었습니다.`,
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }

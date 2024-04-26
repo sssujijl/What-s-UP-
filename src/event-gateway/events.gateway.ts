@@ -8,6 +8,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { RedisService } from 'nestjs-redis';
 import { Server, Socket } from 'socket.io';
 import { ChatRoom } from 'src/chat-rooms/entites/chat-room.entity';
 import { User_ChatRoom } from 'src/chat-rooms/entites/user-chatRoom.entity';

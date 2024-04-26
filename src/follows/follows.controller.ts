@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
 import { FollowsService } from './follows.service';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/users/entities/user.entity';
@@ -28,7 +28,12 @@ export class FollowsController {
     try {
       await this.userService.findUserById(userId);
 
-      return await this.followsService.follow(user.id, userId);
+      const data = await this.followsService.follow(user.id, userId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '성공적으로 팔로우 하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -44,7 +49,12 @@ export class FollowsController {
     @UserInfo() user: User
   ) {
     try {
-      return await this.followsService.findFollower(user.id);
+      const data = await this.followsService.findFollower(user.id);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '팔로워 목록을 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -62,7 +72,12 @@ export class FollowsController {
     try {
       await this.userService.findUserById(userId);
 
-      return await this.followsService.findFollowing(userId);
+      const data = await this.followsService.findFollowing(userId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '팔로잉 목록을 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }

@@ -24,7 +24,7 @@ import { validate } from 'class-validator';
 @ApiTags('Foodmates')
 @Controller('foodmates')
 export class FoodmatesController {
-  constructor(private readonly foodmatesService: FoodmatesService) {}
+  constructor(private readonly foodmatesService: FoodmatesService) { }
 
   /**
    * 밥친구 글 등록
@@ -33,14 +33,19 @@ export class FoodmatesController {
   @UseGuards(AuthGuard('jwt'))
   @Post()
   async create(
-    @Body() createFoodmateDto: CreateFoodmateDto, 
+    @Body() createFoodmateDto: CreateFoodmateDto,
     @UserInfo() user: User
   ) {
     try {
       await validate(createFoodmateDto);
 
       createFoodmateDto.userId = user.id;
-      return await this.foodmatesService.create(createFoodmateDto);
+      const data = await this.foodmatesService.create(createFoodmateDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '밥친구 게시물이 성공적으로 생성되었습니다.',
+        data
+      };
     } catch (error) {
       return { message: `${error}` }
     }
@@ -59,7 +64,11 @@ export class FoodmatesController {
     try {
       const data = await this.foodmatesService.findAll(orderBy, category, region);
 
-      return data;
+      return {
+        statusCode: HttpStatus.OK,
+        message: '밥친구 게시물 목록을 성공적으로 조회하었습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -72,8 +81,18 @@ export class FoodmatesController {
    */
   @Get(':id')
   async findOne(@Param('id') id: string, @Req() req: any) {
-    const userIP = req.ip;
-    return await this.foodmatesService.findOne(+id, userIP);
+    try {
+      const userIP = req.ip;
+
+      const data = await this.foodmatesService.findOne(+id, userIP);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '밥친구 게시물을 성공적으로 조회되었습니다.',
+        data
+      };
+    } catch (err) {
+      return { message: `${err}` }
+    }
   }
 
   /**
@@ -84,15 +103,15 @@ export class FoodmatesController {
    */
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateFoodmateDto: UpdateFoodmateDto,
   ) {
     try {
-      const data = this.foodmatesService.update(+id, updateFoodmateDto);
+      const data = await this.foodmatesService.update(+id, updateFoodmateDto);
       return {
         statusCode: HttpStatus.OK,
-        message: '성공적으로 수정되었습니다.',
+        message: '밥친구 게시물을 성공적으로 수정하였습니다.',
         data
       };
     } catch (err) {
@@ -107,12 +126,18 @@ export class FoodmatesController {
    */
   @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    this.foodmatesService.remove(+id);
+  async remove(@Param('id') id: string) {
+    try {
+      const data =await this.foodmatesService.remove(+id);
     return {
       statusCode: HttpStatus.OK,
-      message: '성공적으로 삭제되었습니다.',
+      message: '밥친구 게시물이 성공적으로 삭제되었습니다.',
+      data
     };
+    } catch (err) {
+      return { message: `${err}` }
+    }
+    
   }
 
   @UseGuards(AuthGuard('jwt'))

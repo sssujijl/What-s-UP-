@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, HttpStatus } from '@nestjs/common';
 import { FoodieAnswersService } from './foodie_answers.service';
 import { CreateFoodieAnswerDto } from './dto/create-foodie_answer.dto';
 import { UpdateFoodieAnswerDto } from './dto/update-foodie_answer.dto';
@@ -42,7 +42,12 @@ export class FoodieAnswersController {
 
       createFoodieAnswerDto.userId = user.id;
 
-      return await this.foodieAnswersService.createAnswer(foodie, createFoodieAnswerDto);
+      const data = await this.foodieAnswersService.createAnswer(foodie, createFoodieAnswerDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '답글이 성공적으로 생성되었습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` };
     }
@@ -58,7 +63,12 @@ export class FoodieAnswersController {
     try {
       const foodie = await this.foodiesService.findOneById(foodieId);
 
-      return await this.foodieAnswersService.CheckTitle(foodie, user);
+      const data = await this.foodieAnswersService.CheckTitle(foodie, user);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '칭호를 성공적으로 확인하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` };
     }
@@ -76,7 +86,12 @@ export class FoodieAnswersController {
     try {
       await this.foodiesService.findOneById(foodieId);
 
-      return await this.foodieAnswersService.findAllAnswers(foodieId)
+      const data = await this.foodieAnswersService.findAllAnswers(foodieId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '답글이 성공적으로 조회되었습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` };
     }
@@ -102,7 +117,12 @@ export class FoodieAnswersController {
 
       await this.foodiesService.findOneById(foodieId);
 
-      return await this.foodieAnswersService.updateAnswer(foodieAnswerId, user.id, updateFoodieAnswerDto)
+      const data = await this.foodieAnswersService.updateAnswer(foodieAnswerId, user.id, updateFoodieAnswerDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '답글이 성공적으로 수정되었습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -123,7 +143,12 @@ export class FoodieAnswersController {
     try {
       await this.foodiesService.findOneById(foodieId);
 
-      return await this.foodiesService.findOneById(foodieAnswerId)
+      const data = await this.foodiesService.findOneById(foodieAnswerId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '답글을 성공적으로 삭제하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }

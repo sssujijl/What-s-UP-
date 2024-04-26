@@ -109,7 +109,7 @@ export class PlaceListsService {
     return await this.savedPlaceRepository.delete({ placeListId, placeId });
   }
 
-  async movedPlace(
+  async changeSavedPlace(
     placeListId: number,
     placeId: number,
     newPlaceListId: number,
