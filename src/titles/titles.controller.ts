@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards, Get } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Get, HttpStatus } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/users/entities/user.entity';
 import { UserInfo } from 'src/utils/userInfo.decorator';
@@ -16,7 +16,12 @@ export class TitlesController {
   @Get()
   async findAllTitles(@UserInfo() user: User) {
     try {
-      return await this.titlesService.findAllTitles(user.id); 
+      const data = await this.titlesService.findAllTitles(user.id); 
+      return {
+        statusCode: HttpStatus.OK,
+        message: '전체 칭호를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` };
     }
@@ -26,7 +31,12 @@ export class TitlesController {
   @Get('/top3')
   async Top3_Titles(@UserInfo() user:User) {
     try {
-      return await this.titlesService.Top3_Titles(user.id)
+      const data = await this.titlesService.Top3_Titles(user.id);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '칭호 Top3를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}`};
     }

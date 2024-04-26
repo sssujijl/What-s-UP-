@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Logger, HttpStatus } from '@nestjs/common';
 import { MissionsService } from './missions.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
@@ -78,7 +78,12 @@ export class MissionsController {
     @Param('missionId') missionId: number
   ) {
     try {
-      return await this.missionsService.findMission(missionId);
+      const data = await this.missionsService.findMission(missionId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '미션을 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }

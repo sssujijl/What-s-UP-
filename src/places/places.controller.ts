@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, Post, Query } from '@nestjs/common';
 import { PlacesService } from './places.service';
 
 @Controller('places')
@@ -12,7 +12,12 @@ export class PlacesController {
   ) {
     try {
       console.log(category)
-      return await this.placesService.findAllPlace(dong, category);
+      const data = await this.placesService.findAllPlace(dong, category);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -21,7 +26,12 @@ export class PlacesController {
   @Get('/foodCategory')
   async findAllFoodCategory() {
     try {
-      return await this.placesService.findAllFoodCategory();
+      const data = await this.placesService.findAllFoodCategory();
+      return {
+        statusCode: HttpStatus.OK,
+        message: '음식카테고리를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -30,17 +40,26 @@ export class PlacesController {
   @Get('/:placeId')
   async findPlace(@Param('placeId') placeId: number) {
     try {
-      return await this.placesService.findPlaceById(placeId);
+      const data = await this.placesService.findPlaceById(placeId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 찾았습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
   @Post('/search')
-  async searchPlaces(@Body('data') data: string) {
+  async searchPlaces(@Body('body') body: string) {
     try {
-      console.log(data);
-      return await this.placesService.searchPlaces(data);
+      const data = await this.placesService.searchPlaces(body);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 검색하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }

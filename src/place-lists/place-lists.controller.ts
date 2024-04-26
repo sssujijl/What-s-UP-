@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Put, HttpStatus } from '@nestjs/common';
 import { PlaceListsService } from './place-lists.service';
 import { CreatePlaceListDto } from './dto/create-place-list.dto';
 import { UpdatePlaceListDto } from './dto/update-place-list.dto';
@@ -21,7 +21,12 @@ export class PlaceListsController {
       await validate(createPlaceListDto);
 
       createPlaceListDto.userId = user.id
-      return await this.placeListsService.createPlaceList(createPlaceListDto);
+      const data = await this.placeListsService.createPlaceList(createPlaceListDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 생성하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -34,7 +39,12 @@ export class PlaceListsController {
     @UserInfo() user: User
   ) {
     try {
-      return await this.placeListsService.findPlaceListsByUserId(user.id, nickName);
+      const data = await this.placeListsService.findPlaceListsByUserId(user.id, nickName);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -47,7 +57,12 @@ export class PlaceListsController {
     @UserInfo() user: User
   ) {
     try {
-      return await this.placeListsService.findPlaceListById(placeListId, user.id);
+      const data = await this.placeListsService.findPlaceListById(placeListId, user.id);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -60,7 +75,12 @@ export class PlaceListsController {
     @Body() updatePlaceListDto: UpdatePlaceListDto
   ) {
     try {
-      return await this.placeListsService.editPlaceList(placeListId, updatePlaceListDto);
+      const data = await this.placeListsService.editPlaceList(placeListId, updatePlaceListDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 수정하였습니다',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -70,7 +90,12 @@ export class PlaceListsController {
   @Patch('/:placeListId')
   async deletePlaceList(@Param('placeListId') placeListId: number) {
     try {
-      return await this.placeListsService.deletePlaceList(placeListId);
+      const data = await this.placeListsService.deletePlaceList(placeListId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 삭제하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -83,7 +108,12 @@ export class PlaceListsController {
     @Query('placeId') placeId: number
   ) {
     try {
-      return await this.placeListsService.savedPlace(placeListId, placeId);
+      const data = await this.placeListsService.savedPlace(placeListId, placeId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 저장하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -96,7 +126,12 @@ export class PlaceListsController {
     @Query('placeId') placeId: number
   ) {
     try {
-      return await this.placeListsService.canceledPlace(placeListId, placeId);
+      const data = await this.placeListsService.canceledPlace(placeListId, placeId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 삭제하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -104,13 +139,18 @@ export class PlaceListsController {
 
   @UseGuards(AuthGuard('author'))
   @Put('/:placeListId')
-  async movedPlace(
+  async changeSavedPlace(
     @Param('placeListId') placeListId: number,
     @Query('placeId') placeId: number,
     @Body('newPlaceListId') newPlaceListId: number
   ) {
     try {
-      return await this.placeListsService.movedPlace(placeListId, placeId, newPlaceListId);
+      const data = await this.placeListsService.changeSavedPlace(placeListId, placeId, newPlaceListId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소리스트를 성공적으로 옮겼습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }

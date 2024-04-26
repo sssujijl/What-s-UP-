@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, HttpStatus } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { ChatRoomsService } from 'src/chat-rooms/chat-rooms.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -20,7 +20,12 @@ export class MessagesController {
   ) {
     try {
       await this.chatRoomService.findOneChatRoom(chatRoomId, user.id);
-      return await this.messagesService.findAllMessageFromRedis(chatRoomId);
+      const data = await this.messagesService.findAllMessageFromRedis(chatRoomId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '메세지를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
