@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ChatRoomsService } from './chat-rooms.service';
+import { ChatService } from './chat-rooms.service';
 import { ChatRoomsController } from './chat-rooms.controller';
 
 @Module({
   controllers: [ChatRoomsController],
-  providers: [ChatRoomsService],
+  providers: [ChatService],
 })
 export class ChatRoomsModule {}

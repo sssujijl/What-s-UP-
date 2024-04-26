@@ -4,6 +4,7 @@ import {
     WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
+import { RedisService } from 'nestjs-redis';
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway(8080)
@@ -11,12 +12,14 @@ export class EventsGateway {
     @WebSocketServer()
     server!: Server;
 
+    // constructor(private readonly redisService: RedisService) {}
+
     async handleConnection(client: Socket): Promise<void> {
         const socketId = client.id;
         console.log(socketId)
-        this.server.emit('성진', 'data');
-    } 
-      
+        this.server.emit('성진', '안녕');
+    }
+
     @SubscribeMessage('민석') 
     async handleMessage(@MessageBody() data: any): Promise<void> {
         console.log(data);
