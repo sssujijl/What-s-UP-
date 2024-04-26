@@ -126,9 +126,12 @@ export class FoodmatesController {
    */
   @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  async remove(@Param('id') id: string) {
+  async remove(
+    @UserInfo() user: User,
+    @Param('id') id: string
+  ) {
     try {
-      const data =await this.foodmatesService.remove(+id);
+      const data =await this.foodmatesService.remove(+id, user);
     return {
       statusCode: HttpStatus.OK,
       message: '밥친구 게시물이 성공적으로 삭제되었습니다.',

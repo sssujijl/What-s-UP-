@@ -142,13 +142,16 @@ export class FoodmatesService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number, user: User) {
     const foodmate = await this.foodmateRepository.findOne({ where: { id } });
+
     if (!foodmate) {
       throw new NotFoundException('밥친구를 찾을 수 없습니다.');
+    } else if (foodmate.userId !== user.id) {
+      throw new UnauthorizedException('밥친구를 삭제할 권한이 없습니다.')
     }
 
-    return this.foodmateRepository.delete({ id });
+    return await this.foodmateRepository.delete({ id });
   }
 
   async applicationFoodMate(user: User, id: number) {
