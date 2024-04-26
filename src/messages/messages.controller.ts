@@ -19,7 +19,7 @@ export class MessagesController {
     @Param('chatRoomId') chatRoomId: number
   ) {
     try {
-      await this.chatRoomService.findOneChatRoom(chatRoomId);
+      await this.chatRoomService.findOneChatRoom(chatRoomId, user.id);
       return await this.messagesService.findAllMessageFromRedis(chatRoomId);
     } catch (err) {
       return { message: `${err}` }

@@ -150,7 +150,7 @@ const typeOrmModuleOptions = {
     ClovaocrModule,
     ProducerModule,
     RecommendModule,
-    EventGatewayModule
+    EventGatewayModule,
   ],
   controllers: [],
   providers: [],

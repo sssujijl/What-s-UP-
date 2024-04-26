@@ -49,9 +49,12 @@ export class ChatRoomsController {
   }
 
   @Get('/:chatRoomId')
-  async findOneChatRoom(@Param('chatRoomdId') chatRoomdId: number) {
+  async findOneChatRoom(
+    @Param('chatRoomdId') chatRoomdId: number,
+    @UserInfo() user: User
+  ) {
     try {
-      return await this.chatRoomService.findOneChatRoom(chatRoomdId);
+      return await this.chatRoomService.findOneChatRoom(chatRoomdId, user.id);
     } catch (err) {
       return { message: `${err}` }
     }

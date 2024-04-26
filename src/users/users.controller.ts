@@ -111,6 +111,22 @@ export class UsersController {
     }
   }
 
+    /**
+   * 유저 정보 조회
+   * @returns
+   */
+    @UseGuards(AuthGuard("jwt"))
+    @Get()
+    async findUser(
+      @UserInfo() user: User,
+    ) {
+      try {
+        return user;
+      } catch (err) {
+        return { message: `${err}` }
+      }
+    }
+
   /**
    * 유저 정보 조회
    * @returns

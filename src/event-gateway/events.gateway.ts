@@ -79,9 +79,11 @@ export class EventsGateway
 
       const publish = {
         userId: user.id,
-        nickName: user.nickName,
-        message: data.message,
-        currentTime: new Date().toISOString()
+        user: {
+          nickName: user.nickName,
+        },
+        content: data.message,
+        createdAt: new Date(socket.handshake.time).toISOString()
       }
 
       this.server.emit(`message: ${data.chatRoomId}`, publish);
@@ -110,9 +112,3 @@ export class EventsGateway
     console.log('disconnected');
   }
 }
-
-// 1. 유저랑 연결
-// 2. 리액트랑 연결
-// 3. 주고받은 메세지 저장
-// 4. 유저 Id저장
-// 5. 룸 설정?

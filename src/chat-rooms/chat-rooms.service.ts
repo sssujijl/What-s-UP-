@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ChatRoom } from './entites/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -51,7 +51,7 @@ export class ChatRoomsService {
       const remainingUsers = await this.findUserChatRoomsByChatRoomdId(chatRoomdId);
 
       if (remainingUsers.length <= 1) {
-        const chatRoom = await this.findOneChatRoom(chatRoomdId);
+        const chatRoom = await this.findOneChatRoom(chatRoomdId, userId);
 
         chatRoom.deletedAt = new Date();
         await queryRunner.manager.save(chatRoom);
@@ -108,14 +108,18 @@ export class ChatRoomsService {
     return chatRooms
   }
 
-  async findOneChatRoom(chatRoomId: number) {
+  async findOneChatRoom(chatRoomId: number, userId: number) {
     const chatRoom = await this.chatRoomRepository.findOne({
       where: { id: chatRoomId },
-      relations: ['messages']
+      relations: ['messages', 'userChatRooms']
     });
 
     if (!chatRoom) {
       throw new NotFoundException('해당 채팅방을 찾을 수 없습니다.');
+    } else if (chatRoom.userChatRooms.map((user) => {
+      user.userId !== userId
+    })) {
+      throw new UnauthorizedException('해당 채팅방에 접속할 권한이 없습니다.')
     }
 
     return chatRoom;
