@@ -114,4 +114,22 @@ export class FoodmatesController {
       message: '성공적으로 삭제되었습니다.',
     };
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/application')
+  async applicationFoodMate(
+    @Param('id') id: number,
+    @UserInfo() user: User
+  ) {
+    try {
+      const data = await this.foodmatesService.applicationFoodMate(user, id);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '성공적으로 밥친구 신청이 되었습니다.',
+        data
+      }
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
 }
