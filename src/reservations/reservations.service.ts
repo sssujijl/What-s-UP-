@@ -19,6 +19,7 @@ export class ReservationsService {
   constructor(
     @InjectRepository(Reservation) private readonly reservationRepository: Repository<Reservation>,
     @InjectRepository(ResStatus) private readonly resStatusRepository: Repository<ResStatus>,
+    @InjectRepository(Order_Menus) private readonly orderMenusRepository: Repository<Order_Menus>,
     private dataSource: DataSource,
     private readonly menuService: MenusService,
     private readonly pointService: PointsService,
@@ -29,7 +30,11 @@ export class ReservationsService {
   async findReservationsByUserId(userId: number) {
     const reservations = await this.reservationRepository.find({
       where: { userId },
-      relations: ['resStatus', 'resStatus.place']
+      relations: ['resStatus', 'resStatus.place', 'review'],
+      order: { 
+        'status': 'ASC',
+        'updatedAt': 'DESC'
+      } 
     });
 
     if (!reservations) {
@@ -108,7 +113,7 @@ export class ReservationsService {
 
   async findResStatusById(resStatusId: number) {
     const resStatus = await this.resStatusRepository.findOneBy({ id: resStatusId });
-    console.log('0000000', resStatus);
+
     if (!resStatus) {
       throw new NotFoundException('해당 예약상태정보를 찾을 수 없습니다.');
     }
@@ -160,17 +165,22 @@ export class ReservationsService {
     try {
       const reservation = await this.findOneById(reservationId);
       const resStatus = await this.findResStatusById(resStatusId);
+      
+      if (reservation.status === Status.VISIT_COMPLETED) {
+        throw new Error('이미 방문한 예약입니다.');
+      }
 
-      await queryRunner.manager.update(ResStatus, 
-        reservation.resStatusId, 
-        { status: true }
-      );
+      await queryRunner.manager.update(ResStatus, resStatus.id, { status: true });
 
-      await queryRunner.manager.delete(Order_Menus, reservation.id);
+      const orderMenus = await this.orderMenusRepository.findBy({ reservationId });
+      if (orderMenus.length > 0) {
+        await queryRunner.manager.delete(Order_Menus, reservation.id);
+      }
 
       await this.pointService.cancelPoint(userId, reservation.totalAmount);
-
+      console.log(reservation);
       reservation.status = Status.RESERVATION_CANCELLED;
+      console.log(reservation);
       const cancelReservation = await queryRunner.manager.save(Reservation, reservation);
 
       resStatus.status = true;

@@ -6,7 +6,6 @@ import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { PlaceListsModule } from 'src/place-lists/place-lists.module';
-import { AuthorStrategy } from './author.strategy';
 import { JwtGoogleStrategy } from './google.strategy';
 import { JwtNaverStrategy } from './naver.strategy';
 import { JwtKakaoStrategy } from './kakao.strategy';
@@ -27,7 +26,6 @@ import { JwtKakaoStrategy } from './kakao.strategy';
   providers: [
     AuthService, 
     JwtStrategy, 
-    AuthorStrategy,
     JwtGoogleStrategy,
     JwtNaverStrategy,
     JwtKakaoStrategy,

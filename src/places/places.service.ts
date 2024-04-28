@@ -23,9 +23,42 @@ export class PlacesService {
     return place;
   }
 
-  async findAllPlace(address: string, category?: string) {
+  async findAllPlace(address: { address: string, dong: string }, category?: string) {
     const placeIds = await this.placesByDong(address);
+
+
+    if (!placeIds || placeIds.length === 0) {
+      return await this.findAllAddress(address.address, category);
+    }
     
+    return await this.findAllPlaceIds(placeIds, category);
+  }
+
+  private async findAllAddress(address: string, category?: string) {
+    const query = this.placeRepository
+      .createQueryBuilder('place')
+      .where('place.address LIKE :address', { address: `%${address}%` })
+      .leftJoinAndSelect('place.foodCategory', 'foodCategory')
+      .leftJoinAndSelect('place.reviews', 'reviews');
+  
+    if (category) {
+      const categoryIds = await this.redis.smembers(`FoodCategory:${category}`);
+      if (categoryIds && categoryIds.length > 0) {
+        query.andWhere('place.foodCategory IN (:...categoryIds)', { categoryIds });
+      }
+    }
+  
+    const places = await query.getMany();
+  
+    if (!places || places.length === 0) {
+      throw new NotFoundException('장소를 찾을 수 없습니다.');
+    }
+  
+    return places;
+  }
+  
+
+  private async findAllPlaceIds(placeIds: string[], category?: string) {
     const categoryIds = category ? await this.redis.smembers(`FoodCategory: ${category}`) : null;
 
     const query = this.placeRepository
@@ -49,12 +82,9 @@ export class PlacesService {
     return places;
   }
 
-  private async placesByDong(address: string) {
-    if (address === '부성2동') {
-      address = '두정동';
-    }
+  private async placesByDong(address: { address: string, dong: string }) {
 
-    const places = await this.redis.smembers(`PlaceIds: ${address}`);
+    const places = await this.redis.smembers(`PlaceIds:${address.address}:${address.dong}`);
 
     return places;
   }

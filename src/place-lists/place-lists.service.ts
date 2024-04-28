@@ -36,14 +36,29 @@ export class PlaceListsService {
     if (userId === author.id) {
       placeLists = await this.placeListRepository.find({
         where: { userId: author.id },
-        relations: ['savedPlaces', 'savedPlaces.place']
+        relations: ['savedPlaces', 'savedPlaces.place'],
       });
     } else {
       placeLists = await this.placeListRepository.find({
         where: { userId: author.id, visible: Visible.public },
-        relations: ['savedPlaces', 'savedPlaces.place']
+        relations: ['savedPlaces', 'savedPlaces.place'],
       });
     }
+
+    if (!placeLists) {
+      throw new NotFoundException(
+        '해당 유저의 장소리스트들을 찾을 수 없습니다.',
+      );
+    }
+
+    return placeLists;
+  }
+
+  async findAllPlaceList(userId: number) {
+    const placeLists = await this.placeListRepository.find({
+      where: { userId },
+      relations: ['savedPlaces', 'savedPlaces.place'],
+    });
 
     if (!placeLists) {
       throw new NotFoundException(
@@ -81,8 +96,13 @@ export class PlaceListsService {
   async editPlaceList(
     placeListId: number,
     updatePlaceListDto: UpdatePlaceListDto,
+    userId: number,
   ) {
-    await this.findMyPlaceList(placeListId);
+    const placeList = await this.findMyPlaceList(placeListId);
+
+    if (placeList.userId !== userId) {
+      throw new UnauthorizedException('해당 유저는 수정할 권한이 없습니다.');
+    }
 
     return await this.placeListRepository.update(
       placeListId,
@@ -90,21 +110,42 @@ export class PlaceListsService {
     );
   }
 
-  async deletePlaceList(placeListId: number) {
+  async deletePlaceList(placeListId: number, userId: number) {
     const placeList = await this.findMyPlaceList(placeListId);
+
+    if (placeList.userId !== userId) {
+      throw new UnauthorizedException('해당 유저는 삭제할 권한이 없습니다.');
+    }
 
     placeList.deletedAt = new Date();
     return await this.placeListRepository.save(placeList);
   }
 
-  async savedPlace(placeListId: number, placeId: number) {
+  async savedPlace(placeListId: number, placeId: number, userId: number) {
     await this.placeService.findPlaceById(placeId);
+    const placeList = await this.findMyPlaceList(placeListId);
 
-    return await this.savedPlaceRepository.save({ placeListId, placeId });
+    if (placeList.userId !== userId) {
+      throw new UnauthorizedException('해당 유저는 저장할 권한이 없습니다.');
+    }
+
+    const savedPlace = await this.savedPlaceRepository.findOneBy({ placeListId, placeId });
+    if (savedPlace) {
+      await this.savedPlaceRepository.delete(savedPlace);
+      return '저장 취소'
+    }
+
+    await this.savedPlaceRepository.save({ placeListId, placeId });
+    return '저장';
   }
 
-  async canceledPlace(placeListId: number, placeId: number) {
+  async canceledPlace(placeListId: number, placeId: number, userId: number) {
     await this.placeService.findPlaceById(placeId);
+    const placeList = await this.findMyPlaceList(placeListId);
+
+    if (placeList.userId !== userId) {
+      throw new UnauthorizedException('해당 유저는 장소리스트에 대한 권한이 없습니다.');
+    }
 
     return await this.savedPlaceRepository.delete({ placeListId, placeId });
   }
@@ -113,10 +154,14 @@ export class PlaceListsService {
     placeListId: number,
     placeId: number,
     newPlaceListId: number,
+    userId: number
   ) {
     await this.placeService.findPlaceById(placeId);
-
     const placeList = await this.findMyPlaceList(newPlaceListId);
+
+    if (placeList.userId !== userId) {
+      throw new UnauthorizedException('해당 유저는 장소리스트에 대한 권한이 없습니다.');
+    }
 
     return await this.savedPlaceRepository.update(
       { placeListId, placeId },

@@ -34,7 +34,6 @@ export class PuppeteerService {
         category,
       });
       const foodCategory = await this.foodCategoryRepository.save(newCategory);
-      // await this.redis.sadd(`Categories: ${mainCategory}`, foodCategory.id);
       await this.groupByMainCategory(foodCategory);
       return foodCategory;
     }

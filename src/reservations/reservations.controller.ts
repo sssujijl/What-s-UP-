@@ -88,7 +88,7 @@ export class ReservationsController {
    * @returns 
    */
   @UseGuards(AuthGuard('jwt'))
-  @Delete('/:reservationId')
+  @Delete('/:resStatusId/:reservationId')
   async cancelReservation(
     @UserInfo() user: User,
     @Param('resStatusId') resStatusId: number,

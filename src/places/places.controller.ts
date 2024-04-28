@@ -7,12 +7,11 @@ export class PlacesController {
 
   @Post()
   async findAllPlace(
-    @Body() { dong }: { dong: string },
+    @Body() address: { address: string, dong: string },
     @Query('category') category: string
   ) {
     try {
-      console.log(category)
-      const data = await this.placesService.findAllPlace(dong, category);
+      const data = await this.placesService.findAllPlace(address, category);
       return {
         statusCode: HttpStatus.OK,
         message: '장소를 성공적으로 조회하였습니다.',

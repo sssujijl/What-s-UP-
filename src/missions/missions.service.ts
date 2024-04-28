@@ -163,7 +163,8 @@ export class MissionsService {
         await this.cacheManager.set(`Mission_place: ${place.id}`, place, ttl);
       });
 
-      await this.redis.set(`Mission: ${mission.date}`, 'mission created')
+      await this.redis.set(`Mission: ${mission.date}`, 'mission created');
+      await this.cacheManager.set(`Mission: ${mission.date}`, mission, ttl);
       await this.messageProducer.sendMessage(
         `[${mission.date}] 미션이 생성되었습니다!!`,
       );

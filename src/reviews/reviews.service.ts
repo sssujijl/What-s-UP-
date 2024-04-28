@@ -117,7 +117,10 @@ export class ReviewsService {
   }
 
   async findAll(placeId: number) {
-    const reviews = await this.reviewRepository.findBy({ placeId });
+    const reviews = await this.reviewRepository.find({
+      where: { placeId },
+      relations: ['user']
+    });
     return reviews;
   }
 

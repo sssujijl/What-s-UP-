@@ -120,8 +120,7 @@ export class UsersController {
       
       return res.status(HttpStatus.OK).json({
         statusCode: HttpStatus.OK,
-        message: '장소리스트를 성공적으로 옮겼습니다.',
-        data
+        message: '로그인 하였습니다.',
       });
     } catch (err) {
       return res.json({ message: `${err}` });

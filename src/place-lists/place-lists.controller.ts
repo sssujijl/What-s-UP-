@@ -7,11 +7,11 @@ import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { validate } from 'class-validator';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('placeLists')
 export class PlaceListsController {
   constructor(private readonly placeListsService: PlaceListsService) {}
 
-  @UseGuards(AuthGuard('jwt'))
   @Post()
   async createPlaceList(
     @UserInfo() user: User,
@@ -32,7 +32,6 @@ export class PlaceListsController {
     }
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get()
   async findPlaceLists(
     @Query('nickName') nickName: string,
@@ -50,7 +49,22 @@ export class PlaceListsController {
     }
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @Get('/myPlaceLists')
+  async findAllPlaceList(
+    @UserInfo() user: User
+  ) {
+    try {
+      const data = await this.placeListsService.findAllPlaceList(user.id);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 조회하였습니다.',
+        data
+      };
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
   @Get('/:placeListId')
   async findPlaceList(
     @Param('placeListId') placeListId: number,
@@ -68,14 +82,14 @@ export class PlaceListsController {
     }
   }
 
-  @UseGuards(AuthGuard('author'))
   @Patch('/:placeListId')
   async editPlaceList(
     @Param('placeListId') placeListId: number,
-    @Body() updatePlaceListDto: UpdatePlaceListDto
+    @Body() updatePlaceListDto: UpdatePlaceListDto,
+    @UserInfo() user: User
   ) {
     try {
-      const data = await this.placeListsService.editPlaceList(placeListId, updatePlaceListDto);
+      const data = await this.placeListsService.editPlaceList(placeListId, updatePlaceListDto, user.id);
       return {
         statusCode: HttpStatus.OK,
         message: '장소를 성공적으로 수정하였습니다',
@@ -86,11 +100,13 @@ export class PlaceListsController {
     }
   }
 
-  @UseGuards(AuthGuard('author'))
-  @Patch('/:placeListId')
-  async deletePlaceList(@Param('placeListId') placeListId: number) {
+  @Delete('/:placeListId')
+  async deletePlaceList(
+    @Param('placeListId') placeListId: number,
+    @UserInfo() user: User
+  ) {
     try {
-      const data = await this.placeListsService.deletePlaceList(placeListId);
+      const data = await this.placeListsService.deletePlaceList(placeListId, user.id);
       return {
         statusCode: HttpStatus.OK,
         message: '장소를 성공적으로 삭제하였습니다.',
@@ -101,32 +117,31 @@ export class PlaceListsController {
     }
   }
 
-  @UseGuards(AuthGuard('author'))
-  @Post('/:placeListId')
+  @Get('/:placeListId/save')
   async savedPlace(
     @Param('placeListId') placeListId: number,
-    @Query('placeId') placeId: number
+    @Query('placeId') placeId: number,
+    @UserInfo() user: User
   ) {
     try {
-      const data = await this.placeListsService.savedPlace(placeListId, placeId);
+      const data = await this.placeListsService.savedPlace(placeListId, placeId, user.id);
       return {
         statusCode: HttpStatus.OK,
-        message: '장소를 성공적으로 저장하였습니다.',
-        data
+        message: `장소를 성공적으로 ${data}하였습니다.`
       };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
-  @UseGuards(AuthGuard('author'))
   @Delete('/:placeListId')
   async canceledPlace(
     @Param('placeListId') placeListId: number,
-    @Query('placeId') placeId: number
+    @Query('placeId') placeId: number,
+    @UserInfo() user: User
   ) {
     try {
-      const data = await this.placeListsService.canceledPlace(placeListId, placeId);
+      const data = await this.placeListsService.canceledPlace(placeListId, placeId, user.id);
       return {
         statusCode: HttpStatus.OK,
         message: '장소를 성공적으로 삭제하였습니다.',
@@ -137,15 +152,15 @@ export class PlaceListsController {
     }
   }
 
-  @UseGuards(AuthGuard('author'))
   @Put('/:placeListId')
   async changeSavedPlace(
     @Param('placeListId') placeListId: number,
     @Query('placeId') placeId: number,
-    @Body('newPlaceListId') newPlaceListId: number
+    @Body('newPlaceListId') newPlaceListId: number,
+    @UserInfo() user: User
   ) {
     try {
-      const data = await this.placeListsService.changeSavedPlace(placeListId, placeId, newPlaceListId);
+      const data = await this.placeListsService.changeSavedPlace(placeListId, placeId, newPlaceListId, user.id);
       return {
         statusCode: HttpStatus.OK,
         message: '장소리스트를 성공적으로 옮겼습니다.',
