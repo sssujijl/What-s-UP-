@@ -26,7 +26,7 @@ export class PlacesService {
   async findAllPlace(address: { address: string, dong: string }, category?: string) {
     const placeIds = await this.placesByDong(address);
 
-
+    console.log(category)
     if (!placeIds || placeIds.length === 0) {
       return await this.findAllAddress(address.address, category);
     }
@@ -42,7 +42,7 @@ export class PlacesService {
       .leftJoinAndSelect('place.reviews', 'reviews');
   
     if (category) {
-      const categoryIds = await this.redis.smembers(`FoodCategory:${category}`);
+      const categoryIds = await this.redis.smembers(`FoodCategory: ${category}`);
       if (categoryIds && categoryIds.length > 0) {
         query.andWhere('place.foodCategory IN (:...categoryIds)', { categoryIds });
       }

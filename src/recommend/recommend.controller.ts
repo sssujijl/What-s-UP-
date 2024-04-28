@@ -77,7 +77,7 @@ export class RecommendController {
         user.id,
       );
 
-      if (placeLists.length === 0) {
+      if (goodReviews.length === 0) {
         throw new HttpException(
           '추천을 위한 리뷰 데이터가 충분하지 않습니다.',
           HttpStatus.BAD_REQUEST,

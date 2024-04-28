@@ -26,7 +26,6 @@ export class ReservationsController {
   ) {
     try {
       await validate(createReservationDto);
-      console.log(createReservationDto);
       createReservationDto.userId = user.id;
 
       const data = await this.reservationsService.addReservationQueue(resStatusId, createReservationDto);

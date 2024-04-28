@@ -15,14 +15,28 @@ export class MissionsController {
   @Get()
   async findTodayMission() {
     try {
-      return await this.missionsService.findTodayMission();
-      // const createMissionDto: CreateMissionDto = {
-      //   capacity: 0,
-      //   date: '',
-      //   time: Time.TEN_AM
-      // };
-      // return await this.missionsService.test();
-      // return await this.missionsService.createRandomMissions(createMissionDto);
+      const data = await this.missionsService.findTodayMission();
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: '미션을 성공적으로 조회하였습니다.',
+        data
+      };
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  @Get('/info')
+  async findTodayMissionInfo() {
+    try {
+      const data = await this.missionsService.findTodayMissionInfo();
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: '미션 장소들을 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -48,5 +62,10 @@ export class MissionsController {
     } catch (err) {
       return { message: `${err}` }
     }
+  }
+
+  @Get('test/test')
+  async test() {
+    return await this.missionsService.test()
   }
 }

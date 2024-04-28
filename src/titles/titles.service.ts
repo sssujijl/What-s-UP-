@@ -1,16 +1,24 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Point } from 'src/points/entities/point.entity';
 import { DataSource, Repository } from 'typeorm';
 import { Title } from './entities/titles.entity';
 import { Level } from './types/level.type';
+import { FoodCategory } from 'src/places/entities/foodCategorys.entity';
 
 @Injectable()
 export class TitlesService {
   constructor(
-    @InjectRepository(Title) private readonly titleRepository: Repository<Title>,
+    @InjectRepository(Title)
+    private readonly titleRepository: Repository<Title>,
+    @InjectRepository(FoodCategory)
+    private readonly foodCategoryRepository: Repository<FoodCategory>,
     private dataSource: DataSource,
-  ) { }
+  ) {}
 
   async givenTitle(userId: number, foodCategoryId: number, count: number) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -21,8 +29,11 @@ export class TitlesService {
       const title = await this.findTitle(userId, foodCategoryId);
 
       if (!title) {
-        const title = await queryRunner.manager.save(Title, { userId, foodCategoryId });
-        
+        const title = await queryRunner.manager.save(Title, {
+          userId,
+          foodCategoryId,
+        });
+
         await queryRunner.manager.save(Point, { userId, point: 1000 });
         await queryRunner.commitTransaction();
 
@@ -32,12 +43,16 @@ export class TitlesService {
       title.count += count;
       const newTitle = await this.upgradeTitle(title);
 
-      const upgradeTitle = await queryRunner.manager.update(Title, title.id, newTitle);
+      const upgradeTitle = await queryRunner.manager.update(
+        Title,
+        title.id,
+        newTitle,
+      );
 
       if (title.level !== newTitle.level) {
         const point = await this.paymentPoint(newTitle.level);
 
-        await queryRunner.manager.save(Point, {userId, point});
+        await queryRunner.manager.save(Point, { userId, point });
       }
 
       await queryRunner.commitTransaction();
@@ -45,14 +60,17 @@ export class TitlesService {
       return upgradeTitle;
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      return { message: `${err}` }
+      return { message: `${err}` };
     } finally {
       await queryRunner.release();
     }
   }
 
   async findTitle(userId: number, foodCategoryId: number) {
-    const title = await this.titleRepository.findOneBy({ userId, foodCategoryId });
+    const title = await this.titleRepository.findOneBy({
+      userId,
+      foodCategoryId,
+    });
 
     return title;
   }
@@ -60,7 +78,7 @@ export class TitlesService {
   async findAllTitles(userId: number) {
     const titles = await this.titleRepository.find({
       where: { userId },
-      relations: ['foodCategory']
+      relations: ['foodCategory'],
     });
 
     return titles;
@@ -69,16 +87,20 @@ export class TitlesService {
   async Top3_Titles(userId: number) {
     const titles = await this.findAllTitles(userId);
 
-    const top3 = titles.sort((a, b) => {
-      if (b.count !== a.count) {
-        return b.count - a.count; 
-      } else {
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      }
-    }).slice(0, 3);
+    const top3 = titles
+      .sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        } else {
+          return (
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
+        }
+      })
+      .slice(0, 3);
 
     if (!titles) {
-      throw new NotFoundException('칭호가 없습니다.')
+      throw new NotFoundException('칭호가 없습니다.');
     }
     return top3;
   }
@@ -102,23 +124,18 @@ export class TitlesService {
   }
 
   async paymentPoint(level: Level) {
-    let point:number = 0;
+    let point: number = 0;
 
     if (level === Level.초보) {
       point = 3000;
-
     } else if (level === Level.중수) {
       point = 5000;
-
     } else if (level === Level.고수) {
       point = 8000;
-
     } else if (level === Level.전문가) {
       point = 12000;
-
     } else if (level === Level.신) {
       point = 15000;
-
     } else if (level === Level.음식) {
       point = 20000;
     }
@@ -126,4 +143,21 @@ export class TitlesService {
     return point;
   }
 
+  async rankingTitle() {
+    const foodCategories = await this.foodCategoryRepository.find();
+  
+    const titlesPromises = foodCategories.map(async (foodCategory) => {
+      return await this.titleRepository.findOne({
+        where: { foodCategoryId: foodCategory.id },
+        order: { count: 'DESC' },
+        relations: ['foodCategory', 'user']
+      });
+    });
+  
+    const titles = await Promise.all(titlesPromises);
+  
+    return titles.filter(title => title !== null);
+  }
+  
+  
 }

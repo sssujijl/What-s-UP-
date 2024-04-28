@@ -8,11 +8,11 @@ import { signinDto } from './dto/signin.dto';
 import { EditUserDto } from './dto/editUser.dto';
 import { Point } from 'src/points/entities/point.entity';
 import { SendMailService } from 'src/users/sendMail.service';
-import { number } from 'joi';
 import Redis from 'ioredis';
 import { CheckVerification } from './dto/checkVerification.dto';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { CheckDuplicateDto } from './dto/checkDuplicate.dto';
+import { MessageProducer } from 'src/producer/producer.service';
 
 @Injectable()
 export class UsersService {
@@ -20,7 +20,7 @@ export class UsersService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
     private readonly sendMailService: SendMailService,
-    // private readonly snsService: SnsService
+    private readonly messageProducer: MessageProducer,
     @InjectRedis() private readonly redis: Redis,
   ) {}
 
@@ -51,6 +51,9 @@ export class UsersService {
       const userPoint = { userId: user.id, point: 3000};
       await queryRunner.manager.save(Point, userPoint);
 
+      if (user.smsConsent === true) {
+        await this.messageProducer.subscriblePhoneToTopic(user.phone);
+      }
       await queryRunner.commitTransaction();
 
       return await this.findUserById(user.id);

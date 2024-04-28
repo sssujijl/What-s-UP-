@@ -137,5 +137,17 @@ export class FoodiesController {
     }
   }
 
-
+  @Post('/search')
+  async searchFoodie(@Body('body') body: string) {
+    try {
+      const data = await this.foodiesService.searchFoodies(body);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '맛집인이 성공적으로 검색하었습니다.',
+        data
+      };
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
 }

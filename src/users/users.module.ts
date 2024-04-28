@@ -7,6 +7,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { SendMailService } from 'src/users/sendMail.service';
 import { BullModule } from '@nestjs/bull';
 import { MailerConsumer } from './mailer.consumer';
+import { ProducerModule } from 'src/producer/producer.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { MailerConsumer } from './mailer.consumer';
       name: 'mailerQueue'
     }),
     forwardRef(() => AuthModule),
+    ProducerModule
   ],
   controllers: [UsersController],
   providers: [UsersService, SendMailService, MailerConsumer],
