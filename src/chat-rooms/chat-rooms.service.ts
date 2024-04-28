@@ -116,7 +116,7 @@ export class ChatRoomsService {
 
     if (!chatRoom) {
       throw new NotFoundException('해당 채팅방을 찾을 수 없습니다.');
-    } else if (chatRoom.userChatRooms.map((user) => {
+    } else if (chatRoom.userChatRooms.some((user) => {
       user.userId !== userId
     })) {
       throw new UnauthorizedException('해당 채팅방에 접속할 권한이 없습니다.')

@@ -106,7 +106,7 @@ export class PlacesService {
 
     const places = await queryBuilder.getMany();
 
-    if (!places) {
+    if (!places || places.length === 0) {
       throw new NotFoundException('해당 검색어에 일치하는 가게가 없습니다.');
     }
 

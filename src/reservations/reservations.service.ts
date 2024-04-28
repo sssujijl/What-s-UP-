@@ -223,7 +223,7 @@ export class ReservationsService {
         .orderBy('resStatus.dateTime', 'ASC')
         .getMany();
 
-    if (!resStatus) {
+    if (!resStatus || resStatus.length === 0) {
       throw new NotFoundException('해당 가게의 예약 목록을 찾을 수 없습니다.');
     }
 
