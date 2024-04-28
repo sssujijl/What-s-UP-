@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { validate } from 'class-validator';
@@ -210,25 +211,23 @@ export class UsersController {
    * @returns
    */
   @UseGuards(AuthGuard('jwt'))
-  @Delete()
+  @Patch('/delete')
   async secession(
     @UserInfo() user: User,
     @Body('password') password: string,
     @Res() res: any,
   ) {
     try {
-      const data = await this.usersService.secession(user, password);
+      await this.usersService.secession(user, password);
 
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
 
-      return {
-        statusCode: HttpStatus.OK,
-        message: `${user.name} 님이 정상적으로 탈퇴되었습니다.`,
-        data,
-      };
+      return res
+        .status(HttpStatus.OK)
+        .json({ message: `${user.name} 님이 정상적으로 탈퇴되었습니다.` });
     } catch (err) {
-      return { message: `${err}` };
+      return res.json({ message: `${err}` });
     }
   }
 

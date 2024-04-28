@@ -206,7 +206,7 @@ export class FoodmatesService {
       await queryRunner.commitTransaction();
 
       const chatRoom = await this.chatRoomService.createChatRoom(user, foodMate.user, `foodMate: ${foodMate.title}`);
-
+      console.log(chatRoom)
       return chatRoom;
     } catch (err) {
       await queryRunner.rollbackTransaction();

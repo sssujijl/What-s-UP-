@@ -201,9 +201,8 @@ export class UsersService {
 
   async secession(user: User, password: string) {
     const findUser = await this.findUserWithPassword(user.id);
-
-    if (
-      findUser.password &&
+    console.log(password)
+    if (findUser.password &&
       !(await bcrypt.compare(password, findUser.password))
     ) {
       throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
