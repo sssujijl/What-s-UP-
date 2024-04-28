@@ -105,7 +105,7 @@ export class UsersController {
 
       return {
         statusCode: HttpStatus.OK,
-        message: '장소리스트를 성공적으로 옮겼습니다.',
+        message: '중복되는 유저가 없습니다.',
         data,
       };
     } catch (err) {

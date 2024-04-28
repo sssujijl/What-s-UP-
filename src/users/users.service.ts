@@ -98,7 +98,7 @@ export class UsersService {
 
   async checkDuplicate(data: CheckDuplicateDto) {
     const { email, nickName, phone } = data;
-    console.log(email);
+
     const checkDuplicate = await this.userRepository.findOne({
       where: [{ email }, { nickName }, { phone }],
     });
