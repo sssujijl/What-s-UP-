@@ -5,14 +5,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { SendMailService } from 'src/users/sendMail.service';
+import { BullModule } from '@nestjs/bull';
+import { MailerConsumer } from './mailer.consumer';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]), 
+    TypeOrmModule.forFeature([User]),
+    BullModule.registerQueue({
+      name: 'mailerQueue'
+    }),
     forwardRef(() => AuthModule),
   ],
   controllers: [UsersController],
-  providers: [UsersService, SendMailService],
-  exports: [UsersService],
+  providers: [UsersService, SendMailService, MailerConsumer],
+  exports: [UsersService, SendMailService],
 })
 export class UsersModule {}

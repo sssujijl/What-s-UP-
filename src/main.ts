@@ -4,12 +4,29 @@ import { AppModule } from "./app.module";
 import cookieParser from "cookie-parser";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import dotenv from 'dotenv' 
+import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
+import { RedisIoAdapter } from "./event-gateway/redisIoAdapter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   dotenv.config();
+
+  const corsOptions: CorsOptions = {
+    origin: 'http://localhost:4000',
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  };
+  app.enableCors(corsOptions);
+  
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe())
+
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+  
+  app.useWebSocketAdapter(redisIoAdapter);
+  
 
   const config = new DocumentBuilder()
     .setTitle('Whats_UP')

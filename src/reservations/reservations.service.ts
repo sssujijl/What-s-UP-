@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Reservation } from './entities/reservation.entity';
@@ -11,6 +11,8 @@ import { Status } from './types/reservation.status.type';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { format, formatDate } from 'date-fns';
 
 @Injectable()
 export class ReservationsService {
@@ -21,10 +23,14 @@ export class ReservationsService {
     private readonly menuService: MenusService,
     private readonly pointService: PointsService,
     @InjectQueue('reservationQueue') private reservationQueue: Queue,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
   ) {}
 
   async findReservationsByUserId(userId: number) {
-    const reservations = await this.reservationRepository.findBy({ userId });
+    const reservations = await this.reservationRepository.find({
+      where: { userId },
+      relations: ['resStatus', 'resStatus.place']
+    });
 
     if (!reservations) {
       throw new NotFoundException('해당 유저의 예약목록을 찾을 수 없습니다.');
@@ -61,7 +67,7 @@ export class ReservationsService {
 
       const order = await this.findOrderMenus(resStatus.placeId, createReservationDto.orderMenus);
 
-      if (resStatus.mission) {
+      if (resStatus.missionId) {
         order.totalAmount -= 1000;
       } else if (createReservationDto.deposit) {
         order.totalAmount += createReservationDto.deposit;
@@ -85,8 +91,12 @@ export class ReservationsService {
       resStatus.status = false;
       await queryRunner.manager.save(ResStatus, resStatus);
 
+      if (resStatus.missionId) {
+        await this.cacheManager.set(`Mission_resStatus: ${resStatus.id}`, resStatus);
+      }
+      
       await queryRunner.commitTransaction();
-
+      
       return reservation;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -98,7 +108,7 @@ export class ReservationsService {
 
   async findResStatusById(resStatusId: number) {
     const resStatus = await this.resStatusRepository.findOneBy({ id: resStatusId });
-
+    console.log('0000000', resStatus);
     if (!resStatus) {
       throw new NotFoundException('해당 예약상태정보를 찾을 수 없습니다.');
     }
@@ -114,9 +124,8 @@ export class ReservationsService {
     let totalAmount = 0;
     const orders = menus.map((menu) => {
       const quantity = orderMenus[menu.id];
-      const price = menu.price;
-      // 엔티티 변경으로 실행을 위해 임시로 price에 parseInt를 끼웠습니다ㅠㅠ
-      const totalPrice = quantity * parseInt(price);
+      const price = +menu.price.replace(/[^\d]/g, '');
+      const totalPrice = quantity * price;
       const reservationId = 0;
       totalAmount += totalPrice;
       return {
@@ -143,13 +152,14 @@ export class ReservationsService {
     return reservation;
   }
 
-  async cancelReservation(userId: number, reservationId: number) {
+  async cancelReservation(userId: number, resStatusId: number, reservationId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
       const reservation = await this.findOneById(reservationId);
+      const resStatus = await this.findResStatusById(resStatusId);
 
       await queryRunner.manager.update(ResStatus, 
         reservation.resStatusId, 
@@ -160,9 +170,15 @@ export class ReservationsService {
 
       await this.pointService.cancelPoint(userId, reservation.totalAmount);
 
-      reservation.deletedAt = new Date();
       reservation.status = Status.RESERVATION_CANCELLED;
       const cancelReservation = await queryRunner.manager.save(Reservation, reservation);
+
+      resStatus.status = true;
+      await queryRunner.manager.save(ResStatus, resStatus);
+
+      if (resStatus.missionId) {
+        await this.cacheManager.set(`Mission_resStatus: ${resStatus.id}`, resStatus);
+      }
 
       await queryRunner.commitTransaction();
 
@@ -179,6 +195,7 @@ export class ReservationsService {
   async handleCron() {
     const reservations = await this.reservationRepository.find({
       where: { status: Status.BEFORE_VISIT},
+      relations: ['resStatus']
     });
 
     const currentTime = new Date();
@@ -194,5 +211,22 @@ export class ReservationsService {
     reservation.status = Status.VISIT_COMPLETED;
 
     return await this.reservationRepository.save(reservation);
+  }
+
+  
+  async findAllResStatue(placeId: number, date: string) {
+    const formattedDate = format(date, 'yyyy-MM-dd');
+
+    const resStatus = await this.resStatusRepository.createQueryBuilder('resStatus')
+        .where('resStatus.placeId = :placeId', { placeId })
+        .andWhere('DATE_FORMAT(resStatus.dateTime, "%Y-%m-%d") = :formattedDate', { formattedDate })
+        .orderBy('resStatus.dateTime', 'ASC')
+        .getMany();
+
+    if (!resStatus || resStatus.length === 0) {
+      throw new NotFoundException('해당 가게의 예약 목록을 찾을 수 없습니다.');
+    }
+
+    return resStatus;
   }
 }

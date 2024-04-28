@@ -29,8 +29,6 @@ import { Coupon } from './coupons/entities/coupon.entity';
 import { Mission } from './missions/entities/mission.entity';
 import { Reservation } from './reservations/entities/reservation.entity';
 import { Title } from './titles/entities/titles.entity';
-import { User_ChatRoom } from './chat-rooms/entities/user_chatRoom.entity';
-import { ChatRoom } from './chat-rooms/entities/chat-room.entity';
 import { Message } from './messages/entities/message.entity';
 import { Order_Menus } from './reservations/entities/orderMenus.entity';
 import { Place } from './places/entities/place.entity';
@@ -49,8 +47,12 @@ import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-ioredis';
 import dotenv from 'dotenv';
 import { ClovaocrModule } from './clovaocr/clovaocr.module';
-dotenv.config();
 import { RecommendModule } from './recommend/recommend.module';
+import { EventGatewayModule } from './event-gateway/event-gateway.module';
+import { User_ChatRoom } from './chat-rooms/entites/user-chatRoom.entity';
+import { ChatRoom } from './chat-rooms/entites/chat-room.entity';
+
+dotenv.config();
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -109,20 +111,22 @@ const typeOrmModuleOptions = {
     }),
     BullModule.forRoot({
       redis: {
-        host: process.env.REDIS_HOST,
-        port: +process.env.REDIS_PORT,
+        host: 'localhost',
+        port: 6379,
       },
     }),
     RedisModule.forRootAsync({
       useFactory: () => ({
         type: 'single',
-        url: process.env.REDIS_URL
+        url: "redis://127.0.0.1:6379",
       })
     }),
     CacheModule.register({
       store: redisStore,
-      host: process.env.REDIS_HOST,
-      port: +process.env.REDIS_PORT,
+      host: 'localhost',
+      port: 6379,
+      ttl: 86400,
+      isGlobal: true
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UsersModule,
@@ -146,6 +150,7 @@ const typeOrmModuleOptions = {
     ClovaocrModule,
     ProducerModule,
     RecommendModule,
+    EventGatewayModule,
   ],
   controllers: [],
   providers: [],

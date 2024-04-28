@@ -23,4 +23,14 @@ export class MenusService {
 
     return menus;
   }
+
+  async findAllMenuByPlaceId(placeId: number) {
+    const menus = await this.menuRepository.findBy({ placeId });
+
+    if (!menus || menus.length === 0) {
+      throw new NotFoundException('해당 가게의 메뉴정보들을 찾을 수 없습니다.');
+    }
+
+    return menus;
+  }
 }

@@ -5,7 +5,6 @@ import { Point } from "src/points/entities/point.entity";
 import { Title } from "src/titles/entities/titles.entity";
 import { Follow } from "src/follows/entities/follow.entity";
 import { Coupon } from "src/coupons/entities/coupon.entity";
-import { User_ChatRoom } from "src/chat-rooms/entities/user_chatRoom.entity";
 import { Message } from "src/messages/entities/message.entity";
 import { Reservation } from "src/reservations/entities/reservation.entity";
 import { Foodie } from "src/foodies/entities/foodie.entity";
@@ -14,6 +13,7 @@ import { FoodMate } from "src/foodmates/entities/foodmate.entity";
 import { User_FoodMate } from "src/foodmates/entities/user_foodmates.entity";
 import { PlaceList } from "src/place-lists/entities/place-list.entity";
 import { Review } from "src/reviews/entities/review.entity";
+import { User_ChatRoom } from "src/chat-rooms/entites/user-chatRoom.entity";
 
 @Entity({ name: "users" })
 @Unique(['email'])
@@ -38,7 +38,7 @@ export class User {
     name: string;
 
     @IsString()
-    @Column({ type: 'varchar', select: false, nullable: false })
+    @Column({ type: 'varchar', select: false, nullable: true, default: null })
     password: string;
 
     @Column({ type: 'date', nullable: false })
@@ -72,7 +72,7 @@ export class User {
     point: Point;
 
     @OneToMany(() => Review, (review) => review.user)
-    reviews: Review;
+    reviews: Review[];
 
     @OneToMany(() => PlaceList, (placeList) => placeList.user, { cascade: true })
     placeLists: PlaceList[];

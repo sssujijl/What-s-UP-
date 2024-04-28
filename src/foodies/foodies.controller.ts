@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, HttpStatus } from '@nestjs/common';
 import { FoodiesService } from './foodies.service';
 import { CreateFoodieDto } from './dto/create-foodie.dto';
 import { UpdateFoodieDto } from './dto/update-foodie.dto';
@@ -7,6 +7,7 @@ import { User } from 'src/users/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { validate } from 'class-validator';
 import { ApiTags } from '@nestjs/swagger';
+import { orderBy } from 'lodash';
 
 @ApiTags('Foodies')
 @Controller('foodies')
@@ -30,28 +31,41 @@ export class FoodiesController {
       await validate(createFoodieDto);
 
       createFoodieDto.userId = user.id;
-      return await this.foodiesService.createFoodie(createFoodieDto);
+      const data = await this.foodiesService.createFoodie(createFoodieDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '맛집인이 성공적으로 생성되었습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` };
     }
   }
 
   /**
-   * 밥친구 목록 조회
+   * 맛집인 목록 조회
    * @returns
    */
   // 게시물 전체조회
   @Get()
-  async findAllFoodies() {
-    try { 
-      return await this.foodiesService.findAllFoodies();
+  async findAllFoodies(
+    @Query('orderBy') orderBy: string,
+    @Query('category') category: string,
+  ) {
+    try {
+      const data = await this.foodiesService.findAllFoodies(orderBy, category);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '맛집인을 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` };
     }
   }
 
   /**
-   * 밥친구 상세 조회
+   * 맛집인 상세 조회
    * @param foodieId
    * @returns
    */
@@ -63,14 +77,19 @@ export class FoodiesController {
   ) {
     try {
       const userIP = req.ip;
-      return await this.foodiesService.findFoodieById(foodieId, userIP);
+      const data = await this.foodiesService.findFoodieById(foodieId, userIP);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '맛집인을 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
   /**
-   * 밥친구 수정
+   * 맛집인 수정
    * @param foodieId
    * @returns
    */
@@ -83,14 +102,19 @@ export class FoodiesController {
     @Body() updateFoodieDto: UpdateFoodieDto
   ) {
     try {
-      return await this.foodiesService.updateFoodie(foodieId, user.id, updateFoodieDto);
+      const data = await this.foodiesService.updateFoodie(foodieId, user.id, updateFoodieDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '맛집인이 성공적으로 수정되었습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
   /**
-   * 보드 삭제
+   * 맛집인 삭제
    * @param foodieId
    * @returns
    */
@@ -102,7 +126,12 @@ export class FoodiesController {
     @UserInfo() user: User,
   ) {
     try {
-      return await this.foodiesService.deleteFoodie(foodieId, user.id);
+      const data = await this.foodiesService.deleteFoodie(foodieId, user.id);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '맛집인이 성공적으로 삭제되었습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}`}
     }

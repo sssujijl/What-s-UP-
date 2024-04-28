@@ -1,5 +1,5 @@
 import { IsString } from "class-validator";
-import { ChatRoom } from "src/chat-rooms/entities/chat-room.entity";
+import { ChatRoom } from "src/chat-rooms/entites/chat-room.entity";
 import { User } from "src/users/entities/user.entity";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
@@ -22,8 +22,9 @@ export class Message {
     @Column({ type: 'varchar', nullable: true })
     images: string;
 
-    @CreateDateColumn()
-    createdAt: Date;
+    @IsString()
+    @Column({ type: 'varchar', nullable: true })
+    createdAt: string;
 
     @UpdateDateColumn()
     updatedAt: Date;

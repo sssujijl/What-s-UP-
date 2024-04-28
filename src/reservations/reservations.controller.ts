@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Query, Param, Get, Delete, Put } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Query, Param, Get, Delete, Put, HttpStatus } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/utils/userInfo.decorator';
@@ -26,10 +26,15 @@ export class ReservationsController {
   ) {
     try {
       await validate(createReservationDto);
-
+      console.log(createReservationDto);
       createReservationDto.userId = user.id;
 
-      return await this.reservationsService.addReservationQueue(resStatusId, createReservationDto);
+      const data = await this.reservationsService.addReservationQueue(resStatusId, createReservationDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '예약중입니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -43,7 +48,12 @@ export class ReservationsController {
   @Get()
   async findReservations(@UserInfo() user: User) {
     try {
-      return await this.reservationsService.findReservationsByUserId(user.id);
+      const data = await this.reservationsService.findReservationsByUserId(user.id);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '예약목록을 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -61,7 +71,12 @@ export class ReservationsController {
     @Param('reservationId') reservationId: number
   ) {
     try {
-      return await this.reservationsService.findOneById(reservationId);
+      const data = await this.reservationsService.findOneById(reservationId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '예약을 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
@@ -76,10 +91,39 @@ export class ReservationsController {
   @Delete('/:reservationId')
   async cancelReservation(
     @UserInfo() user: User,
+    @Param('resStatusId') resStatusId: number,
     @Param('reservationId') reservationId: number
   ) {
     try {
-      return await this.reservationsService.cancelReservation(user.id, reservationId);
+      const data = await this.reservationsService.cancelReservation(user.id, resStatusId, reservationId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '예약을 성공적으로 취소했습니다.',
+        data
+      };
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
+
+  /**
+   * 가게별 예약상태 찾기
+   * @param placeId 
+   * @param date 
+   * @returns 
+   */
+  @Get('/places/:placeId')
+  async findAllResStatue(
+    @Param('placeId') placeId: number,
+    @Query('date') date: string
+  ) {
+    try {
+      const data = await this.reservationsService.findAllResStatue(placeId, date);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '가게별 예약상태를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }

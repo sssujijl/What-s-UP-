@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Put, HttpStatus } from '@nestjs/common';
 import { PlaceListsService } from './place-lists.service';
 import { CreatePlaceListDto } from './dto/create-place-list.dto';
 import { UpdatePlaceListDto } from './dto/update-place-list.dto';
@@ -6,11 +6,17 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { validate } from 'class-validator';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 
-@Controller('place-lists')
+@ApiTags('PlaceLists')
+@Controller('placeLists')
 export class PlaceListsController {
   constructor(private readonly placeListsService: PlaceListsService) {}
-
+  
+  /**
+   * 장소리스트 생성
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Post()
   async createPlaceList(
@@ -21,25 +27,44 @@ export class PlaceListsController {
       await validate(createPlaceListDto);
 
       createPlaceListDto.userId = user.id
-      return await this.placeListsService.createPlaceList(createPlaceListDto);
+      const data = await this.placeListsService.createPlaceList(createPlaceListDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 생성하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
+  /**
+   * 장소리스트 조회
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
-  @Get('/:nickName')
+  @Get()
   async findPlaceLists(
-    @Param('nickName') nickName: string,
+    @Query('nickName') nickName: string,
     @UserInfo() user: User
   ) {
     try {
-      return await this.placeListsService.findPlaceListsByUserId(user.id, nickName);
+      const data = await this.placeListsService.findPlaceListsByUserId(user.id, nickName);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
+  /**
+   * 장소리스트 상세조회
+   * @param placeListId
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Get('/:placeListId')
   async findPlaceList(
@@ -47,12 +72,22 @@ export class PlaceListsController {
     @UserInfo() user: User
   ) {
     try {
-      return await this.placeListsService.findPlaceListById(placeListId, user.id);
+      const data = await this.placeListsService.findPlaceListById(placeListId, user.id);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 조회하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
+  /**
+   * 장소리스트 수정
+   * @param placeListId
+   * @returns
+   */
   @UseGuards(AuthGuard('author'))
   @Patch('/:placeListId')
   async editPlaceList(
@@ -60,22 +95,42 @@ export class PlaceListsController {
     @Body() updatePlaceListDto: UpdatePlaceListDto
   ) {
     try {
-      return await this.placeListsService.editPlaceList(placeListId, updatePlaceListDto);
+      const data = await this.placeListsService.editPlaceList(placeListId, updatePlaceListDto);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 수정하였습니다',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
+  /**
+   * 장소리스트 삭제
+   * @param placeListId
+   * @returns
+   */
   @UseGuards(AuthGuard('author'))
-  @Patch('/:placeListId')
+  @Delete('/:placeListId')
   async deletePlaceList(@Param('placeListId') placeListId: number) {
     try {
-      return await this.placeListsService.deletePlaceList(placeListId);
+      const data = await this.placeListsService.deletePlaceList(placeListId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 삭제하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
+  /**
+   * 장소리스트 저장
+   * @param placeListId
+   * @returns
+   */
   @UseGuards(AuthGuard('author'))
   @Post('/:placeListId')
   async savedPlace(
@@ -83,12 +138,22 @@ export class PlaceListsController {
     @Query('placeId') placeId: number
   ) {
     try {
-      return await this.placeListsService.savedPlace(placeListId, placeId);
+      const data = await this.placeListsService.savedPlace(placeListId, placeId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 저장하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
+  /**
+   * 저장된 장소리스트 삭제
+   * @param placeListId
+   * @returns
+   */
   @UseGuards(AuthGuard('author'))
   @Delete('/:placeListId')
   async canceledPlace(
@@ -96,21 +161,41 @@ export class PlaceListsController {
     @Query('placeId') placeId: number
   ) {
     try {
-      return await this.placeListsService.canceledPlace(placeListId, placeId);
+      const data = await this.placeListsService.canceledPlace(placeListId, placeId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소를 성공적으로 삭제하였습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }
   }
 
+  /**
+   * 저장된 장소리스트 변경
+   * @param placeListId
+   * @returns
+   */
+   @ApiBody({
+    schema: {
+      example: { newPlaceListId: 1 },
+    },
+  })
   @UseGuards(AuthGuard('author'))
   @Put('/:placeListId')
-  async movedPlace(
+  async changeSavedPlace(
     @Param('placeListId') placeListId: number,
     @Query('placeId') placeId: number,
     @Body('newPlaceListId') newPlaceListId: number
   ) {
     try {
-      return await this.placeListsService.movedPlace(placeListId, placeId, newPlaceListId);
+      const data = await this.placeListsService.changeSavedPlace(placeListId, placeId, newPlaceListId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소리스트를 성공적으로 옮겼습니다.',
+        data
+      };
     } catch (err) {
       return { message: `${err}` }
     }

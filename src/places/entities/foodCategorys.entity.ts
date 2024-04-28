@@ -1,5 +1,5 @@
 import { IsEnum, IsString } from 'class-validator';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { Category } from '../types/category.type';
 import { Title } from 'src/titles/entities/titles.entity';
 import { FoodMate } from 'src/foodmates/entities/foodmate.entity';
@@ -7,6 +7,7 @@ import { Place } from './place.entity';
 import { Foodie } from 'src/foodies/entities/foodie.entity';
 
 @Entity({ name: 'foodCategorys' })
+@Unique(['category'])
 export class FoodCategory {
   @PrimaryGeneratedColumn()
   id: number;

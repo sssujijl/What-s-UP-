@@ -1,4 +1,4 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller, HttpStatus, Post } from '@nestjs/common';
 import { PlacesService } from 'src/places/places.service';
 import { ReviewsService } from 'src/reviews/reviews.service';
 import { ClovaocrService } from './clovaocr.service';
@@ -11,7 +11,7 @@ export class ClovaocrController {
         private readonly clovaocrService: ClovaocrService,
         private readonly placeService: PlacesService,
         private readonly reviewsService: ReviewsService
-    ) {}
+    ) { }
 
     /**
    * 영수증 인증
@@ -19,8 +19,17 @@ export class ClovaocrController {
    */
     @Post()
     async test() {
-        const text = await this.clovaocrService.requestWithFile();
-        const place = await this.placeService.findPlaceById(30);
-        return await this.clovaocrService.test2(text, place);
+        try {
+            const text = await this.clovaocrService.requestWithFile();
+            const place = await this.placeService.findPlaceById(92);
+            const data = await this.clovaocrService.test2(text, place);
+            return {
+                statusCode: HttpStatus.OK,
+                message: '영수증 인증이 성공적으로 완료되었습니다.',
+                data
+              };
+        } catch (err) {
+            return { message: `${err}`}}
+        }
+
     }
-}

@@ -3,6 +3,8 @@ import nodemailer, { Transporter } from 'nodemailer'
 import dotenv from 'dotenv'
 import Redis from 'ioredis';
 import { InjectRedis } from '@nestjs-modules/ioredis';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 dotenv.config();
 
@@ -11,7 +13,8 @@ export class SendMailService {
   private transporter: Transporter
 
   constructor(
-    @InjectRedis() private readonly redis: Redis
+    @InjectRedis() private readonly redis: Redis,
+    @InjectQueue('mailerQueue') private mailerQueue: Queue,
   ) {
     // Nodemailer transporter 생성
     this.transporter = nodemailer.createTransport({
@@ -26,10 +29,17 @@ export class SendMailService {
     });
   }
 
+  async addMailerQueue(email: string) {
+    const job = await this.mailerQueue.add('mailer', { email },
+    { removeOnComplete: true, removeOnFail: true }
+    );
+
+    return { message: '이메일 발송중입니다.' };
+  }
+
   // 이메일 보내는 메서드
   async sendEmail(email: string, verificationCode: string) {
     try {
-      console.log('------', email);
       const mailOptions = {
         from: process.env.MAILER_EMAIL,
         to: email,
@@ -80,6 +90,24 @@ export class SendMailService {
     return result;
   }
 
+  async sendAlertEmail(error: Error) {
+    try {
+      const mailOptions = {
+        from: process.env.MAILER_EMAIL,
+        to: process.env.ALERT_EMAIL,
+        subject: '스크래핑 중 오류가 발생했습니다.',
+        text: `작업 중 오류가 발생했습니다.
+        아래의 오류 내용을 참조하여 코드를 수정해 주십시오.
+        ${error}`,
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('Email sent:', info.response);
+    } catch (error) {
+      console.error('Error occurred:', error);
+      throw error;
+    }
+  }
 }
 
 

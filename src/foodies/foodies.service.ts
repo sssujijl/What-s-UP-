@@ -16,7 +16,10 @@ export class FoodiesService {
   ) {}
 
   async findOneById(id: number) {
-    const foodie = await this.foodieRepository.findOneBy({ id });
+    const foodie = await this.foodieRepository.findOne({
+      where: { id },
+      relations: ['foodCategory', 'user']
+    });
 
     if (!foodie) {
       throw new NotFoundException('해당 맛집인을 찾을 수 없습니다.');
@@ -63,16 +66,33 @@ export class FoodiesService {
     await Promise.all(keys.map(key => this.redis.del(key)));
   }
 
-  async findAllFoodies() {
-    const foodie = await this.foodieRepository.find();
+  async findAllFoodies(orderBy: string, category?: string) {
+    let query = this.foodieRepository.createQueryBuilder('foodie')
+      .leftJoinAndSelect('foodie.foodieAnswers', 'foodieAnswers')
+      .leftJoinAndSelect('foodie.user', 'user')
+      .leftJoinAndSelect('foodie.foodCategory', 'foodCategory');
 
-    if (!foodie) {
+      if (category) {
+      const categoryIds = await this.redis.smembers(`FoodCategory: ${category}`);
+      console.log(categoryIds);
+      query = query.andWhere('foodCategory.id IN (:...categoryIds)', { categoryIds });
+    }
+
+    const foodies = await query
+      .orderBy(orderBy === 'views' ? 'foodie.views' : 'foodie.createdAt', 'DESC')
+      .getMany();
+
+      if (!foodies || foodies.length === 0) {
       throw new NotFoundException('맛집인 게시물을 찾을 수 없습니다.');
     }
 
-    return foodie;
-  }
+    for (const foodie of foodies) {
+      const views = await this.redis.get(`foodie:${foodie.id}:views`);
+      foodie.views = +views || 0;
+    }
     
+    return foodies;
+  }
 
   async updateFoodie(foodieId: number, userId: number, updateFoodieDto: UpdateFoodieDto) {
     const foodie = await this.findOneById(foodieId);

@@ -1,34 +1,40 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, HttpStatus } from '@nestjs/common';
 import { MessagesService } from './messages.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
+import { ChatRoomsService } from 'src/chat-rooms/chat-rooms.service';
+import { AuthGuard } from '@nestjs/passport';
+import { UserInfo } from 'src/utils/userInfo.decorator';
+import { User } from 'src/users/entities/user.entity';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller('messages')
+@ApiTags('Messages')
+@UseGuards(AuthGuard('jwt'))
+@Controller('/chatRoom/:chatRoomId/messages')
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly chatRoomService: ChatRoomsService
+  ) {}
 
-  @Post()
-  create(@Body() createMessageDto: CreateMessageDto) {
-    return this.messagesService.create(createMessageDto);
-  }
-
+  /**
+   * 모든 메세지 조회
+   * @param chatRoomId
+   * @returns
+   */
   @Get()
-  findAll() {
-    return this.messagesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.messagesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
-    return this.messagesService.update(+id, updateMessageDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.messagesService.remove(+id);
+  async findAllMessage(
+    @UserInfo() user: User,
+    @Param('chatRoomId') chatRoomId: number
+  ) {
+    try {
+      await this.chatRoomService.findOneChatRoom(chatRoomId, user.id);
+      const data = await this.messagesService.findAllMessageFromRedis(chatRoomId);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '메세지를 성공적으로 조회하였습니다.',
+        data
+      };
+    } catch (err) {
+      return { message: `${err}` }
+    }
   }
 }

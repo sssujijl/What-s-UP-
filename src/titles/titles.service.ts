@@ -58,7 +58,10 @@ export class TitlesService {
   }
 
   async findAllTitles(userId: number) {
-    const titles = await this.titleRepository.findBy({ userId });
+    const titles = await this.titleRepository.find({
+      where: { userId },
+      relations: ['foodCategory']
+    });
 
     return titles;
   }
@@ -81,24 +84,18 @@ export class TitlesService {
   }
 
   async upgradeTitle(title: Title) {
-
-    if (title.count > 10) {
-      title.level = Level.초보
-
-    } else if (title.count > 30) {
-      title.level = Level.중수
-
-    } else if (title.count > 50) {
-      title.level = Level.고수
-
-    } else if (title.count > 80) {
-      title.level = Level.전문가
-
-    } else if (title.count > 120) {
-      title.level = Level.신
-
-    } else if (title.count > 200) {
-      title.level = Level.음식
+    if (title.count >= 200) {
+      title.level = Level.음식;
+    } else if (title.count >= 120) {
+      title.level = Level.신;
+    } else if (title.count >= 80) {
+      title.level = Level.전문가;
+    } else if (title.count >= 50) {
+      title.level = Level.고수;
+    } else if (title.count >= 30) {
+      title.level = Level.중수;
+    } else if (title.count >= 10) {
+      title.level = Level.초보;
     }
 
     return title;
