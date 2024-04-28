@@ -49,4 +49,18 @@ export class TitlesController {
       return { message: `${err}`};
     }
   }
+
+  @Get('ranking')
+  async rankingTitle() {
+    try {
+      const data = await this.titlesService.rankingTitle();
+      return {
+        statusCode: HttpStatus.OK,
+        message: '카테고리별 랭킹을 성공적으로 조회하였습니다.',
+        data
+      };
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
 }

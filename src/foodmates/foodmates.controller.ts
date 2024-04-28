@@ -160,4 +160,18 @@ export class FoodmatesController {
       return { message: `${err}` }
     }
   }
+
+  @Post('/search')
+  async searchFoodie(@Body('body') body: string) {
+    try {
+      const data = await this.foodmatesService.searchFoodMates(body);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '밥친구를 성공적으로 검색하었습니다.',
+        data
+      };
+    } catch (err) {
+      return { message: `${err}` }
+    }
+  }
 }

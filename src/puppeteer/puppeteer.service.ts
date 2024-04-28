@@ -8,7 +8,7 @@ import { CreateMenuDto } from 'src/menus/dto/create-menu.dto';
 import { Menu } from 'src/menus/entities/menu.entity';
 import { FoodCategory } from 'src/places/entities/foodCategorys.entity';
 import { Place } from 'src/places/entities/place.entity';
-import { Title } from 'src/titles/entities/titles.entity';
+import { ResStatus } from 'src/reservations/entities/resStatus.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -20,7 +20,6 @@ export class PuppeteerService {
     private readonly menuRepository: Repository<Menu>,
     @InjectRepository(Place)
     private readonly placeRepository: Repository<Place>,
-
     @InjectRedis() private readonly redis: Redis,
   ) {}
 
@@ -34,7 +33,6 @@ export class PuppeteerService {
         category,
       });
       const foodCategory = await this.foodCategoryRepository.save(newCategory);
-      // await this.redis.sadd(`Categories: ${mainCategory}`, foodCategory.id);
       await this.groupByMainCategory(foodCategory);
       return foodCategory;
     }

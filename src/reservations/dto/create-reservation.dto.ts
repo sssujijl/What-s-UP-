@@ -27,4 +27,10 @@ export class CreateReservationDto extends PickType (Reservation, [
      * @example '500'
      */
     deposit?: number;
+
+    /**
+     * 미션 예약 확인 여부
+     * @example false
+     */
+    checkMission?: boolean;
 }

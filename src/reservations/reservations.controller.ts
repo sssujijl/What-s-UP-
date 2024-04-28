@@ -26,7 +26,6 @@ export class ReservationsController {
   ) {
     try {
       await validate(createReservationDto);
-      console.log(createReservationDto);
       createReservationDto.userId = user.id;
 
       const data = await this.reservationsService.addReservationQueue(resStatusId, createReservationDto);
@@ -88,7 +87,7 @@ export class ReservationsController {
    * @returns 
    */
   @UseGuards(AuthGuard('jwt'))
-  @Delete('/:reservationId')
+  @Delete('/:resStatusId/:reservationId')
   async cancelReservation(
     @UserInfo() user: User,
     @Param('resStatusId') resStatusId: number,

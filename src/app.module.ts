@@ -125,7 +125,7 @@ const typeOrmModuleOptions = {
       store: redisStore,
       host: 'localhost',
       port: 6379,
-      ttl: 86400,
+      ttl: 50400,
       isGlobal: true
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),

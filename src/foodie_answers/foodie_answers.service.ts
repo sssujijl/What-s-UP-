@@ -17,7 +17,7 @@ export class FoodieAnswersService {
     private readonly titleService: TitlesService,
   ) {}
 
-  async CheckTitle(foodie: Foodie, user: User) {
+  async checkTitle(foodie: Foodie, user: User) {
     const userTitle = await this.titleService.findTitle(user.id, foodie.foodCategoryId)
     if (!userTitle) {
       throw new NotFoundException('칭호를 찾을 수 없습니다.')
@@ -43,7 +43,10 @@ export class FoodieAnswersService {
   }
 
   async findAllAnswers(foodieId: number) {
-    const foodieAnswer = await this.foodieAnswerRepository.findBy({ foodieId });
+    const foodieAnswer = await this.foodieAnswerRepository.find({
+      where: { foodieId },
+      relations: ['user']
+    });
     
     if(!foodieAnswer) {
       throw new NotFoundException('답글이 없습니다.');

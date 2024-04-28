@@ -46,7 +46,7 @@ export class MissionsService {
 
   async findTodayMission() {
     const today = new Date().toISOString().slice(0, 10);
-    const mission = await this.missionRepository.findOneBy({ date: today });
+    const mission = await this.cacheManager.get(`Mission: ${today}`);
 
     if (!mission) {
       throw new NotFoundException('오늘의 미션을 찾을 수 없습니다.');
@@ -55,53 +55,48 @@ export class MissionsService {
     return mission;
   }
 
-  async test() {
-    const places = await this.placeRepository.find();
+  async findTodayMissionInfo() {
+    const today = new Date().toISOString().slice(0, 10);
 
-    // 시간대 목록 생성 (09시부터 22시까지)
-    const timeSlots = [];
-    for (let hour = 9; hour <= 22; hour++) {
-      const dateTime = `2024-04-26T${hour.toString().padStart(2, '0')}:00:00`;
-      timeSlots.push(dateTime);
-    }
-
-    // 각 시간대별로 예약 상태 생성
-    const promises = [];
-    places.forEach((place) => {
-      timeSlots.forEach((dateTime) => {
-        const resStatus = {
-          placeId: place.id,
-          dateTime: dateTime,
-          status: true,
-        };
-        promises.push(this.resStatusRepository.save(resStatus));
-      });
+    const placeIds = await this.redis.smembers(`Mission: ${today}: placeIds`);
+    const placesPromises = placeIds.map(async (placeId) => {
+        return await this.cacheManager.get(`Mission: ${today}: place: ${placeId}`);
     });
+    const places = await Promise.all(placesPromises);
 
-    // 모든 예약 상태가 생성될 때까지 기다림
-    await Promise.all(promises);
+    const resStatusIds = await this.redis.smembers(`Mission: ${today}: resStatusIds`);
+    const resStatusPromises = resStatusIds.map(async (resStatusId) => {
+        return await this.cacheManager.get(`Mission: ${today}: resStatus: ${resStatusId}`);
+    });
+    const resStatus = await Promise.all(resStatusPromises);
 
-    return '완료';
+    return { places, resStatus };
+  }
+
+  async test() {
+    return await this.messageProducer.sendMessage(
+      `미션이 생성되었습니다!!`,
+    );
+    // return await this.messageProducer.subscriblePhoneToTopic('01065830878');
   }
 
   // 10시 또는 15시에 랜덤으로 스케줄링 시작
-  @Cron('0 * * * *', {
-    timeZone: 'Asia/Seoul',
-  })
+  @Cron(CronExpression.EVERY_HOUR)
   async createRandomMissions() {
     const currentHour = new Date().getHours();
-    const mission = await this.redis.get(`Mission: ${currentHour}`);
+    const today = new Date().toISOString().slice(0, 10);
+    const mission = await this.cacheManager.get(`Mission: ${today}`);
 
     if (!mission) {
 
       if (currentHour === 15) {
-        return await this.createMission(currentHour);
+        return await this.createMission(currentHour, today);
 
       } else if (currentHour === 10) {
         const random = getRandom();
 
         if (random === currentHour) {
-          return await this.createMission(currentHour);
+          return await this.createMission(currentHour, today);
         }
       }
     }
@@ -110,13 +105,17 @@ export class MissionsService {
   }
 
   // 스케줄링을 통해서 실행되는 미션 생성 로직
-  private async createMission(currentHour: number) {
+  private async createMission(currentHour: number, today: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      let createMissionDto: CreateMissionDto;
+      let createMissionDto: CreateMissionDto = {
+        capacity: null,
+        date: null,
+        time: null
+      };
 
       if (currentHour === 10) {
         createMissionDto.time = Time.TEN_AM; // 12 ~ 15시
@@ -125,10 +124,9 @@ export class MissionsService {
       }
 
       createMissionDto.capacity = getRandomAttendees();
-      createMissionDto.date = new Date().toISOString().slice(0, 10);
+      createMissionDto.date = today;
 
       const mission = await queryRunner.manager.save(Mission, createMissionDto);
-      await this.cacheManager.set(`Mission: ${mission.id}`, mission);
 
       const placesByDong = await this.placesByDong();
       const selectedPlaceIds = await this.selectedPlaceIds(placesByDong);
@@ -146,24 +144,29 @@ export class MissionsService {
       await queryRunner.commitTransaction();
 
       const ttl = this.calculateTTL(mission.time);
-
+      console.log(ttl);
       resStatusIds.map(async (resStatusId) => {
         const resStatus = await this.resStatusRepository.findOneBy({
           id: resStatusId,
         });
+        await this.redis.sadd(`Mission: ${mission.date}: resStatusIds`, resStatus.id);
+        await this.redis.expire(`Mission: ${mission.date}: resStatusIds`, ttl);
         await this.cacheManager.set(
-          `Mission_resStatus: ${resStatus.id}`,
+          `Mission: ${mission.date}: resStatus: ${resStatus.id}`,
           resStatus,
           ttl,
         );
 
-        const place = await this.placeRepository.findOneBy({
-          id: resStatus.placeId,
+        const place = await this.placeRepository.findOne({
+          where: {id: resStatus.placeId},
+          relations: ['foodCategory', 'reviews']
         });
-        await this.cacheManager.set(`Mission_place: ${place.id}`, place, ttl);
+        await this.redis.sadd(`Mission: ${mission.date}: placeIds`, place.id);
+        await this.redis.expire(`Mission: ${mission.date}: placeIds`, ttl);
+        await this.cacheManager.set(`Mission: ${mission.date}: place: ${place.id}`, place, ttl);
       });
 
-      await this.redis.set(`Mission: ${mission.date}`, 'mission created')
+      await this.cacheManager.set(`Mission: ${mission.date}`, mission, ttl);
       await this.messageProducer.sendMessage(
         `[${mission.date}] 미션이 생성되었습니다!!`,
       );

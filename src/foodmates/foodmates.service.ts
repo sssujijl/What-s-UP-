@@ -206,7 +206,7 @@ export class FoodmatesService {
       await queryRunner.commitTransaction();
 
       const chatRoom = await this.chatRoomService.createChatRoom(user, foodMate.user, `foodMate: ${foodMate.title}`);
-
+      console.log(chatRoom)
       return chatRoom;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -226,5 +226,46 @@ export class FoodmatesService {
       age--;
     }
     return age;
+  }
+
+  async searchFoodMates(data: string) {
+    const words = data.split(' ');
+
+    const queryBuilder = this.foodmateRepository.createQueryBuilder('foodmate');
+
+    queryBuilder
+    .leftJoinAndSelect('foodmate.userFoodMates', 'userFoodMates')
+    .leftJoinAndSelect('foodmate.user', 'user')
+    .leftJoinAndSelect('foodmate.foodCategory', 'foodCategory');
+
+    if (words.length === 1) {
+      const word = `%${words[0]}%`;
+      queryBuilder.where(
+        'foodmate.title LIKE :word OR foodmate.content LIKE :word',
+        { word },
+      );
+    } else {
+      words.forEach((word, index) => {
+        if (index === 0) {
+          queryBuilder.where(
+            'foodmate.title LIKE :word OR foodmate.content LIKE :word',
+            { word: `%${word}%` },
+          );
+        } else {
+          queryBuilder.orWhere(
+            'foodmate.title LIKE :word OR foodmate.content LIKE :word',
+            { word: `%${word}%` },
+          );
+        }
+      });
+    }
+
+    const foodMates = await queryBuilder.getMany();
+
+    if (!foodMates || foodMates.length === 0) {
+      throw new NotFoundException('해당 검색어에 일치하는 글이 없습니다.');
+    }
+
+    return foodMates;
   }
 }

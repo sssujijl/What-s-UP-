@@ -12,11 +12,11 @@ import { signinDto } from './dto/signin.dto';
 import { EditUserDto } from './dto/editUser.dto';
 import { Point } from 'src/points/entities/point.entity';
 import { SendMailService } from 'src/users/sendMail.service';
-import { number } from 'joi';
 import Redis from 'ioredis';
 import { CheckVerification } from './dto/checkVerification.dto';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { CheckDuplicateDto } from './dto/checkDuplicate.dto';
+import { MessageProducer } from 'src/producer/producer.service';
 import { AdditionalInfoDto } from './dto/additionalInfo.dto';
 import { Gender } from './types/gender.types';
 
@@ -26,7 +26,7 @@ export class UsersService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private dataSource: DataSource,
     private readonly sendMailService: SendMailService,
-    // private readonly snsService: SnsService
+    private readonly messageProducer: MessageProducer,
     @InjectRedis() private readonly redis: Redis,
   ) {}
 
@@ -59,6 +59,9 @@ export class UsersService {
       const userPoint = { userId: user.id, point: 3000 };
       await queryRunner.manager.save(Point, userPoint);
 
+      if (user.smsConsent === true) {
+        await this.messageProducer.subscriblePhoneToTopic(user.phone);
+      }
       await queryRunner.commitTransaction();
 
       return await this.findUserById(user.id);
@@ -198,9 +201,8 @@ export class UsersService {
 
   async secession(user: User, password: string) {
     const findUser = await this.findUserWithPassword(user.id);
-
-    if (
-      findUser.password &&
+    console.log(password)
+    if (findUser.password &&
       !(await bcrypt.compare(password, findUser.password))
     ) {
       throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
