@@ -9,6 +9,11 @@ import { ApiTags } from '@nestjs/swagger';
 export class MenusController {
   constructor(private readonly menusService: MenusService) {}
 
+  /**
+   * 전체 메뉴 조회
+   * @param placeId
+   * @returns
+   */
   @Get()
   async findAllMenuByPlaceId(@Param('placeId') placeId: number) {
     try {

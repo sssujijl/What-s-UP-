@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Delete, Res, UseGuards, Req, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Delete,
+  Res,
+  UseGuards,
+  Req,
+  HttpStatus,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { validate } from 'class-validator';
 import { SignupDto } from './dto/signup.dto';
@@ -12,6 +23,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SendMailService } from 'src/users/sendMail.service';
 import { CheckVerification } from './dto/checkVerification.dto';
 import { CheckDuplicateDto } from './dto/checkDuplicate.dto';
+import { AdditionalInfoDto } from './dto/additionalInfo.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -19,7 +31,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
-    private readonly sendMailService: SendMailService
+    private readonly sendMailService: SendMailService,
   ) {}
 
   /**
@@ -27,19 +39,18 @@ export class UsersController {
    * @returns
    */
   @Post('signup')
-  async signup(
-    @Body() signupDto: SignupDto) {
+  async signup(@Body() signupDto: SignupDto) {
     try {
-     const data = await this.usersService.signup(signupDto);
- 
-     return {
-      statusCode: HttpStatus.OK,
-      message: '장소리스트를 성공적으로 옮겼습니다.',
-      data
-    };
-   } catch (err) {
-     return { message: `${err}` };
-   }
+      const data = await this.usersService.signup(signupDto);
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: '장소리스트를 성공적으로 옮겼습니다.',
+        data,
+      };
+    } catch (err) {
+      return { message: `${err}` };
+    }
   }
 
   /**
@@ -55,10 +66,10 @@ export class UsersController {
       return {
         statusCode: HttpStatus.OK,
         message: `${email} 로 인증메일을 발송하였습니다.`,
-        data
+        data,
       };
     } catch (err) {
-      return { message: `${err}` }
+      return { message: `${err}` };
     }
   }
 
@@ -69,15 +80,16 @@ export class UsersController {
   @Post('/checkVerification')
   async checkVerificationCode(@Body() checkVerification: CheckVerification) {
     try {
-      const data = await this.usersService.checkVerificationCode(checkVerification);
+      const data =
+        await this.usersService.checkVerificationCode(checkVerification);
 
       return {
         statusCode: HttpStatus.OK,
         message: '인증이 완료되었습니다.',
-        data
+        data,
       };
     } catch (err) {
-      return { message: `${err}` }
+      return { message: `${err}` };
     }
   }
 
@@ -86,16 +98,14 @@ export class UsersController {
    * @returns
    */
   @Post('/checkDuplicate')
-  async checkDuplicate(
-    @Body() check: CheckDuplicateDto
-  ) {
+  async checkDuplicate(@Body() check: CheckDuplicateDto) {
     try {
       const data = await this.usersService.checkDuplicate(check);
 
       return {
         statusCode: HttpStatus.OK,
         message: '장소리스트를 성공적으로 옮겼습니다.',
-        data
+        data,
       };
     } catch (err) {
       return { message: `${err}` };
@@ -107,17 +117,14 @@ export class UsersController {
    * @returns
    */
   @Post('signin')
-  async signin(
-    @Body() signinDto: signinDto,
-    @Res() res: any
-  ) {
+  async signin(@Body() signinDto: signinDto, @Res() res: any) {
     try {
       await validate(signinDto);
 
       const data = await this.usersService.signin(signinDto);
 
       await this.authService.createTokens(res, data.id);
-      
+
       return res.status(HttpStatus.OK).json({
         statusCode: HttpStatus.OK,
         message: '로그인 하였습니다.',
@@ -127,41 +134,36 @@ export class UsersController {
     }
   }
 
-    /**
+  /**
    * 유저 정보 조회
    * @returns
    */
-    @UseGuards(AuthGuard("jwt"))
-    @Get()
-    async findUser(
-      @UserInfo() user: User,
-    ) {
-      try {
-        return user;
-      } catch (err) {
-        return { message: `${err}` }
-      }
+  @UseGuards(AuthGuard('jwt'))
+  @Get()
+  async findUser(@UserInfo() user: User) {
+    try {
+      return user;
+    } catch (err) {
+      return { message: `${err}` };
     }
+  }
 
   /**
    * 유저 정보 조회
    * @returns
    */
-  @UseGuards(AuthGuard("jwt"))
+  @UseGuards(AuthGuard('jwt'))
   @Post('info')
-  async getUser(
-    @UserInfo() user: User,
-    @Body('password') password: string
-  ) {
+  async getUser(@UserInfo() user: User, @Body('password') password: string) {
     try {
       const data = await this.usersService.getUser(user, password);
       return {
         statusCode: HttpStatus.OK,
         message: '유저정보를 성공적으로 조회하였습니다.',
-        data
+        data,
       };
     } catch (err) {
-      return { message: `${err}` }
+      return { message: `${err}` };
     }
   }
 
@@ -169,54 +171,50 @@ export class UsersController {
    * 유저 전체 정보 조회
    * @returns
    */
-    @UseGuards(AuthGuard("jwt"))
-    @Get('info')
-    async getUserInfo(@UserInfo() user: User) {
-      try {
-        const data = await this.usersService.getUserInfo(user.id);
-        return {
-          statusCode: HttpStatus.OK,
-          message: '전체유저정보를 성공적으로 조회하였습니다.',
-          data
-        };
-      } catch (err) {
-        return { message: `${err}` }
-      }
+  @UseGuards(AuthGuard('jwt'))
+  @Get('info')
+  async getUserInfo(@UserInfo() user: User) {
+    try {
+      const data = await this.usersService.getUserInfo(user.id);
+      return {
+        statusCode: HttpStatus.OK,
+        message: '전체유저정보를 성공적으로 조회하였습니다.',
+        data,
+      };
+    } catch (err) {
+      return { message: `${err}` };
     }
+  }
 
   /**
    * 유저 정보 수정
-   * @returns 
+   * @returns
    */
-  @UseGuards(AuthGuard("jwt"))
+  @UseGuards(AuthGuard('jwt'))
   @Patch()
-  async editUser(
-    @UserInfo() user: User,
-    @Body() editUserDto: EditUserDto
-  ) {
+  async editUser(@UserInfo() user: User, @Body() editUserDto: EditUserDto) {
     try {
       const data = await this.usersService.editUser(user.id, editUserDto);
       return {
         statusCode: HttpStatus.OK,
         message: '프로필을 성공적으로 수정하였습니다.',
-        data
+        data,
       };
-
     } catch (err) {
-      return { message: `${err}` }
+      return { message: `${err}` };
     }
   }
 
   /**
    * 탈퇴
-   * @returns 
+   * @returns
    */
-  @UseGuards(AuthGuard("jwt"))
+  @UseGuards(AuthGuard('jwt'))
   @Delete()
   async secession(
     @UserInfo() user: User,
     @Body('password') password: string,
-    @Res() res: any
+    @Res() res: any,
   ) {
     try {
       const data = await this.usersService.secession(user, password);
@@ -227,10 +225,10 @@ export class UsersController {
       return {
         statusCode: HttpStatus.OK,
         message: `${user.name} 님이 정상적으로 탈퇴되었습니다.`,
-        data
+        data,
       };
     } catch (err) {
-      return { message: `${err}` }
+      return { message: `${err}` };
     }
   }
 
@@ -238,73 +236,84 @@ export class UsersController {
    * 구글 로그인
    * @returns
    */
-  @UseGuards(AuthGuard("google"))
-  @Get("/signin/google")
-	async loginGoogle(
-    @Req() req: any,
-    @Res() res: any	
-  ) {
-    const user = await this.usersService.socialLogin(req, res);
+  @UseGuards(AuthGuard('google'))
+  @Get('/signin/google')
+  async loginGoogle() {}
 
-    await this.authService.createTokens(res, user.id);
-
-    return res.json({ message: "로그인이 완료되었습니다." });
-  }
-
-  @UseGuards(AuthGuard("google"))
+  @UseGuards(AuthGuard('google'))
   @Get('/callback/google')
   async googleCallback(@Req() req: any, @Res() res: any) {
     console.log('-------------', req.user);
+
     const user = await this.usersService.socialLogin(req, res);
 
     await this.authService.createTokens(res, user.id);
+    const redirectUrl = user.isVerified
+      ? 'http://localhost:4000'
+      : 'http://localhost:4000/user/google';
+    return res.redirect(redirectUrl);
+  }
 
-    return res.json({ message: "로그인이 완료되었습니다." });
+  @UseGuards(AuthGuard('jwt'))
+  @Post('/additional-info')
+  async create(
+    @UserInfo() user: User,
+    @Body() additionalInfoDto: AdditionalInfoDto,
+  ) {
+    const updatedUser = await this.usersService.updateAdditionalInfo(
+      user.email,
+      additionalInfoDto,
+    );
+    console.log(updatedUser);
+    if (updatedUser) {
+      return {
+        statusCode: HttpStatus.OK,
+        message: '가입되었습니다.',
+        updatedUser,
+      };
+    }
   }
 
   /**
    * 네이버 로그인
    * @returns
    */
-  @UseGuards(AuthGuard("naver"))
+  @UseGuards(AuthGuard('naver'))
   @Get('/signin/naver')
-  async signinNaver(
-    @Req() req: any,
-    @Res() res: any	
-  ) {
+  async signinNaver(@Req() req: any, @Res() res: any) {
     try {
       const user = await this.usersService.socialLogin(req, res);
       await this.authService.createTokens(res, user.id);
-  
-      return res.json({ message: "로그인이 완료되었습니다." });
+
+      return res.json({ message: '로그인이 완료되었습니다.' });
     } catch (err) {
-      return { message: `${err}` }
+      return { message: `${err}` };
     }
   }
 
-  @UseGuards(AuthGuard("naver"))
+  @UseGuards(AuthGuard('naver'))
   @Get('/callback/naver')
   async naverCallback(@Req() req: any, @Res() res: any) {
-    res.redirect('/users')
+    res.redirect('/users');
   }
 
   /**
    * 카카오 로그인
    * @returns
    */
-  @UseGuards(AuthGuard("kakao"))
+  @UseGuards(AuthGuard('kakao'))
   @Get('/signin/kakao')
   async signinKakao() {
     try {
       return;
     } catch (err) {
-      return { message: `${err}` }
+      return { message: `${err}` };
     }
   }
 
-  @UseGuards(AuthGuard("kakao"))
+  @UseGuards(AuthGuard('kakao'))
   @Get('/callback/kakao')
   async kakaoCallback(@Req() req: any, @Res() res: any) {
-    res.redirect('/users')
+    res.redirect('/users');
   }
 }

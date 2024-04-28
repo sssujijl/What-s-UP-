@@ -12,6 +12,10 @@ export class TitlesController {
     private readonly titlesService: TitlesService
   ) {}
 
+  /**
+   * 전체 칭호 조회
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Get()
   async findAllTitles(@UserInfo() user: User) {
@@ -27,6 +31,10 @@ export class TitlesController {
     }
   }
 
+  /**
+   * 칭호Top3
+   * @returns
+   */
   @UseGuards(AuthGuard('jwt'))
   @Get('/top3')
   async Top3_Titles(@UserInfo() user:User) {

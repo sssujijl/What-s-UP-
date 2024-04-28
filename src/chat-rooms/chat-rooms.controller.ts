@@ -5,7 +5,10 @@ import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { userInfo } from 'os';
 import { ChatRoomsService } from './chat-rooms.service';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 
+
+@ApiTags('ChatRooms')
 @UseGuards(AuthGuard('jwt'))
 @Controller('chatrooms')
 export class ChatRoomsController {
@@ -14,6 +17,10 @@ export class ChatRoomsController {
     private readonly userService: UsersService
   ) {}
 
+  /**
+   * 채팅방 생성
+   * @returns
+   */
   @Post()
   async createChatRoom (
     @UserInfo() user: User,
@@ -32,6 +39,15 @@ export class ChatRoomsController {
     }
   }
 
+  /**
+   * 채팅방 삭제
+   * @returns
+   */
+   @ApiBody({
+    schema: {
+      example: { chatRoomId: 1 },
+    },
+  })
   @Delete()
   async leaveChatRoom(
     @UserInfo() user: User,
@@ -49,6 +65,10 @@ export class ChatRoomsController {
     }
   }
 
+  /**
+   * 모든 채팅방 조회
+   * @returns
+   */
   @Get()
   async findAllChatRooms(@UserInfo() user: User) {
     try {
@@ -63,6 +83,11 @@ export class ChatRoomsController {
     }
   }
 
+  /**
+   * 채팅방 조회
+   * @param chatRoomdId
+   * @returns
+   */
   @Get('/:chatRoomId')
   async findOneChatRoom(
     @Param('chatRoomdId') chatRoomdId: number,

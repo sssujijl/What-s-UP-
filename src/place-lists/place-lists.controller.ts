@@ -6,12 +6,18 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/utils/userInfo.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { validate } from 'class-validator';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 
 @UseGuards(AuthGuard('jwt'))
+@ApiTags('PlaceLists')
 @Controller('placeLists')
 export class PlaceListsController {
   constructor(private readonly placeListsService: PlaceListsService) {}
-
+  
+  /**
+   * 장소리스트 생성
+   * @returns
+   */
   @Post()
   async createPlaceList(
     @UserInfo() user: User,
@@ -32,6 +38,11 @@ export class PlaceListsController {
     }
   }
 
+  /**
+   * 장소리스트 조회
+   * @returns
+   */
+  @UseGuards(AuthGuard('jwt'))
   @Get()
   async findPlaceLists(
     @Query('nickName') nickName: string,
@@ -49,6 +60,10 @@ export class PlaceListsController {
     }
   }
 
+  /**
+   * 나의 장소리스트 조회
+   * @returns 
+   */
   @Get('/myPlaceLists')
   async findAllPlaceList(
     @UserInfo() user: User
@@ -65,6 +80,11 @@ export class PlaceListsController {
     }
   }
 
+  /**
+   * 장소리스트 상세조회
+   * @param placeListId
+   * @returns
+   */
   @Get('/:placeListId')
   async findPlaceList(
     @Param('placeListId') placeListId: number,
@@ -82,6 +102,11 @@ export class PlaceListsController {
     }
   }
 
+  /**
+   * 장소리스트 수정
+   * @param placeListId
+   * @returns
+   */
   @Patch('/:placeListId')
   async editPlaceList(
     @Param('placeListId') placeListId: number,
@@ -100,6 +125,12 @@ export class PlaceListsController {
     }
   }
 
+  /**
+   * 장소리스트 삭제
+   * @param placeListId
+   * @returns
+   */
+  @UseGuards(AuthGuard('author'))
   @Delete('/:placeListId')
   async deletePlaceList(
     @Param('placeListId') placeListId: number,
@@ -117,6 +148,11 @@ export class PlaceListsController {
     }
   }
 
+  /**
+   * 장소리스트 저장
+   * @param placeListId
+   * @returns
+   */
   @Get('/:placeListId/save')
   async savedPlace(
     @Param('placeListId') placeListId: number,
@@ -134,6 +170,11 @@ export class PlaceListsController {
     }
   }
 
+  /**
+   * 저장된 장소리스트 삭제
+   * @param placeListId
+   * @returns
+   */
   @Delete('/:placeListId')
   async canceledPlace(
     @Param('placeListId') placeListId: number,
@@ -152,6 +193,16 @@ export class PlaceListsController {
     }
   }
 
+  /**
+   * 저장된 장소리스트 변경
+   * @param placeListId
+   * @returns
+   */
+   @ApiBody({
+    schema: {
+      example: { newPlaceListId: 1 },
+    },
+  })
   @Put('/:placeListId')
   async changeSavedPlace(
     @Param('placeListId') placeListId: number,

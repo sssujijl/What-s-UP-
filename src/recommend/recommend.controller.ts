@@ -133,7 +133,7 @@ export class RecommendController {
     } catch (error) {
       console.error('음식점 추천 중 오류가 발생했습니다:', error);
       throw new HttpException(
-        '음식점 추천 중 오류가 발생했습니다.',
+        `음식점 추천 중 오류가 발생했습니다.`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

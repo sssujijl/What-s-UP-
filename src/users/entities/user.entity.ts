@@ -38,7 +38,7 @@ export class User {
     name: string;
 
     @IsString()
-    @Column({ type: 'varchar', select: false, nullable: false })
+    @Column({ type: 'varchar', select: false, nullable: true, default: null })
     password: string;
 
     @Column({ type: 'date', nullable: false })
