@@ -11,7 +11,7 @@ export class MailerConsumer {
     @Process('mailer')
     async getMailerQueue(job: Job) {
         const mailer = await this.sendMailerService.sendVerificationCode(
-            job.data.emailer
+            job.data.email
         );
     }
 
