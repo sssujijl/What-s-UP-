@@ -12,7 +12,7 @@ async function bootstrap() {
   dotenv.config();
 
   const corsOptions: CorsOptions = {
-    origin: 'http://localhost:4000',
+    origin: process.env.FRONT_URL,
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -46,6 +46,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   
-  await app.listen(3000);
+  await app.listen(process.env.PORT);
 }
 bootstrap();
