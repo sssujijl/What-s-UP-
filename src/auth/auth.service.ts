@@ -15,17 +15,14 @@ export class AuthService {
         const accessToken = await this.createAccessToken(id);
         const refreshToken = await this.createRefreshToken(id);
 
-        res.cookie('accessToken', accessToken, {
-            domain: '43.203.233.225:4000'
-        });
+        res.cookie('accessToken', accessToken);
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: this.configService.get('SECURE') !== 'production',
             sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000,
-            path: '/auth/refresh-token',
-            domain: '43.203.233.225:4000'
+            path: '/auth/refresh-token'
         });
 
         return accessToken;
