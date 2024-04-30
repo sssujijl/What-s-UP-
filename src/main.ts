@@ -27,7 +27,6 @@ async function bootstrap() {
   
   app.useWebSocketAdapter(redisIoAdapter);
   
-
   const config = new DocumentBuilder()
     .setTitle('Whats_UP')
     .setDescription('whats UP API description')
@@ -46,6 +45,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   
-  await app.listen(process.env.PORT);
+  await app.listen(3000);
 }
 bootstrap();
