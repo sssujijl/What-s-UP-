@@ -47,7 +47,7 @@ export class MissionsService {
   async findTodayMission() {
     const today = new Date().toISOString().slice(0, 10);
     const mission = await this.cacheManager.get(`Mission: ${today}`);
-
+    console.log(mission);
     if (!mission) {
       throw new NotFoundException('오늘의 미션을 찾을 수 없습니다.');
     }

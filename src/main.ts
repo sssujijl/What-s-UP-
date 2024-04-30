@@ -12,7 +12,7 @@ async function bootstrap() {
   dotenv.config();
 
   const corsOptions: CorsOptions = {
-    origin: 'http://localhost:4000',
+    origin: process.env.FRONT_URL,
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -27,7 +27,6 @@ async function bootstrap() {
   
   app.useWebSocketAdapter(redisIoAdapter);
   
-
   const config = new DocumentBuilder()
     .setTitle('Whats_UP')
     .setDescription('whats UP API description')
